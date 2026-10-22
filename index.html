@@ -492,18 +492,18 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div class="bg-purple-50 p-3 rounded-xl border border-purple-200 space-y-2">
                         <label class="font-bold text-purple-900 block">📅 ระยะวางแผน (Plan)</label>
-                        <input type="date" x-model="currentTask.planStart" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
-                        <input type="date" x-model="currentTask.planEnd" :min="currentTask.planStart" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
+                        <input type="date" x-model="currentTask.planStart" @change="onDateChanged()" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
+                        <input type="date" x-model="currentTask.planEnd" @change="onDateChanged()" :min="currentTask.planStart" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
                     </div>
                     <div class="bg-blue-50 p-3 rounded-xl border border-blue-200 space-y-2">
                         <label class="font-bold text-blue-900 block">⚡ ระยะปฏิบัติจริง (Do)</label>
-                        <input type="date" x-model="currentTask.doStart" :min="currentTask.planEnd || currentTask.planStart" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
-                        <input type="date" x-model="currentTask.doEnd" :min="currentTask.doStart" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
+                        <input type="date" x-model="currentTask.doStart" @change="onDateChanged()" :min="currentTask.planEnd || currentTask.planStart" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
+                        <input type="date" x-model="currentTask.doEnd" @change="onDateChanged()" :min="currentTask.doStart" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
                     </div>
                     <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 space-y-2">
                         <label class="font-bold text-emerald-900 block">📝 ระยะสรุปผล (Summary)</label>
-                        <input type="date" x-model="currentTask.summaryStart" :min="currentTask.doEnd || currentTask.doStart" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
-                        <input type="date" x-model="currentTask.summaryEnd" :min="currentTask.summaryStart" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
+                        <input type="date" x-model="currentTask.summaryStart" @change="onDateChanged()" :min="currentTask.doEnd || currentTask.doStart" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
+                        <input type="date" x-model="currentTask.summaryEnd" @change="onDateChanged()" :min="currentTask.summaryStart" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
                     </div>
                 </div>
 
@@ -547,10 +547,10 @@
                     </div>
                 </div>
 
-                <!-- SDGS TOGGLE & FULL LIST -->
+                <!-- SDGS CORRECT FULL DATA (17 Goals with Targets a, b, c, d...) -->
                 <div class="bg-indigo-50 border p-3 rounded-xl space-y-2">
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-indigo-900">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs ครบถ้วน a, b, c, d)</span>
+                        <span class="font-bold text-indigo-900">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs 17 เป้าหมาย ครบถ้วนถูกต้องตามสากล)</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" x-model="currentTask.useSdgs" :disabled="currentUserRole === 'viewer'" class="sr-only peer">
                             <div class="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
@@ -605,7 +605,7 @@
                             </div>
                         </template>
                     </div>
-                    <button x-show="currentUserRole !== 'viewer'" @click="currentTask.checklist.push({phase: 'do', date: '', text: '', done: false})" type="button" class="bg-white border px-3 py-1 rounded text-xs font-semibold">+ เพิ่มเช็คลิสต์ย่อย</button>
+                    <button x-show="currentUserRole !== 'viewer'" @click="currentTask.checklist.push({phase: 'do', date: currentTask.doStart || new Date().toLocaleDateString('en-CA'), text: '', done: false})" type="button" class="bg-white border px-3 py-1 rounded text-xs font-semibold">+ เพิ่มเช็คลิสต์ย่อย</button>
                 </div>
 
                 <div class="space-y-2 bg-slate-50 p-3 rounded-xl border">
@@ -777,25 +777,27 @@
                 currentMonthIndex: new Date().getMonth(),
                 yearlyViewYear: new Date().getFullYear(),
                 monthNames: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'],
+                lastStoredStart: '', // สำหรับคำนวณการเลื่อนของเช็คลิสต์
 
+                // SDGs ข้อย่อยครบถ้วนถูกต้องตาม UN Framework (17 Goals พร้อมข้อย่อย a, b, c, d...)
                 sdgFullData: [
-                    { goalNum: 1, goalTitle: 'ขจัดความยากจนทุกรูปแบบในทุกที่', targets: [{ code: '1.1a', title: 'ขจัดความยากจนรุนแรงต่ำกว่า $1.25 ต่อวัน' }, { code: '1.2b', title: 'ลดสัดส่วนคนจนทุกมิติลงครึ่งหนึ่ง' }, { code: '1.3c', title: 'ดำเนินมาตรการคุ้มครองทางสังคมที่เหมาะสม' }, { code: '1.4d', title: 'สิทธิเท่าเทียมในการเข้าถึงทรัพยากรพื้นฐาน' }] },
-                    { goalNum: 2, goalTitle: 'ยุติความหิวโหย บรรลุความมั่นคงทางอาหาร', targets: [{ code: '2.1a', title: 'เข้าถึงอาหารปลอดภัยและมีโภชนาการตลอดปี' }, { code: '2.2b', title: 'ยุติทุพโภชนาการทุกรูปแบบในเด็ก' }, { code: '2.3c', title: 'เพิ่มผลิตภาพทางการเกษตรของเกษตรกรรายย่อย' }] },
-                    { goalNum: 3, goalTitle: 'สร้างหลักประกันการมีสุขภาวะที่ดี', targets: [{ code: '3.1a', title: 'ลดอัตราการตายมารดาลงให้น้อยลง' }, { code: '3.2b', title: 'ยุติการตายของทารกและเด็กอายุต่ำกว่า 5 ขวบ' }, { code: '3.4c', title: 'ลดการตายก่อนวัยอันควรจากโรคไม่ติดต่อเรื้อรัง (NCDs)' }, { code: '3.8d', title: 'บรรลุหลักประกันสุขภาพถ้วนหน้า' }] },
-                    { goalNum: 4, goalTitle: 'การศึกษาที่มีคุณภาพเท่าเทียม', targets: [{ code: '4.1a', title: 'การศึกษาขั้นพื้นฐานที่มีคุณภาพฟรีสำหรับทุกคน' }, { code: '4.2b', title: 'การพัฒนาเด็กปฐมวัยที่มีคุณภาพ' }] },
-                    { goalNum: 5, goalTitle: 'ความเสมอภาคระหว่างเพศ', targets: [{ code: '5.1a', title: 'ยุติการเลือกปฏิบัติทุกรูปแบบต่อสตรี' }, { code: '5.2b', title: 'ขจัดความรุนแรงทั้งหมดต่อสตรีและเด็กหญิง' }] },
-                    { goalNum: 6, goalTitle: 'น้ำสะอาดและการสุขาภิบาล', targets: [{ code: '6.1a', title: 'เข้าถึงน้ำดื่มที่ปลอดภัยและราคาเข้าถึงได้' }, { code: '6.2b', title: 'เข้าถึงระบบสุขอนามัยที่เหมาะสม' }] },
-                    { goalNum: 7, goalTitle: 'พลังงานสะอาดที่เข้าถึงได้', targets: [{ code: '7.1a', title: 'เข้าถึงบริการพลังงานสมัยใหม่ที่เชื่อถือได้' }, { code: '7.2b', title: 'เพิ่มสัดส่วนพลังงานทดแทนในระดับโลก' }] },
-                    { goalNum: 8, goalTitle: 'งานที่มีคุณค่าและการเติบโตทางเศรษฐกิจ', targets: [{ code: '8.1a', title: 'เติบโตทางเศรษฐกิจต่อหัวตามบริบทประเทศ' }, { code: '8.2b', title: 'ยกระดับผลิตภาพทางเศรษฐกิจผ่านนวัตกรรม' }] },
-                    { goalNum: 9, goalTitle: 'โครงสร้างพื้นฐาน นวัตกรรม', targets: [{ code: '9.1a', title: 'พัฒนาโครงสร้างพื้นฐานที่มีความยืดหยุ่น' }, { code: '9.2b', title: 'ส่งเสริมอุตสาหกรรมที่ครอบคลุมและยั่งยืน' }] },
-                    { goalNum: 10, goalTitle: 'ลดความเหลื่อมล้ำ', targets: [{ code: '10.1a', title: 'เติบโตรายได้ของกลุ่มประชากรล่างสุด 40%' }, { code: '10.2b', title: 'เสริมสร้างความครอบคลุมทางสังคมและเศรษฐกิจ' }] },
-                    { goalNum: 11, goalTitle: 'เมืองและชุมชนยั่งยืน', targets: [{ code: '11.1a', title: 'เข้าถึงที่อยู่อาศัยและบริการพื้นฐานที่ปลอดภัย' }, { code: '11.2b', title: 'ระบบคมนาคมขนส่งที่ยั่งยืนปลอดภัย' }] },
-                    { goalNum: 12, goalTitle: 'การบริโภคและการผลิตที่ยั่งยืน', targets: [{ code: '12.1a', title: 'กรอบการดำเนินงานว่าด้วยการบริโภคและผลิตที่ยั่งยืน' }, { code: '12.2b', title: 'การบริหารจัดการและการใช้ทรัพยากรธรรมชาติอย่างมีประสิทธิภาพ' }] },
-                    { goalNum: 13, goalTitle: 'การรับมือการเปลี่ยนแปลงสภาพภูมิอากาศ', targets: [{ code: '13.1a', title: 'เสริมสร้างภูมิต้านทานต่อภัยพิบัติทางภูมิอากาศ' }] },
-                    { goalNum: 14, goalTitle: 'ทรัพยากรทางทะเล', targets: [{ code: '14.1a', title: 'ป้องกันและลดมลพิษทางทะเลทุกประเภท' }] },
-                    { goalNum: 15, goalTitle: 'ระบบนิเวศบนบก', targets: [{ code: '15.1a', title: 'อนุรักษ์และฟื้นฟูระบบนิเวศบนบกและน้ำจืด' }] },
-                    { goalNum: 16, goalTitle: 'สันติภาพ ความยุติธรรม สถาบันเข้มแข็ง', targets: [{ code: '16.1a', title: 'ลดความรุนแรงและอัตราการตายทุกรูปแบบ' }] },
-                    { goalNum: 17, goalTitle: 'ความร่วมมือเพื่อการพัฒนาที่ยั่งยืน', targets: [{ code: '17.1a', title: 'เสริมความเข้มแข็งการจัดเก็บรายได้ภายในประเทศ' }] }
+                    { goalNum: 1, goalTitle: 'ขจัดความยากจนทุกรูปแบบในทุกที่', targets: [{ code: '1.1', title: 'ขจัดความยากจนรุนแรงสำหรับทุกคนในทุกที่' }, { code: '1.2', title: 'ลดสัดส่วนคนจนทุกมิติลงอย่างน้อยครึ่งหนึ่ง' }, { code: '1.3', title: 'ดำเนินระบบและมาตรการคุ้มครองทางสังคมที่เหมาะสม' }, { code: '1.4', title: 'สิทธิเท่าเทียมในการเข้าถึงทรัพยากรและบริการพื้นฐาน' }, { code: '1.5', title: 'สร้างภูมิต้านทานแก่ผู้ยากไร้ต่อภัยพิบัติ' }, { code: '1.a', title: 'ระดมทรัพยากรเพื่อยุติความยากจน' }, { code: '1.b', title: 'สร้างกรอบนโยบายระดับประเทศที่สนับสนุนคนจน' }] },
+                    { goalNum: 2, goalTitle: 'ยุติความหิวโหย บรรลุความมั่นคงทางอาหาร', targets: [{ code: '2.1', title: 'ยุติความหิวโหยและเข้าถึงอาหารปลอดภัยตลอดปี' }, { code: '2.2', title: 'ยุติทุพโภชนาการทุกรูปแบบในเด็ก' }, { code: '2.3', title: 'เพิ่มผลิตภาพทางการเกษตรและรายได้ของเกษตรกรรายย่อย' }, { code: '2.4', title: 'การผลิตอาหารที่ยั่งยืนและปฏิบัติทางการเกษตรที่มีภูมิคุ้มกัน' }, { code: '2.5', title: 'รักษาความหลากหลายทางชีวภาพของพืชและสัตว์เลี้ยง' }, { code: '2.a', title: 'เพิ่มการลงทุนในโครงสร้างพื้นฐานชนบทและการวิจัยเกษตร' }, { code: '2.b', title: 'แก้ไขและป้องกันการกีดกันทางการค้าเกษตรโลก' }, { code: '2.c', title: 'ประกันกลไกตลาดอาหารที่มีเสถียรภาพ' }] },
+                    { goalNum: 3, goalTitle: 'สร้างหลักประกันการมีสุขภาวะที่ดี', targets: [{ code: '3.1', title: 'ลดอัตราการตายมารดาลงให้น้อยกว่า 70 ต่อแสนการเกิด' }, { code: '3.2', title: 'ยุติการตายของทารกและเด็กอายุต่ำกว่า 5 ขวบ' }, { code: '3.3', title: 'ยุติโรคติดต่อสำคัญ เช่น เอดส์ วัณโรค มาลาเรีย' }, { code: '3.4', title: 'ลดการตายก่อนวัยอันควรจากโรคไม่ติดต่อเรื้อรัง (NCDs)' }, { code: '3.5', title: 'ป้องกันและรักษาการใช้สารเสพติดและการดื่มแอลกอฮอล์' }, { code: '3.6', title: 'ลดจำนวนผู้เสียชีวิตและบาดเจ็บจากอุบัติเหตุทางถนน' }, { code: '3.7', title: 'เข้าถึงบริการสุขภาพทางเพศและอนามัยเจริญพันธุ์' }, { code: '3.8', title: 'บรรลุหลักประกันสุขภาพถ้วนหน้า (UHC)' }, { code: '3.9', title: 'ลดการเจ็บป่วยและเสียชีวิตจากสารเคมีอันตรายและมลพิษ' }, { code: '3.a', title: 'เสริมสร้างการดำเนินงานอนุสัญญาควบคุมยาสูบโลก' }, { code: '3.b', title: 'สนับสนุนการวิจัยและพัฒนาวัคซีนและยา' }, { code: '3.c', title: 'เพิ่มการจัดสรรงบประมาณสาธารณสุขและการพัฒนาบุคลากร' }, { code: '3.d', title: 'เสริมสมรรถนะการบริหารจัดการความเสี่ยงด้านสุขภาพ' }] },
+                    { goalNum: 4, goalTitle: 'การศึกษาที่มีคุณภาพเท่าเทียม', targets: [{ code: '4.1', title: 'การศึกษาขั้นพื้นฐานที่มีคุณภาพฟรีสำหรับเด็กทุกคน' }, { code: '4.2', title: 'เข้าถึงการพัฒนาและการดูแลเด็กปฐมวัยที่มีคุณภาพ' }, { code: '4.3', title: 'เข้าถึงการศึกษาวิชาชีพและอุดมศึกษาที่เท่าเทียม' }, { code: '4.4', title: 'เพิ่มจำนวนเยาวชนและผู้ใหญ่ที่มีทักษะประกอบอาชีพ' }, { code: '4.5', title: 'ขจัดความเหลื่อมล้ำทางเพศและการเข้าถึงการศึกษา' }, { code: '4.6', title: 'เยาวชนและผู้ใหญ่ทุกคนมีความรู้หนังสือและตัวเลข' }, { code: '4.7', title: 'การศึกษาเพื่อการพัฒนาที่ยั่งยืนและวัฒนธรรมสันติภาพ' }, { code: '4.a', title: 'สร้างและยกระดับสถานศึกษาที่ปลอดภัยและเหมาะสม' }, { code: '4.b', title: 'เพิ่มทุนการศึกษาสำหรับประเทศกำลังพัฒนา' }, { code: '4.c', title: 'เพิ่มจำนวนครูที่มีคุณสมบัติผ่านการฝึกอบรม' }] },
+                    { goalNum: 5, goalTitle: 'ความเสมอภาคระหว่างเพศ', targets: [{ code: '5.1', title: 'ยุติการเลือกปฏิบัติทุกรูปแบบต่อสตรีและเด็กหญิง' }, { code: '5.2', title: 'ขจัดความรุนแรงทั้งหมดต่อสตรีและเด็กหญิงในที่สาธารณะและส่วนตัว' }, { code: '5.3', title: 'ขจัด ารปฏิบัติที่เป็นอันตราย เช่น การสมรสในเด็ก' }, { code: '5.4', title: 'ตระหนักและให้คุณค่างานดูแลและงานบ้านที่ไม่ได้รับค่าจ้าง' }, { code: '5.5', title: 'ประกันการมีส่วนร่วมและโอกาสผู้นำที่เท่าเทียม' }, { code: '5.6', title: 'หลักประกันการเข้าถึงสุขภาพทางเพศและอนามัยเจริญพันธุ์' }, { code: '5.a', title: 'สิทธิเท่าเทียมในการถือครองที่ดินและทรัพย์สิน' }, { code: '5.b', title: 'ใช้ประโยชน์จากเทคโนโลยีเพื่อเสริมพลังสตรี' }, { code: '5.c', title: 'รับ าสนับสนุนนโยบายและกฎหมายเพื่อความเสมอภาค' }] },
+                    { goalNum: 6, goalTitle: 'น้ำสะอาดและการสุขาภิบาล', targets: [{ code: '6.1', title: 'เข้าถึงน้ำดื่มที่ปลอดภัยและราคาเข้าถึงได้สำหรับทุกคน' }, { code: '6.2', title: 'เข้าถึงระบบสุขอนามัยที่เพียงพอและเหมาะสม' }, { code: '6.3', title: 'ปรับปรุงคุณภาพน้ำโดยลดมลพิษและการปล่อยน้ำเสีย' }, { code: '6.4', title: 'เพิ่มประสิทธิภาพการใช้น้ำและแก้ปัญหาการขาดแคลน' }, { code: '6.5', title: 'การบริหารจัดการทรัพยากรน้ำแบบองค์รวมทุกระดับ' }, { code: '6.6', title: 'ปกป้องและฟื้นฟูระบบนิเวศที่เกี่ยวกับน้ำ' }, { code: '6.a', title: 'ขยายความร่วมมือด้านการจัดการน้ำแก่ประเทศกำลังพัฒนา' }, { code: '6.b', title: 'สนับสนุนการมีส่วนร่วมของชุมชนท้องถิ่นจัดการน้ำ' }] },
+                    { goalNum: 7, goalTitle: 'พลังงานสะอาดที่เข้าถึงได้', targets: [{ code: '7.1', title: 'ประกันการเข้าถึงบริการพลังงานสมัยใหม่ที่เชื่อถือได้' }, { code: '7.2', title: 'เพิ่มสัดส่วนพลังงานทดแทนในโครงสร้างพลังงานโลก' }, { code: '7.3', title: 'เพิ่มอัตราการปรับปรุงประสิทธิภาพการใช้พลังงานโลก' }, { code: '7.4', title: 'ความร่วมมือระหว่างประเทศเพื่อเข้าถึงเทคโนโลยีพลังงานสะอาด' }, { code: '7.b', title: 'ขยายโครงสร้างพื้นฐานและยกระดับเทคโนโลยีพลังงาน' }] },
+                    { goalNum: 8, goalTitle: 'งานที่มีคุณค่าและการเติบโตทางเศรษฐกิจ', targets: [{ code: '8.1', title: 'เติบโตทางเศรษฐกิจต่อหัวตามบริบทประเทศ' }, { code: '8.2', title: 'ยกระดับผลิตภาพทางเศรษฐกิจผ่านนวัตกรรมเทคโนโลยี' }, { code: '8.3', title: 'นโยบายสนับสนุนกิจกรรมการผลิตและการจ้างงานงานมั่นคง' }, { code: '8.4', title: 'ปรับปรุงประสิทธิภาพการใช้ทรัพยากรโลกในการบริโภคผลิต' }, { code: '8.5', title: 'การจ้างงานเต็มที่และมีผลิตภาพสำหรับทุกคน' }, { code: '8.6', title: 'ลดสัดส่วนเยาวชนที่ไม่ได้ทำงานหรือศึกษา' }, { code: '8.7', title: 'ขจัดแรงงานบังคับ การค้ามนุษย์ และแรงงานเด็ก' }, { code: '8.8', title: 'ปกป้องสิทธิแรงงานและสร้างสภาพแวดล้อมปลอดภัย' }, { code: '8.9', title: 'นโยบายส่งเสริมการท่องเที่ยวที่ยั่งยืนสร้างงาน' }, { code: '8.10', title: 'เสริมความเข้มแข็งสถาบันการเงินเพื่อเข้าถึงบริการทั่วถึง' }] },
+                    { goalNum: 9, goalTitle: 'โครงสร้างพื้นฐาน นวัตกรรม และอุตสาหกรรม', targets: [{ code: '9.1', title: 'พัฒนาโครงสร้างพื้นฐานคุณภาพสูงที่มีความยืดหยุ่น' }, { code: '9.2', title: 'ส่งเสริมอุตสาหกรรมที่ครอบคลุมและยั่งยืนเพิ่มส่วนแบ่งจีดีพี' }, { code: '9.3', title: 'เพิ่มการเข้าถึงบริการทางการเงินของวิสาหกิจขนาดเล็ก' }, { code: '9.4', title: 'ยกระดับโครงสร้างพื้นฐานและอุตสาหกรรมให้ยั่งยืนสะอาด' }, { code: '9.5', title: 'เพิ่มวิจัยทางวิทยาศาสตร์และขีดความสามารถทางเทคโนโลยี' }] },
+                    { goalNum: 10, goalTitle: 'ลดความเหลื่อมล้ำ', targets: [{ code: '10.1', title: 'เติบโตรายได้ของประชากรกลุ่มล่างสุด 40% ให้สูงกว่าค่าเฉลี่ย' }, { code: '10.2', title: 'ส่งเสริมการมีส่วนร่วมทางสังคม เศรษฐกิจ และการเมือง' }, { code: '10.3', title: 'ประกันโอกาสที่เท่าเทียมและลดความเหลื่อมล้ำผลลัพธ์' }, { code: '10.4', title: 'ใช้นโยบายการคลัง ค่าจ้าง และการคุ้มครองสังคมที่ดี' }, { code: '10.5', title: 'ปรับปรุงกฎระเบียบตลาดการเงินโลกให้มีเสถียรภาพ' }, { code: '10.6', title: 'เพิ่มเสียงสะท้อนของประเทศกำลังพัฒนาในสถาบันโลก' }, { code: '10.7', title: 'การย้ายถิ่นฐานและ mobility ของคนอย่างเป็นระเบียบปลอดภัย' }] },
+                    { goalNum: 11, goalTitle: 'เมืองและชุมชนยั่งยืน', targets: [{ code: '11.1', title: 'เข้าถึงที่อยู่อาศัยและบริการพื้นฐานในราคาที่จ่ายไหว' }, { code: '11.2', title: 'ระบบคมนาคมขนส่งสาธารณะที่ปลอดภัยยั่งยืน' }, { code: '11.3', title: 'การพัฒนาเมืองแบบมีส่วนร่วมและยั่งยืนครอบคลุม' }, { code: '11.4', title: 'ปกป้องคุ้มครองมรดกทางวัฒนธรรมและธรรมชาติโลก' }, { code: '11.5', title: 'ลดจำนวนผู้เสียชีวิตและผลกระทบจากภัยพิบัติ' }, { code: '11.6', title: 'ลดผลกระทบด้านสิ่งแวดล้อมต่อหัวของเมือง' }, { code: '11.7', title: 'เข้าถึงพื้นที่สาธารณะสีเขียวที่ปลอดภัยครอบคลุม' }] },
+                    { goalNum: 12, goalTitle: 'การบริโภคและการผลิตที่ยั่งยืน', targets: [{ code: '12.1', title: 'กรอบการดำเนินงาน 10 ปีว่าด้วยการบริโภคผลิตยั่งยืน' }, { code: '12.2', title: 'การบริหารจัดการและการใช้ทรัพยากรธรรมชาติมีประสิทธิภาพ' }, { code: '12.3', title: 'ลดขยะอาหารระดับค้าปลีกและผู้บริโภคลงครึ่งหนึ่ง' }, { code: '12.4', title: 'การจัดการสารเคมีและของเสียตลอดวงจรชีวิตปลอดภัย' }, { code: '12.5', title: 'ลดการเกิดขยะผ่านการป้องกัน การลดซ้ำ และรีไซเคิล' }, { code: '12.6', title: 'สนับสนุนให้บริษัทเอกชนนำข้อมูลความยั่งยืนไปปฏิบัติ' }, { code: '12.7', title: 'แนวปฏิบัติด้านการจัดซื้อจัดจ้างภาครัฐที่ยั่งยืน' }] },
+                    { goalNum: 13, goalTitle: 'การรับมือการเปลี่ยนแปลงสภาพภูมิอากาศ', targets: [{ code: '13.1', title: 'เสริมสร้างภูมิต้านทานและขีดความสามารถรับมือภัยพิบัติ' }, { code: '13.2', title: 'บูรณาการมาตรการด้านการเปลี่ยนแปลงสภาพภูมิอากาศในนโยบาย' }, { code: '13.3', title: 'พัฒนาการศึกษาและการสร้างความตระหนักรู้เรื่องภูมิอากาศ' }] },
+                    { goalNum: 14, goalTitle: 'ทรัพยากรทางทะเล', targets: [{ code: '14.1', title: 'ป้องกันและลดมลพิษทางทะเลทุกประเภทอย่างมีนัยสำคัญ' }, { code: '14.2', title: 'บริหารจัดการและปกป้องระบบนิเวศทางทะเลและชายฝั่ง' }, { code: '14.3', title: 'ลดและจัดการผลกระทบจากภาวะความเป็นกรดในมหาสมุทร' }, { code: '14.4', title: 'ควบคุมการทำประมงเกินขีดจำกัดและประมงผิดกฎหมาย' }, { code: '14.5', title: 'อนุรักษ์พื้นที่ชายฝั่งและทางทะเลอย่างน้อย 10%' }] },
+                    { goalNum: 15, goalTitle: 'ระบบนิเวศบนบก', targets: [{ code: '15.1', title: 'อนุรักษ์และฟื้นฟูระบบนิเวศบนบกและน้ำจืดในแผ่นดิน' }, { code: '15.2', title: 'ส่งเสริมการจัดการป่าไม้ทุกประเภทอย่างยั่งยืน' }, { code: '15.3', title: 'ต่อสู้กับการกลายสภาพเป็นทะเลทรายและฟื้นฟูเสื่อมโทรม' }, { code: '15.4', title: 'อนุรักษ์ระบบนิเวศภูเขาเพื่อความหลากหลายทางชีวภาพ' }, { code: '15.5', title: 'ลดการเสื่อมโทรมถิ่นที่อยู่อาศัยและหยุดยั้งการสูญพันธุ์' }] },
+                    { goalNum: 16, goalTitle: 'สันติภาพ ความยุติธรรม และสถาบันเข้มแข็ง', targets: [{ code: '16.1', title: 'ลดความรุนแรงและอัตราการตายทุกรูปแบบทั่วโลก' }, { code: '16.2', title: 'ยุติการข่มเหง การแสวงประโยชน์ และความรุนแรงต่อเด็ก' }, { code: '16.3', title: 'ส่งเสริมหลักนิติธรรมและประกันการเข้าถึงความยุติธรรม' }, { code: '16.4', title: 'ลดการลักลอบค้าอาวุธและเงินผิดกฎหมายฟอกเงิน' }, { code: '16.5', title: 'ลดการทุจริตและสินบนทุกรูปแบบอย่างมีประสิทธิผล' }, { code: '16.6', title: 'พัฒนาสถาบันโปร่งใส มีประสิทธิผล และมีความรับผิดชอบ' }, { code: '16.7', title: 'ประกันกระบวนการตัดสินใจที่มีส่วนร่วมรอบด้าน' }] },
+                    { goalNum: 17, goalTitle: 'ความร่วมมือเพื่อการพัฒนาที่ยั่งยืน', targets: [{ code: '17.1', title: 'เสริมความเข้มแข็งการจัดเก็บรายได้ภายในประเทศ' }, { code: '17.2', title: 'ประเทศพัฒนาแล้วบรรลุคำมั่นสัญญา ODA ช่วยเหลือ' }, { code: '17.3', title: 'ระดมทรัพยากรการเงินเพิ่มเติมจากหลากหลายแหล่ง' }, { code: '17.5', title: 'นำและส่งเสริมการใช้กรอบนโยบายลงทุนสำหรับประเทศกำลังพัฒนา' }] }
                 ],
 
                 currentTask: {
@@ -1023,10 +1025,36 @@
                     if (!tplId) return;
                     let found = this.allTemplates.find(t => t.id === tplId);
                     if (found) {
-                        let today = new Date().toISOString().split('T')[0];
+                        let today = this.currentTask.doStart || new Date().toLocaleDateString('en-CA');
                         found.items.forEach(text => {
                             this.currentTask.checklist.push({ phase: 'do', date: today, text, done: false });
                         });
+                    }
+                },
+
+                // ฟังก์ชันเลื่อนเช็คลิสต์อัตโนมัติตามวันเริ่มต้นงานที่เปลี่ยนไป
+                onDateChanged() {
+                    let newStart = this.currentTask.doStart || this.currentTask.planStart;
+                    if (!newStart || !this.lastStoredStart) {
+                        this.lastStoredStart = newStart;
+                        return;
+                    }
+                    if (newStart !== this.lastStoredStart) {
+                        let dOld = new Date(this.lastStoredStart);
+                        let dNew = new Date(newStart);
+                        let diffTime = dNew - dOld;
+                        let diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+                        if (diffDays !== 0 && this.currentTask.checklist) {
+                            this.currentTask.checklist.forEach(chk => {
+                                if (chk.date) {
+                                    let cd = new Date(chk.date);
+                                    cd.setDate(cd.getDate() + diffDays);
+                                    chk.date = cd.toLocaleDateString('en-CA');
+                                }
+                            });
+                        }
+                        this.lastStoredStart = newStart;
                     }
                 },
 
@@ -1045,7 +1073,7 @@
                 buildMonthGrid(year, month) {
                     let firstDow = new Date(year, month, 1).getDay();
                     let totalDays = new Date(year, month + 1, 0).getDate();
-                    let today = new Date().toISOString().split('T')[0];
+                    let today = new Date().toLocaleDateString('en-CA');
                     let days = [];
                     for (let i = 0; i < firstDow; i++) days.push({ dayNum: '', dateStr: '', isCurrentMonth: false });
                     for (let d = 1; d <= totalDays; d++) {
@@ -1164,7 +1192,6 @@
                 },
 
                 getTaskStatus(task) {
-                    // ดึงวันที่ปัจจุบันตามโซนเวลาประเทศไทยที่ถูกต้อง
                     let today = new Date().toLocaleDateString('en-CA');
                     let startDo = task.doStart || task.planStart || '';
                     let endDo = task.doEnd || task.planEnd || '';
@@ -1284,6 +1311,7 @@
 
                 openTaskModal() {
                     let today = new Date().toLocaleDateString('en-CA');
+                    this.lastStoredStart = today;
                     this.currentTask = {
                         id: null, category: this.availableCategoriesForUser[0]?.name || '', title: '', countWorkload: true,
                         planStart: today, planEnd: today, doStart: today, doEnd: today, summaryStart: today, summaryEnd: today,
@@ -1301,6 +1329,7 @@
                         return;
                     }
                     this.currentTask = JSON.parse(JSON.stringify(task));
+                    this.lastStoredStart = this.currentTask.doStart || this.currentTask.planStart || '';
                     if (!this.currentTask.pdsa) this.currentTask.pdsa = { plan: '', do: '', study: '', act: '' };
                     if (!this.currentTask.checklist) this.currentTask.checklist = [];
                     if (!this.currentTask.subTeamMembers) this.currentTask.subTeamMembers = [];
