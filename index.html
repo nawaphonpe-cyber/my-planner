@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบวางแผนการทำงานประจำปี</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/sort@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -66,7 +67,7 @@
                 <button @click="activeTab = 'calendar'" :class="activeTab === 'calendar' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">ปฏิทินงาน</button>
                 <button @click="activeTab = 'tasks'" :class="activeTab === 'tasks' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">รายการงาน</button>
                 <button @click="activeTab = 'reports'" :class="activeTab === 'reports' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">ออกรายงาน PDF</button>
-                <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'templates'" :class="activeTab === 'templates' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการเทมเพลต</button>
+                <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'templates'" :class="activeTab === 'templates' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการเทมเพลตเช็คลิสต์</button>
                 <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'categories'" :class="activeTab === 'categories' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการกลุ่มงาน</button>
                 <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'owners'" :class="activeTab === 'owners' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการบุคลากร</button>
                 <button x-show="currentUserRole === 'admin'" @click="activeTab = 'users'" :class="activeTab === 'users' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการสิทธิ์</button>
@@ -110,7 +111,7 @@
                     </div>
                 </div>
 
-                <!-- Yearly View -->
+                <!-- Yearly View (Clean: Colored only on task dates) -->
                 <div x-show="calendarMode === 'yearly'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <template x-for="(mName, mIdx) in monthNames" :key="mIdx">
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 space-y-2">
@@ -119,12 +120,13 @@
                                 <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
                             </div>
                             <div class="grid grid-cols-7 gap-1 text-center text-xs">
-                                <template x-for="dCell in buildFullMonthGrid(currentYearNum, mIdx)" :key="dCell.dateStr || Math.random()">
+                                <template x-for="dCell in buildYearlyMonthGrid(currentYearNum, mIdx)" :key="dCell.dateStr || Math.random()">
                                     <div class="py-1 rounded font-semibold flex flex-col items-center justify-center relative"
-                                         :style="dCell.taskCount > 0 ? 'background-color: ' + dCell.mainColor + '; color: white;' : 'background-color: #f8fafc; color: #64748b;'">
+                                         :style="dCell.isWorkDay ? `background-color: ${dCell.bgColor}; color: white;` : 'background-color: transparent; color: #94a3b8;'"
+                                         :title="dCell.tooltip">
                                         <span x-text="dCell.dayNum"></span>
-                                        <template x-if="dCell.taskCount > 1">
-                                            <span class="absolute -top-1 -right-1 bg-rose-600 text-white text-[8px] px-1 rounded-full font-bold" x-text="dCell.taskCount"></span>
+                                        <template x-if="dCell.isMulti">
+                                            <span class="absolute -top-1 -right-1 bg-rose-600 text-white text-[8px] px-1 rounded-full font-bold">multi</span>
                                         </template>
                                     </div>
                                 </template>
@@ -187,76 +189,65 @@
                 </div>
             </div>
 
-            <!-- TAB 3: REPORTS -->
+            <!-- TAB 3: REPORTS (Custom Date Range & Category Filter) -->
             <div x-show="activeTab === 'reports'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
                 <div>
                     <h2 class="text-base font-bold text-indigo-900">🖨️ ระบบออกรายงานทางการ (แนวนอน / พิมพ์)</h2>
-                    <p class="text-xs text-slate-500 mt-1">เลือกประเภทรายงานเพื่อแสดงหน้าต่างตัวอย่างและสั่งพิมพ์</p>
+                    <p class="text-xs text-slate-500 mt-1">เลือกช่วงวันที่และกลุ่มงานที่ต้องการออกรายงาน</p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-slate-50 border p-4 rounded-xl space-y-3">
-                        <h3 class="font-bold text-sm text-indigo-900">1. รายงานสรุปภาพรวมโครงการ / กิจกรรม</h3>
+                <div class="bg-slate-50 border p-4 rounded-xl space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                         <div>
-                            <label class="block text-xs font-semibold mb-1">เลือกกลุ่มงาน</label>
-                            <select x-model="reportCategory" class="w-full border rounded p-2 text-xs bg-white font-semibold">
+                            <label class="block font-semibold mb-1">เลือกกลุ่มงาน</label>
+                            <select x-model="reportCategory" class="w-full border rounded p-2 bg-white font-semibold">
                                 <option value="">-- ทุกกลุ่มงานทั้งหมด --</option>
                                 <template x-for="cat in categories" :key="cat.id">
                                     <option :value="cat.name" x-text="cat.name"></option>
                                 </template>
                             </select>
                         </div>
-                        <button @click="generateGeneralReport()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded text-xs font-semibold cursor-pointer">แสดงตัวอย่างและพิมพ์สรุปภาพรวม</button>
+                        <div>
+                            <label class="block font-semibold mb-1">ตั้งแต่วันที่</label>
+                            <input type="date" x-model="reportStartDate" class="w-full border rounded p-1.5 bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">ถึงวันที่</label>
+                            <input type="date" x-model="reportEndDate" class="w-full border rounded p-1.5 bg-white">
+                        </div>
                     </div>
 
-                    <div class="bg-indigo-50/60 border border-indigo-200 p-4 rounded-xl space-y-3">
-                        <h3 class="font-bold text-sm text-indigo-900">2. รายงานภาระงานรายบุคคล (ตามรอบประเมิน)</h3>
-                        <div class="space-y-2 text-xs">
-                            <div>
-                                <label class="block font-semibold mb-1">เลือกบุคลากร *</label>
-                                <select x-model="workloadPerson" class="w-full border rounded p-2 bg-white font-bold">
-                                    <option value="">-- เลือกรายชื่อบุคลากร --</option>
-                                    <template x-for="o in sortedOwners" :key="o.id">
-                                        <option :value="o.name" x-text="o.name"></option>
-                                    </template>
-                                </select>
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block font-semibold mb-1">ปี พ.ศ.</label>
-                                    <select x-model.number="workloadYear" class="w-full border rounded p-2 bg-white font-bold">
-                                        <template x-for="y in [currentYearNum, currentYearNum + 1, currentYearNum - 1]" :key="y">
-                                            <option :value="y" x-text="'พ.ศ. ' + (y + 543)"></option>
-                                        </template>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block font-semibold mb-1">รอบประเมิน</label>
-                                    <select x-model="workloadTerm" class="w-full border rounded p-2 bg-white font-bold">
-                                        <option value="1">รอบ 1 (1 ม.ค. - 30 มิ.ย.)</option>
-                                        <option value="2">รอบ 2 (1 ก.ค. - 31 ธ.ค.)</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <button @click="generateWorkloadReport()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded text-xs font-semibold cursor-pointer">แสดงตัวอย่างและพิมพ์ภาระงาน</button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        <button @click="generateGeneralReport()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded text-xs font-semibold cursor-pointer">ออกรายงานสรุปภาพรวมตามช่วงเวลา</button>
+                        <button @click="generateWorkloadReport()" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded text-xs font-semibold cursor-pointer">ออกรายงานภาระงานรายบุคคลตามช่วงเวลา</button>
+                    </div>
+
+                    <div class="pt-2 text-xs text-slate-500" x-show="workloadPerson">
+                        บุคลากรที่เลือกสำหรับรายงานภาระงาน: <b x-text="workloadPerson"></b> (ตั้งค่าจากชื่อผู้รับผิดชอบหลักในงาน)
                     </div>
                 </div>
             </div>
 
-            <!-- TAB 4: TEMPLATES -->
+            <!-- TAB 4: TEMPLATES CHECKLIST -->
             <div x-show="currentUserRole !== 'viewer' && activeTab === 'templates'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
-                <h2 class="text-base font-bold text-slate-800">จัดการเทมเพลต</h2>
+                <h2 class="text-base font-bold text-slate-800">จัดการเทมเพลตเช็คลิสต์</h2>
                 <div class="bg-slate-50 border p-4 rounded-xl space-y-3 text-xs">
-                    <div>
-                        <label class="block font-semibold mb-1">ชื่อเทมเพลตเช็คลิสต์</label>
-                        <input type="text" x-model="newTemplateName" placeholder="ชื่อเทมเพลต..." class="w-full border rounded p-2 bg-white">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold mb-1">ไอคอน (Emoji เช่น 🚀, 📅, 📋)</label>
+                            <input type="text" x-model="newTemplateIcon" placeholder="🚀" class="w-full border rounded p-2 bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">ชื่อเทมเพลตเช็คลิสต์</label>
+                            <input type="text" x-model="newTemplateName" placeholder="ชื่อเทมเพลต..." class="w-full border rounded p-2 bg-white">
+                        </div>
                     </div>
                     <div class="space-y-1">
-                        <label class="block font-semibold">ขั้นตอนย่อย</label>
-                        <div class="space-y-1">
+                        <label class="block font-semibold">ขั้นตอนย่อย (คลิกลากสลับตำแหน่ง ⠿)</label>
+                        <div class="space-y-1" x-sort x-sort:item="newTemplateItems">
                             <template x-for="(item, idx) in newTemplateItems" :key="idx">
-                                <div class="flex gap-2 items-center bg-white border p-1.5 rounded">
+                                <div class="flex gap-2 items-center bg-white border p-1.5 rounded cursor-move" x-sort:item="idx">
+                                    <span class="text-slate-400 font-bold">⠿</span>
                                     <input type="text" x-model="newTemplateItems[idx]" class="flex-1 border rounded p-1 text-xs">
                                     <button @click="newTemplateItems.splice(idx, 1)" type="button" class="text-rose-600 font-bold px-2 cursor-pointer">&times;</button>
                                 </div>
@@ -264,31 +255,36 @@
                         </div>
                         <button @click="newTemplateItems.push('')" type="button" class="mt-2 bg-slate-200 px-3 py-1 rounded text-xs font-semibold cursor-pointer">+ เพิ่มขั้นตอนย่อย</button>
                     </div>
-                    <button @click="saveTemplate()" type="button" class="bg-indigo-600 text-white px-4 py-2 rounded font-semibold cursor-pointer">บันทึกเทมเพลต</button>
+                    <button @click="saveTemplate()" type="button" class="bg-indigo-600 text-white px-4 py-2 rounded font-semibold cursor-pointer" x-text="editingTemplateId ? 'บันทึกการแก้ไขเทมเพลต' : 'บันทึกเทมเพลตใหม่'"></button>
+                    <button x-show="editingTemplateId" @click="cancelEditTemplate()" type="button" class="bg-slate-300 text-slate-700 px-4 py-2 rounded font-semibold cursor-pointer ml-2">ยกเลิก</button>
                 </div>
                 <div class="space-y-2">
                     <template x-for="tpl in allTemplates" :key="tpl.id">
                         <div class="border rounded p-3 bg-white flex justify-between items-center text-xs">
                             <div>
-                                <span class="font-bold text-indigo-900 text-sm" x-text="tpl.name"></span>
-                                <p class="text-slate-500" x-text="tpl.items.length + ' ขั้นตอน'"></p>
+                                <span class="font-bold text-indigo-900 text-sm" x-text="(tpl.icon || '📋') + ' ' + tpl.name"></span>
+                                <p class="text-slate-500" x-text="tpl.items.length + ' ขั้นตอนย่อย'"></p>
                             </div>
-                            <button @click="deleteTemplate(tpl.id)" class="text-rose-600 cursor-pointer font-bold">ลบ</button>
+                            <div class="space-x-2">
+                                <button @click="editTemplate(tpl)" class="text-indigo-600 font-bold cursor-pointer">แก้ไข</button>
+                                <button @click="deleteTemplate(tpl.id)" class="text-rose-600 font-bold cursor-pointer">ลบ</button>
+                            </div>
                         </div>
                     </template>
                 </div>
             </div>
 
-            <!-- TAB 5: CATEGORIES -->
+            <!-- TAB 5: CATEGORIES (Drag & Drop) -->
             <div x-show="currentUserRole !== 'viewer' && activeTab === 'categories'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
-                <h2 class="text-base font-bold text-slate-800">จัดการกลุ่มงานหลัก</h2>
+                <h2 class="text-base font-bold text-slate-800">จัดการกลุ่มงานหลัก (ลากสลับตำแหน่งได้ ⠿)</h2>
                 <div class="flex gap-2">
                     <input type="text" x-model="newCategoryName" placeholder="เพิ่มกลุ่มงาน..." class="border rounded px-3 py-2 text-xs flex-1 bg-white">
                     <button @click="addCategory()" class="bg-indigo-600 text-white px-4 py-2 rounded text-xs cursor-pointer">+ เพิ่ม</button>
                 </div>
-                <div class="space-y-2">
+                <div class="space-y-2" x-sort="onSortCategories">
                     <template x-for="cat in categories" :key="cat.id">
-                        <div class="border rounded p-3 bg-slate-50 flex items-center justify-between gap-3">
+                        <div class="border rounded p-3 bg-slate-50 flex items-center justify-between gap-3 cursor-move" :x-sort:item="cat.id">
+                            <span class="text-slate-400 font-bold">⠿</span>
                             <input type="color" x-model="cat.color" class="w-8 h-8 rounded border cursor-pointer">
                             <input type="text" x-model="cat.name" @change="saveLocalStorage()" class="flex-1 border rounded px-2 py-1 text-xs bg-white font-bold text-indigo-900">
                             <button @click="deleteCategory(cat.id)" class="text-rose-600 text-xs px-2 py-1 border rounded bg-white cursor-pointer">ลบ</button>
@@ -413,7 +409,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block font-semibold mb-1 text-indigo-900">คณะทำงาน / ผู้เข้าร่วม (เลือกได้หลายคน)</label>
+                        <label class="block font-semibold mb-1 text-indigo-900">คณะทำงาน / ผู้ร่วมงาน (เลือกได้หลายคน)</label>
                         <div class="bg-white border rounded p-2 max-h-32 overflow-y-auto space-y-1">
                             <input type="text" x-model="ownerSearchQuery" placeholder="🔍 ค้นหาชื่อ..." class="w-full border rounded p-1 text-[11px] mb-1">
                             <template x-for="o in filteredOwnersForSelect" :key="o.id">
@@ -442,20 +438,26 @@
                     </div>
                 </div>
 
-                <!-- CHECKLISTS -->
+                <!-- CHECKLISTS 3 PHASES (Plan, Do, Summary) with Drag & Drop -->
                 <div class="bg-indigo-50 border p-3 rounded-xl space-y-3">
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-indigo-900">📌 เช็คลิสต์ปฏิบัติงาน & เลือกเทมเพลต</span>
+                        <span class="font-bold text-indigo-900">📌 เช็คลิสต์ปฏิบัติงาน (วางแผน, ทำงาน, สรุป)</span>
                         <select @change="applyTemplate($event.target.value)" :disabled="currentUserRole === 'viewer'" class="border rounded p-1 text-xs bg-white font-semibold">
                             <option value="">-- เลือกเทมเพลตเช็คลิสต์ --</option>
                             <template x-for="tpl in allTemplates" :key="tpl.id">
-                                <option :value="tpl.id" x-text="tpl.name"></option>
+                                <option :value="tpl.id" x-text="(tpl.icon || '📋') + ' ' + tpl.name"></option>
                             </template>
                         </select>
                     </div>
-                    <div class="space-y-1 max-h-32 overflow-y-auto">
+                    <div class="space-y-1 max-h-40 overflow-y-auto" x-sort x-sort:item="currentTask.checklist">
                         <template x-for="(chk, idx) in currentTask.checklist" :key="idx">
-                            <div class="flex items-center gap-2 bg-white p-1.5 rounded border">
+                            <div class="flex items-center gap-2 bg-white p-1.5 rounded border cursor-move" x-sort:item="idx">
+                                <span class="text-slate-400 font-bold">⠿</span>
+                                <select x-model="chk.phase" :disabled="currentUserRole === 'viewer'" class="border rounded p-1 text-[10px] font-semibold bg-slate-50">
+                                    <option value="plan">วางแผน</option>
+                                    <option value="do">ทำงาน</option>
+                                    <option value="summary">สรุป</option>
+                                </select>
                                 <input type="date" x-model="chk.date" :disabled="currentUserRole === 'viewer'" class="border rounded p-1 text-[10px] w-28">
                                 <input type="text" x-model="chk.text" :disabled="currentUserRole === 'viewer'" class="flex-1 border rounded p-1 text-xs">
                                 <input type="checkbox" x-model="chk.done" :disabled="currentUserRole === 'viewer'" class="w-4 h-4 text-indigo-600">
@@ -463,7 +465,7 @@
                             </div>
                         </template>
                     </div>
-                    <button x-show="currentUserRole !== 'viewer'" @click="currentTask.checklist.push({date: '', text: '', done: false})" type="button" class="bg-white border px-3 py-1 rounded text-xs font-semibold">+ เพิ่มเช็คลิสต์</button>
+                    <button x-show="currentUserRole !== 'viewer'" @click="currentTask.checklist.push({phase: 'do', date: '', text: '', done: false})" type="button" class="bg-white border px-3 py-1 rounded text-xs font-semibold">+ เพิ่มเช็คลิสต์ย่อย</button>
                 </div>
 
                 <div class="space-y-2 bg-slate-50 p-3 rounded-xl border">
@@ -538,7 +540,7 @@
                     { id: '2', name: 'เจ้าหน้าที่ ข' }
                 ],
                 allTemplates: [
-                    { id: 't1', name: 'เทมเพลตโครงการมาตรฐาน', items: ['สำรวจความต้องการ', 'เสนออนุมัติโครงการ', 'ดำเนินโครงการ', 'สรุปประเมินผล'] }
+                    { id: 't1', icon: '🚀', name: 'เทมเพลตโครงการมาตรฐาน', items: ['สำรวจความต้องการ', 'เสนออนุมัติโครงการ', 'ดำเนินโครงการ', 'สรุปประเมินผล'] }
                 ],
                 appUsers: [
                     { id: 'admin-1', name: 'ผู้ดูแลระบบหลัก', passcode: '1234', role: 'admin' }
@@ -546,9 +548,13 @@
                 newCategoryName: '',
                 newOwnerName: '',
                 newTemplateName: '',
+                newTemplateIcon: '📋',
                 newTemplateItems: [''],
+                editingTemplateId: null,
                 newUser: { name: '', passcode: '', role: 'editor' },
                 reportCategory: '',
+                reportStartDate: new Date().getFullYear() + '-10-01',
+                reportEndDate: (new Date().getFullYear() + 1) + '-09-30',
                 workloadPerson: '',
                 workloadYear: new Date().getFullYear(),
                 workloadTerm: '1',
@@ -557,7 +563,6 @@
                 currentMonthIndex: new Date().getMonth(),
                 monthNames: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'],
 
-                // SDGs แบบละเอียดครบทุกข้อย่อย (a, b, c, d...)
                 fullSdgList: [
                     { id: 'SDG 1.1', title: 'ขจัดความยากจนรุนแรง (a)', desc: 'ขจัดความยากจนรุนแรงสำหรับทุกคนในทุกที่' },
                     { id: 'SDG 1.2', title: 'ลดความยากจนทุกมิติ (b)', desc: 'ลดสัดส่วนของชายหญิงและเด็กทุกวัยที่มีความยากจน' },
@@ -671,6 +676,16 @@
                     this.categories = this.categories.filter(c => c.id !== id);
                     this.saveLocalStorage();
                 },
+                onSortCategories(itemIds) {
+                    let sorted = [];
+                    itemIds.forEach(id => {
+                        let found = this.categories.find(c => c.id === id);
+                        if (found) sorted.push(found);
+                    });
+                    this.categories = sorted;
+                    this.saveLocalStorage();
+                },
+
                 addOwner() {
                     if (!this.newOwnerName.trim()) return;
                     this.owners.push({ id: Date.now().toString(), name: this.newOwnerName.trim() });
@@ -681,18 +696,43 @@
                     this.owners = this.owners.filter(o => o.id !== id);
                     this.saveLocalStorage();
                 },
+
                 saveTemplate() {
                     if (!this.newTemplateName.trim()) return;
                     let validItems = this.newTemplateItems.filter(i => i.trim() !== '');
-                    this.allTemplates.push({ id: Date.now().toString(), name: this.newTemplateName.trim(), items: validItems });
+                    if (this.editingTemplateId) {
+                        let t = this.allTemplates.find(x => x.id === this.editingTemplateId);
+                        if (t) {
+                            t.name = this.newTemplateName.trim();
+                            t.icon = this.newTemplateIcon || '📋';
+                            t.items = validItems;
+                        }
+                        this.editingTemplateId = null;
+                    } else {
+                        this.allTemplates.push({ id: Date.now().toString(), icon: this.newTemplateIcon || '📋', name: this.newTemplateName.trim(), items: validItems });
+                    }
                     this.newTemplateName = '';
+                    this.newTemplateIcon = '📋';
                     this.newTemplateItems = [''];
                     this.saveLocalStorage();
+                },
+                editTemplate(tpl) {
+                    this.editingTemplateId = tpl.id;
+                    this.newTemplateName = tpl.name;
+                    this.newTemplateIcon = tpl.icon || '📋';
+                    this.newTemplateItems = [...tpl.items];
+                },
+                cancelEditTemplate() {
+                    this.editingTemplateId = null;
+                    this.newTemplateName = '';
+                    this.newTemplateIcon = '📋';
+                    this.newTemplateItems = [''];
                 },
                 deleteTemplate(id) {
                     this.allTemplates = this.allTemplates.filter(t => t.id !== id);
                     this.saveLocalStorage();
                 },
+
                 addUser() {
                     if (!this.newUser.name || !this.newUser.passcode) return;
                     this.appUsers.push({ id: Date.now().toString(), ...this.newUser });
@@ -709,7 +749,9 @@
                     let found = this.allTemplates.find(t => t.id === tplId);
                     if (found) {
                         let today = new Date().toISOString().split('T')[0];
-                        this.currentTask.checklist = found.items.map(text => ({ date: today, text, done: false }));
+                        found.items.forEach(text => {
+                            this.currentTask.checklist.push({ phase: 'do', date: today, text, done: false });
+                        });
                     }
                 },
 
@@ -769,7 +811,7 @@
                     return `background-color: ${baseColor}; font-weight: 500; ` + shapeClass;
                 },
 
-                buildFullMonthGrid(year, month) {
+                buildYearlyMonthGrid(year, month) {
                     let totalDays = new Date(year, month + 1, 0).getDate();
                     let days = [];
                     for (let d = 1; d <= totalDays; d++) {
@@ -779,9 +821,11 @@
                             let end = t.summaryEnd || t.doEnd || start;
                             return start && ds >= start && ds <= (end || start);
                         });
-                        let taskCount = matched.length;
-                        let mainColor = taskCount > 0 ? this.getCategoryColor(matched[0].category) : '#f8fafc';
-                        days.push({ dayNum: d, dateStr: ds, taskCount, mainColor });
+                        let isWorkDay = matched.length > 0;
+                        let bgColor = isWorkDay ? this.getCategoryColor(matched[0].category) : 'transparent';
+                        let isMulti = matched.length > 1;
+                        let tooltip = matched.map(m => m.title).join(', ');
+                        days.push({ dayNum: d, dateStr: ds, isWorkDay, bgColor, isMulti, tooltip });
                     }
                     return days;
                 },
@@ -846,9 +890,15 @@
                 },
 
                 generateGeneralReport() {
-                    let filtered = this.tasks;
-                    if (this.reportCategory) filtered = filtered.filter(t => t.category === this.reportCategory);
-                    let html = `<table class="w-full border-collapse border border-slate-300 text-xs mt-4">
+                    let filtered = this.tasks.filter(t => {
+                        let s = t.doStart || t.planStart || '';
+                        let matchCat = !this.reportCategory || t.category === this.reportCategory;
+                        let matchDate = (!this.reportStartDate || s >= this.reportStartDate) && (!this.reportEndDate || s <= this.reportEndDate);
+                        return matchCat && matchDate;
+                    });
+
+                    let html = `<div class="mb-2 text-xs">ช่วงวันที่: ${this.reportStartDate} ถึง ${this.reportEndDate}</div>`;
+                    html += `<table class="w-full border-collapse border border-slate-300 text-xs mt-2">
                         <thead>
                             <tr class="bg-slate-100 text-slate-700">
                                 <th class="border border-slate-300 p-2">ที่</th>
@@ -874,19 +924,13 @@
                 },
 
                 generateWorkloadReport() {
-                    if (!this.workloadPerson) {
-                        alert('กรุณาเลือกบุคลากรก่อนออกรายงานภาระงาน');
-                        return;
-                    }
-                    let startTermDate = this.workloadTerm === '1' ? `${this.workloadYear}-01-01` : `${this.workloadYear}-07-01`;
-                    let endTermDate = this.workloadTerm === '1' ? `${this.workloadYear}-06-30` : `${this.workloadYear}-12-31`;
-
-                    let userTasks = this.tasks.filter(t => (t.owner === this.workloadPerson || (t.subTeamMembers && t.subTeamMembers.includes(this.workloadPerson))) && t.countWorkload);
+                    let targetPerson = this.currentUserName;
+                    let userTasks = this.tasks.filter(t => (t.owner === targetPerson || (t.subTeamMembers && t.subTeamMembers.includes(targetPerson))) && t.countWorkload && {}.doStart >= this.reportStartDate);
                     let totalDays = 0;
 
                     let html = `<div class="mb-4 text-xs space-y-1">
-                        <p><b>ชื่อ-นามสกุล:</b> ${this.workloadPerson}</p>
-                        <p><b>ปี พ.ศ.:</b> ${this.workloadYear + 543} (รอบประเมินที่ ${this.workloadTerm}: ${startTermDate} ถึง ${endTermDate})</p>
+                        <p><b>ชื่อ-นามสกุล:</b> ${targetPerson}</p>
+                        <p><b>ช่วงรายงาน:</b> ${this.reportStartDate} ถึง ${this.reportEndDate}</p>
                     </div>`;
 
                     html += `<table class="w-full border-collapse border border-slate-300 text-xs">
@@ -908,7 +952,7 @@
                         let diffDays = Math.max(1, Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1);
                         totalDays += diffDays;
 
-                        let role = t.owner === this.workloadPerson ? 'ผู้รับผิดชอบหลัก' : 'คณะทำงาน/ผู้ร่วมงาน';
+                        let role = t.owner === targetPerson ? 'ผู้รับผิดชอบหลัก' : 'คณะทำงาน/ผู้ร่วมงาน';
                         let sdgsStr = (t.selectedSdgs && t.selectedSdgs.length > 0) ? t.selectedSdgs.join(', ') : '-';
 
                         html += `<tr>
@@ -930,7 +974,7 @@
                         <p><b>สรุปภาระงานรวม:</b> จำนวนงานทั้งสิ้น ${userTasks.length} งาน | จำนวนวันปฏิบัติงานรวมทั้งหมด ${totalDays} วัน</p>
                     </div>`;
 
-                    this.printModal = { open: true, title: 'รายงานภาระงานรายบุคคลประจำปีงบประมาณ', subtitle: `รอบประเมินที่ ${this.workloadTerm} พ.ศ. ${this.workloadYear + 543}`, htmlContent: html, reporterName: this.workloadPerson };
+                    this.printModal = { open: true, title: 'รายงานภาระงานรายบุคคลประจำปีงบประมาณ', subtitle: `ช่วงวันที่ ${this.reportStartDate} ถึง ${this.reportEndDate}`, htmlContent: html, reporterName: targetPerson };
                 }
             };
         }
