@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบวางแผนการทำงานประจำปี</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/sort@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -247,7 +246,7 @@
 
             <!-- TAB 4: TEMPLATES -->
             <div x-show="currentUserRole !== 'viewer' && activeTab === 'templates'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
-                <h2 class="text-base font-bold text-slate-800">จัดการเทมเพลตเช็คลิสต์</h2>
+                <h2 class="text-base font-bold text-slate-800">จัดการเทมเพลต</h2>
                 <div class="bg-slate-50 border p-4 rounded-xl space-y-3 text-xs">
                     <div>
                         <label class="block font-semibold mb-1">ชื่อเทมเพลตเช็คลิสต์</label>
@@ -402,6 +401,7 @@
                     </div>
                 </div>
 
+                <!-- OWNERS & MULTI-SELECT TEAM -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-indigo-50/50 p-3 rounded-xl border">
                     <div>
                         <label class="block font-semibold mb-1 text-indigo-900">ผู้รับผิดชอบหลัก</label>
@@ -413,14 +413,39 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block font-semibold mb-1 text-indigo-900">คณะทำงาน / ผู้ร่วมงาน</label>
-                        <input type="text" x-model="currentTask.subTeam" :disabled="currentUserRole === 'viewer'" placeholder="ระบุผู้ร่วมงาน..." class="w-full border rounded p-2 bg-white">
+                        <label class="block font-semibold mb-1 text-indigo-900">คณะทำงาน / ผู้เข้าร่วม (เลือกได้หลายคน)</label>
+                        <div class="bg-white border rounded p-2 max-h-32 overflow-y-auto space-y-1">
+                            <input type="text" x-model="ownerSearchQuery" placeholder="🔍 ค้นหาชื่อ..." class="w-full border rounded p-1 text-[11px] mb-1">
+                            <template x-for="o in filteredOwnersForSelect" :key="o.id">
+                                <label class="flex items-center gap-2 text-xs cursor-pointer hover:bg-slate-50 p-1 rounded">
+                                    <input type="checkbox" :value="o.name" x-model="currentTask.subTeamMembers" class="rounded text-indigo-600">
+                                    <span x-text="o.name"></span>
+                                </label>
+                            </template>
+                        </div>
                     </div>
                 </div>
 
+                <!-- SDGS WITH SUB-ITEMS (a, b, c, d...) -->
+                <div class="bg-indigo-50 border p-3 rounded-xl space-y-2">
+                    <span class="font-bold text-indigo-900">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs แบบละเอียดครบทุกข้อย่อย)</span>
+                    <div class="space-y-2 max-h-40 overflow-y-auto bg-white p-2 rounded border">
+                        <template x-for="goal in fullSdgList" :key="goal.id">
+                            <label class="flex items-start gap-2 p-1 hover:bg-slate-50 rounded cursor-pointer">
+                                <input type="checkbox" :value="goal.id" x-model="currentTask.selectedSdgs" class="mt-0.5 rounded text-indigo-600">
+                                <div>
+                                    <span class="font-bold text-indigo-950" x-text="goal.id + ': ' + goal.title"></span>
+                                    <p class="text-[10px] text-slate-500" x-text="goal.desc"></p>
+                                </div>
+                            </label>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- CHECKLISTS -->
                 <div class="bg-indigo-50 border p-3 rounded-xl space-y-3">
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-indigo-900">📌 เช็คลิสต์ & เลือกเทมเพลต</span>
+                        <span class="font-bold text-indigo-900">📌 เช็คลิสต์ปฏิบัติงาน & เลือกเทมเพลต</span>
                         <select @change="applyTemplate($event.target.value)" :disabled="currentUserRole === 'viewer'" class="border rounded p-1 text-xs bg-white font-semibold">
                             <option value="">-- เลือกเทมเพลตเช็คลิสต์ --</option>
                             <template x-for="tpl in allTemplates" :key="tpl.id">
@@ -502,6 +527,7 @@
                 calendarMode: 'monthly',
                 isModalOpen: false,
                 selectedCategoryFilter: '',
+                ownerSearchQuery: '',
                 tasks: [],
                 categories: [
                     { id: '1', name: 'กลุ่มงานบริหารทั่วไป', color: '#7c3aed' },
@@ -531,11 +557,32 @@
                 currentMonthIndex: new Date().getMonth(),
                 monthNames: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'],
 
+                // SDGs แบบละเอียดครบทุกข้อย่อย (a, b, c, d...)
+                fullSdgList: [
+                    { id: 'SDG 1.1', title: 'ขจัดความยากจนรุนแรง (a)', desc: 'ขจัดความยากจนรุนแรงสำหรับทุกคนในทุกที่' },
+                    { id: 'SDG 1.2', title: 'ลดความยากจนทุกมิติ (b)', desc: 'ลดสัดส่วนของชายหญิงและเด็กทุกวัยที่มีความยากจน' },
+                    { id: 'SDG 2.1', title: 'ยุติความหิวโหยเข้าถึงอาหาร (a)', desc: 'ยุติความหิวโหยและเข้าถึงอาหารที่ปลอดภัยตลอดปี' },
+                    { id: 'SDG 2.2', title: 'ยุติทุพโภชนาการทุกรูปแบบ (b)', desc: 'ยุติทุพโภชนาการทุกรูปแบบรวมถึงเด็กเตี้ยแคระ' },
+                    { id: 'SDG 3.1', title: 'ลดอัตราการตายมารดา (a)', desc: 'ลดอัตราส่วนการตายของมารดาลงให้ต่ำกว่า 70 ต่อแสนการเกิดมีชีพ' },
+                    { id: 'SDG 3.2', title: 'ยุติการตายของเด็กทารก (b)', desc: 'ยุติการตายของทารกแรกเกิดและเด็กอายุต่ำกว่า 5 ขวบ' },
+                    { id: 'SDG 3.4', title: 'ลดการตายจากโรคไม่ติดต่อเรื้อรัง (c)', desc: 'ลดการตายก่อนวัยอันควรจากโรค NCDs ลงหนึ่งในสาม' },
+                    { id: 'SDG 3.8', title: 'หลักประกันสุขภาพถ้วนหน้า (d)', desc: 'บรรลุการคุ้มครองสุขภาพถ้วนหน้าและการเข้าถึงบริการ' },
+                    { id: 'SDG 4.1', title: 'การศึกษาขั้นพื้นฐานที่มีคุณภาพ (a)', desc: 'เด็กทุกคนจบการศึกษาประถมศึกษาและมัธยมศึกษาที่มีคุณภาพ' },
+                    { id: 'SDG 4.2', title: 'การพัฒนาเด็กปฐมวัย (b)', desc: 'เด็กทุกคนเข้าถึงการพัฒนาและการดูแลเด็กปฐมวัยที่มีคุณภาพ' },
+                    { id: 'SDG 5.1', title: 'ยุติการเลือกปฏิบัติสตรี (a)', desc: 'ยุติการเลือกปฏิบัติทุกรูปแบบต่อสตรีและเด็กหญิง' },
+                    { id: 'SDG 5.2', title: 'ขจัดความรุนแรงต่อสตรี (b)', desc: 'ขจัดความรุนแรงทั้งหมดต่อสตรีและเด็กหญิงในที่สาธารณะและส่วนตัว' },
+                    { id: 'SDG 8.1', title: 'การเติบโตทางเศรษฐกิจต่อหัว (a)', desc: 'รักษาการเติบโตทางเศรษฐกิจต่อหัวตามบริบทประเทศ' },
+                    { id: 'SDG 8.2', title: 'ยกระดับผลิตภาพทางเศรษฐกิจ (b)', desc: 'บรรลุระดับความหลากหลายสูงขึ้นและการยกระดับเทคโนโลยี' },
+                    { id: 'SDG 16.1', title: 'ลดความรุนแรงทุกรูปแบบ (a)', desc: 'ลดอัตราการ Mutilation และการตายจากความรุนแรงทุกรูปแบบ' },
+                    { id: 'SDG 16.6', title: 'พัฒนาสถาบันที่มีประสิทธิผล (b)', desc: 'พัฒนาสถาบันที่มีประสิทธิผล โปร่งใส และมีความรับผิดชอบ' },
+                    { id: 'SDG 17.1', title: 'เสริมความเข้มแข็งการจัดเก็บรายได้ (a)', desc: 'เสริมความเข้มแข็งการจัดเก็บรายได้ภายในประเทศ' }
+                ],
+
                 currentTask: {
                     id: null, category: '', title: '', countWorkload: true,
                     planStart: '', planEnd: '', doStart: '', doEnd: '', summaryStart: '', summaryEnd: '',
-                    budgetApproved: 0, budgetUsed: 0, owner: '', subTeam: '', checklist: [],
-                    pdsa: { plan: '', do: '', study: '', act: '' }
+                    budgetApproved: 0, budgetUsed: 0, owner: '', subTeamMembers: [], checklist: [],
+                    selectedSdgs: [], pdsa: { plan: '', do: '', study: '', act: '' }
                 },
 
                 init() { this.loadLocalStorage(); },
@@ -602,6 +649,11 @@
 
                 get sortedOwners() {
                     return [...this.owners].sort((a, b) => a.name.localeCompare(b.name, 'th'));
+                },
+
+                get filteredOwnersForSelect() {
+                    if (!this.ownerSearchQuery) return this.sortedOwners;
+                    return this.sortedOwners.filter(o => o.name.toLowerCase().includes(this.ownerSearchQuery.toLowerCase()));
                 },
 
                 getCategoryColor(catName) {
@@ -753,9 +805,10 @@
                     this.currentTask = {
                         id: null, category: this.categories[0]?.name || '', title: '', countWorkload: true,
                         planStart: today, planEnd: today, doStart: today, doEnd: today, summaryStart: today, summaryEnd: today,
-                        budgetApproved: 0, budgetUsed: 0, owner: this.owners[0]?.name || '', subTeam: '', checklist: [],
-                        pdsa: { plan: '', do: '', study: '', act: '' }
+                        budgetApproved: 0, budgetUsed: 0, owner: this.owners[0]?.name || '', subTeamMembers: [], checklist: [],
+                        selectedSdgs: [], pdsa: { plan: '', do: '', study: '', act: '' }
                     };
+                    this.ownerSearchQuery = '';
                     this.isModalOpen = true;
                 },
 
@@ -763,6 +816,9 @@
                     this.currentTask = JSON.parse(JSON.stringify(task));
                     if (!this.currentTask.pdsa) this.currentTask.pdsa = { plan: '', do: '', study: '', act: '' };
                     if (!this.currentTask.checklist) this.currentTask.checklist = [];
+                    if (!this.currentTask.subTeamMembers) this.currentTask.subTeamMembers = [];
+                    if (!this.currentTask.selectedSdgs) this.currentTask.selectedSdgs = [];
+                    this.ownerSearchQuery = '';
                     this.isModalOpen = true;
                 },
 
@@ -797,17 +853,18 @@
                             <tr class="bg-slate-100 text-slate-700">
                                 <th class="border border-slate-300 p-2">ที่</th>
                                 <th class="border border-slate-300 p-2">กลุ่มงาน / ชื่องาน</th>
-                                <th class="border border-slate-300 p-2">ผู้รับผิดชอบ</th>
-                                <th class="border border-slate-300 p-2">ระยะเวลาปฏิบัติ (Do)</th>
+                                <th class="border border-slate-300 p-2">ผู้รับผิดชอบ / คณะทำงาน</th>
+                                <th class="border border-slate-300 p-2">ช่วงเวลาปฏิบัติ (Do)</th>
                                 <th class="border border-slate-300 p-2">งบประมาณใช้จริง</th>
                             </tr>
                         </thead>
                         <tbody>`;
                     filtered.forEach((t, i) => {
+                        let teamStr = (t.subTeamMembers && t.subTeamMembers.length > 0) ? `<br><span class="text-[10px] text-slate-500">ทีม: ${t.subTeamMembers.join(', ')}</span>` : '';
                         html += `<tr>
                             <td class="border border-slate-300 p-2 text-center">${i+1}</td>
                             <td class="border border-slate-300 p-2"><b>[${t.category}]</b> ${t.title}</td>
-                            <td class="border border-slate-300 p-2 text-center">${t.owner || '-'}</td>
+                            <td class="border border-slate-300 p-2">${t.owner || '-'}${teamStr}</td>
                             <td class="border border-slate-300 p-2 text-center">${t.doStart || '-'} ถึง ${t.doEnd || '-'}</td>
                             <td class="border border-slate-300 p-2 text-right">${(t.budgetUsed || 0).toLocaleString()} ฿</td>
                         </tr>`;
@@ -824,7 +881,7 @@
                     let startTermDate = this.workloadTerm === '1' ? `${this.workloadYear}-01-01` : `${this.workloadYear}-07-01`;
                     let endTermDate = this.workloadTerm === '1' ? `${this.workloadYear}-06-30` : `${this.workloadYear}-12-31`;
 
-                    let userTasks = this.tasks.filter(t => t.owner === this.workloadPerson && t.countWorkload);
+                    let userTasks = this.tasks.filter(t => (t.owner === this.workloadPerson || (t.subTeamMembers && t.subTeamMembers.includes(this.workloadPerson))) && t.countWorkload);
                     let totalDays = 0;
 
                     let html = `<div class="mb-4 text-xs space-y-1">
@@ -837,10 +894,10 @@
                             <tr class="bg-slate-100 text-slate-700">
                                 <th class="border border-slate-300 p-2">ลำดับ</th>
                                 <th class="border border-slate-300 p-2">กลุ่มงาน / ชื่องาน</th>
-                                <th class="border border-slate-300 p-2">ระยะเวลาปฏิบัติ (Do)</th>
+                                <th class="border border-slate-300 p-2">ช่วงเวลาปฏิบัติ (Do)</th>
                                 <th class="border border-slate-300 p-2">จำนวนวัน</th>
                                 <th class="border border-slate-300 p-2">บทบาท</th>
-                                <th class="border border-slate-300 p-2">PDSA (S & A)</th>
+                                <th class="border border-slate-300 p-2">SDGs & PDSA (S & A)</th>
                             </tr>
                         </thead>
                         <tbody>`;
@@ -851,13 +908,17 @@
                         let diffDays = Math.max(1, Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1);
                         totalDays += diffDays;
 
+                        let role = t.owner === this.workloadPerson ? 'ผู้รับผิดชอบหลัก' : 'คณะทำงาน/ผู้ร่วมงาน';
+                        let sdgsStr = (t.selectedSdgs && t.selectedSdgs.length > 0) ? t.selectedSdgs.join(', ') : '-';
+
                         html += `<tr>
                             <td class="border border-slate-300 p-2 text-center">${i+1}</td>
                             <td class="border border-slate-300 p-2"><b>[${t.category}]</b> ${t.title}</td>
                             <td class="border border-slate-300 p-2 text-center">${t.doStart || '-'} ถึง ${t.doEnd || '-'}</td>
                             <td class="border border-slate-300 p-2 text-center">${diffDays} วัน</td>
-                            <td class="border border-slate-300 p-2 text-center">ผู้รับผิดชอบหลัก</td>
+                            <td class="border border-slate-300 p-2 text-center">${role}</td>
                             <td class="border border-slate-300 p-2">
+                                <div><b>SDGs:</b> ${sdgsStr}</div>
                                 <div><b>Study (S):</b> ${t.pdsa?.study || '-'}</div>
                                 <div><b>Act (A):</b> ${t.pdsa?.act || '-'}</div>
                             </td>
