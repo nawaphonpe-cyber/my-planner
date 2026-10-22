@@ -31,7 +31,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-full flex flex-col" x-data="plannerApp()">
+<body class="min-h-full flex flex-col" :class="currentUserRole === 'viewer' ? 'bg-emerald-50/40 text-slate-900' : 'bg-slate-50 text-slate-800'" x-data="plannerApp()">
 
     <!-- LOGIN SCREEN -->
     <div x-show="!isLoggedIn" x-cloak class="fixed inset-0 z-50 bg-slate-900/80 flex items-center justify-center p-4">
@@ -45,17 +45,17 @@
                 </div>
                 <button @click="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg text-sm font-semibold cursor-pointer">เข้าสู่ระบบ (เจ้าหน้าที่/แอดมิน)</button>
             </div>
-            <button @click="handleViewerLogin()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-lg text-sm font-semibold cursor-pointer">👀 เข้าชมระบบ (Viewer / ผู้บริหาร)</button>
+            <button @click="handleViewerLogin()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-semibold cursor-pointer">🌿 เข้าชมระบบ (Viewer สีเขียวสดใส)</button>
         </div>
     </div>
 
     <!-- MAIN APP -->
     <div x-show="isLoggedIn" x-cloak class="flex-1 flex flex-col w-full">
-        <header class="bg-indigo-700 text-white shadow-md w-full no-print">
+        <header class="shadow-md w-full no-print transition-colors duration-300" :class="currentUserRole === 'viewer' ? 'bg-emerald-600 text-white' : 'bg-indigo-700 text-white'">
             <div class="w-full px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
                 <div>
                     <h1 class="text-lg sm:text-xl font-bold">ระบบวางแผนการทำงานประจำปี (1 ต.ค. - 30 ก.ย.)</h1>
-                    <p class="text-xs opacity-90" x-text="'ผู้ใช้งาน: ' + currentUserName + ' (' + (currentUserRole === 'admin' ? 'แอดมิน' : currentUserRole === 'editor' ? 'เจ้าหน้าที่' : 'ผู้ชม/ผู้บริหาร') + ')'"></p>
+                    <p class="text-xs opacity-90" x-text="'ผู้ใช้งาน: ' + currentUserName + ' (' + (currentUserRole === 'admin' ? 'แอดมิน' : currentUserRole === 'editor' ? 'เจ้าหน้าที่' : 'ผู้ชม/ผู้บริหาร (โหมดสีเขียวสดใส)') + ')'"></p>
                 </div>
                 <button @click="logout()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-xs cursor-pointer">ออกจากระบบ</button>
             </div>
@@ -64,9 +64,9 @@
         <main class="flex-1 w-full px-3 sm:px-6 py-4 flex flex-col space-y-4">
             <!-- TABS NAVIGATION -->
             <div class="flex border-b border-slate-200 overflow-x-auto gap-2 no-print">
-                <button @click="activeTab = 'calendar'" :class="activeTab === 'calendar' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">ปฏิทินงาน</button>
-                <button @click="activeTab = 'tasks'" :class="activeTab === 'tasks' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">รายการงาน</button>
-                <button @click="activeTab = 'reports'" :class="activeTab === 'reports' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">ออกรายงาน PDF</button>
+                <button @click="activeTab = 'calendar'" :class="activeTab === 'calendar' ? (currentUserRole === 'viewer' ? 'border-emerald-600 text-emerald-700' : 'border-indigo-600 text-indigo-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">ปฏิทินงาน</button>
+                <button @click="activeTab = 'tasks'" :class="activeTab === 'tasks' ? (currentUserRole === 'viewer' ? 'border-emerald-600 text-emerald-700' : 'border-indigo-600 text-indigo-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">รายการงาน</button>
+                <button @click="activeTab = 'reports'" :class="activeTab === 'reports' ? (currentUserRole === 'viewer' ? 'border-emerald-600 text-emerald-700' : 'border-indigo-600 text-indigo-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">ออกรายงาน PDF</button>
                 <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'templates'" :class="activeTab === 'templates' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการเทมเพลตเช็คลิสต์</button>
                 <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'categories'" :class="activeTab === 'categories' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการกลุ่มงาน</button>
                 <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'owners'" :class="activeTab === 'owners' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการบุคลากร</button>
@@ -77,18 +77,33 @@
             <div x-show="activeTab === 'calendar'" class="space-y-4 flex-1 flex flex-col">
                 <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-3">
                     <div class="bg-slate-100 p-1 rounded-lg flex text-xs font-semibold">
-                        <button @click="calendarMode = 'monthly'" :class="calendarMode === 'monthly' ? 'bg-white text-indigo-700 shadow' : 'text-slate-600'" class="px-3 py-1.5 rounded-md cursor-pointer">รายเดือน</button>
-                        <button @click="calendarMode = 'yearly'" :class="calendarMode === 'yearly' ? 'bg-white text-indigo-700 shadow' : 'text-slate-600'" class="px-3 py-1.5 rounded-md cursor-pointer">ภาพรวมปี</button>
+                        <button @click="calendarMode = 'monthly'" :class="calendarMode === 'monthly' ? (currentUserRole === 'viewer' ? 'bg-emerald-600 text-white shadow' : 'bg-white text-indigo-700 shadow') : 'text-slate-600'" class="px-3 py-1.5 rounded-md cursor-pointer">รายเดือน</button>
+                        <button @click="calendarMode = 'yearly'" :class="calendarMode === 'yearly' ? (currentUserRole === 'viewer' ? 'bg-emerald-600 text-white shadow' : 'bg-white text-indigo-700 shadow') : 'text-slate-600'" class="px-3 py-1.5 rounded-md cursor-pointer">ภาพรวมปี</button>
                     </div>
+                    
                     <div class="flex items-center gap-2">
-                        <button @click="prevMonth()" class="bg-slate-100 px-3 py-1.5 rounded-lg text-xs cursor-pointer">&lt; ก่อนหน้า</button>
-                        <h2 class="text-sm sm:text-base font-bold text-indigo-900 w-40 text-center" x-text="currentMonthName"></h2>
-                        <button @click="nextMonth()" class="bg-slate-100 px-3 py-1.5 rounded-lg text-xs cursor-pointer">ถัดไป &gt;</button>
+                        <!-- เลือกปีสำหรับปฏิทินรายปี -->
+                        <div x-show="calendarMode === 'yearly'" class="flex items-center gap-1">
+                            <label class="text-xs font-semibold">เลือกปี พ.ศ.:</label>
+                            <select x-model.number="yearlyViewYear" class="border rounded p-1 text-xs bg-white font-bold">
+                                <template x-for="y in [currentYearNum-1, currentYearNum, currentYearNum+1, currentYearNum+2]" :key="y">
+                                    <option :value="y" x-text="y + 543"></option>
+                                </template>
+                            </select>
+                        </div>
+                        
+                        <!-- ควบคุมเดือนสำหรับปฏิทินรายเดือน -->
+                        <div x-show="calendarMode === 'monthly'" class="flex items-center gap-2">
+                            <button @click="prevMonth()" class="bg-slate-100 px-3 py-1.5 rounded-lg text-xs cursor-pointer">&lt; ก่อนหน้า</button>
+                            <h2 class="text-sm sm:text-base font-bold w-40 text-center" :class="currentUserRole === 'viewer' ? 'text-emerald-900' : 'text-indigo-900'" x-text="currentMonthName"></h2>
+                            <button @click="nextMonth()" class="bg-slate-100 px-3 py-1.5 rounded-lg text-xs cursor-pointer">ถัดไป &gt;</button>
+                        </div>
                     </div>
-                    <button x-show="currentUserRole !== 'viewer'" @click="openTaskModal()" class="bg-indigo-600 text-white px-3.5 py-1.5 rounded-lg text-xs cursor-pointer">+ เพิ่มงาน</button>
+
+                    <button x-show="currentUserRole !== 'viewer'" @click="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-xs cursor-pointer">+ เพิ่มงาน</button>
                 </div>
 
-                <!-- Monthly View (Seamless Bars) -->
+                <!-- Monthly View -->
                 <div x-show="calendarMode === 'monthly'" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col">
                     <div class="grid grid-cols-7 bg-slate-100 border-b text-center text-xs font-bold text-slate-600 py-2">
                         <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
@@ -97,7 +112,7 @@
                         <template x-for="day in calendarDays" :key="day.dateStr || Math.random()">
                             <div class="min-h-[120px] p-1 flex flex-col bg-white justify-between relative" :class="day.isCurrentMonth ? '' : 'bg-slate-50 text-slate-300'">
                                 <div class="flex justify-between items-center">
-                                    <span class="text-xs font-semibold px-1 rounded" :class="day.isToday ? 'bg-indigo-600 text-white' : ''" x-text="day.dayNum"></span>
+                                    <span class="text-xs font-semibold px-1 rounded" :class="day.isToday ? (currentUserRole === 'viewer' ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white') : ''" x-text="day.dayNum"></span>
                                 </div>
                                 <div class="space-y-0 my-1 flex-1 overflow-hidden">
                                     <template x-for="item in getContinuousTasksForDate(day.dateStr)" :key="item.task.id + '-' + item.phase">
@@ -111,16 +126,16 @@
                     </div>
                 </div>
 
-                <!-- Yearly View -->
+                <!-- Yearly View (Selectable Year) -->
                 <div x-show="calendarMode === 'yearly'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <template x-for="(mName, mIdx) in monthNames" :key="mIdx">
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 space-y-2">
-                            <h3 class="font-bold text-indigo-900 text-center text-sm border-b pb-1" x-text="mName + ' ' + (currentYearNum + 543)"></h3>
+                            <h3 class="font-bold text-center text-sm border-b pb-1" :class="currentUserRole === 'viewer' ? 'text-emerald-900' : 'text-indigo-900'" x-text="mName + ' ' + (yearlyViewYear + 543)"></h3>
                             <div class="grid grid-cols-7 text-center text-[10px] font-bold text-slate-400">
                                 <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
                             </div>
                             <div class="grid grid-cols-7 gap-1 text-center text-xs">
-                                <template x-for="dCell in buildYearlyMonthGridCorrect(currentYearNum, mIdx)" :key="dCell.dateStr || Math.random()">
+                                <template x-for="dCell in buildYearlyMonthGridCorrect(yearlyViewYear, mIdx)" :key="dCell.dateStr || Math.random()">
                                     <div class="py-1 rounded font-semibold flex flex-col items-center justify-center relative cursor-pointer transition-transform hover:scale-110"
                                          @click="dCell.isWorkDay ? openDayDetails(dCell.dateStr) : null"
                                          :style="dCell.isWorkDay ? `background: ${dCell.bgStyle}; color: white;` : (dCell.dayNum ? 'background-color: transparent; color: #cbd5e1;' : 'visibility: hidden;') "
@@ -134,10 +149,10 @@
                 </div>
             </div>
 
-            <!-- TAB 2: TASKS -->
+            <!-- TAB 2: TASKS (Flexible Status Tabs & Batch Duplicate) -->
             <div x-show="activeTab === 'tasks'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
                 <div class="flex justify-between items-center border-b pb-3 flex-wrap gap-2">
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 flex-wrap">
                         <h2 class="font-bold text-sm text-slate-700">รายการงานทั้งหมด</h2>
                         <select x-model="selectedCategoryFilter" class="border rounded p-1.5 text-xs bg-white font-semibold">
                             <option value="">-- ทุกกลุ่มงานหลัก --</option>
@@ -146,23 +161,40 @@
                             </template>
                         </select>
                     </div>
-                    <button x-show="currentUserRole !== 'viewer'" @click="openTaskModal()" class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs cursor-pointer">+ เพิ่มงานใหม่</button>
+                    <div class="flex gap-2">
+                        <button x-show="selectedTaskIds.length > 0 && currentUserRole !== 'viewer'" @click="batchDuplicateTasks()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs cursor-pointer">📋 คัดลอกงานที่เลือกไปปีถัดไป (<span x-text="selectedTaskIds.length"></span>)</button>
+                        <button x-show="currentUserRole !== 'viewer'" @click="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs cursor-pointer">+ เพิ่มงานใหม่</button>
+                    </div>
                 </div>
+
+                <!-- Status Filter Sub-Tabs -->
+                <div class="flex gap-2 border-b pb-2 text-xs font-semibold">
+                    <button @click="taskStatusTab = 'all'" :class="taskStatusTab === 'all' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">ทั้งหมด (<span x-text="tasks.length"></span>)</button>
+                    <button @click="taskStatusTab = 'pending'" :class="taskStatusTab === 'pending' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">รอดำเนินการ</button>
+                    <button @click="taskStatusTab = 'doing'" :class="taskStatusTab === 'doing' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">กำลังทำ</button>
+                    <button @click="taskStatusTab = 'completed'" :class="taskStatusTab === 'completed' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">เสร็จสิ้นแล้ว</button>
+                    <button @click="taskStatusTab = 'overdue'" :class="taskStatusTab === 'overdue' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">เลยกำหนด</button>
+                </div>
+
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
                             <tr class="bg-slate-100 text-slate-700 border-b">
-                                <th class="p-3">สถานะ</th>
+                                <th class="p-3 w-8 text-center"><input type="checkbox" @click="toggleSelectAllTasks($event)" class="rounded text-indigo-600"></th>
+                                <th class="p-3">สถานะงาน</th>
                                 <th class="p-3">กลุ่มงาน / ชื่องาน</th>
                                 <th class="p-3">ผู้รับผิดชอบ</th>
                                 <th class="p-3">ช่วงปฏิบัติ (Do)</th>
                                 <th class="p-3 text-center">งบประมาณ (อนุมัติ/ใช้จริง)</th>
-                                <th class="p-3 text-center">จัดการ</th>
+                                <th class="p-3 text-center">จัดการสถานะ / จัดการ</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            <template x-for="task in filteredTasks" :key="task.id">
+                            <template x-for="task in filteredTasksByStatus" :key="task.id">
                                 <tr class="hover:bg-slate-50">
+                                    <td class="p-3 text-center">
+                                        <input type="checkbox" :value="task.id" x-model="selectedTaskIds" class="rounded text-indigo-600">
+                                    </td>
                                     <td class="p-3 whitespace-nowrap">
                                         <span class="px-2 py-1 rounded text-[10px] font-bold" :class="getTaskStatus(task).class" x-text="getTaskStatus(task).text"></span>
                                     </td>
@@ -177,8 +209,9 @@
                                         <span class="text-indigo-600 font-bold" x-text="(task.budgetUsed || 0).toLocaleString() + ' ฿'"></span>
                                     </td>
                                     <td class="p-3 text-center space-x-1 whitespace-nowrap">
+                                        <button x-show="currentUserRole !== 'viewer'" @click="toggleTaskCompleted(task)" class="px-2 py-1 border rounded text-[10px] font-semibold" :class="task.isCompleted ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-slate-50 text-slate-700'" x-text="task.isCompleted ? '✓ เสร็จแล้ว' : 'Mark เสร็จ'"></button>
                                         <button @click="editTask(task)" class="px-2.5 py-1 border rounded text-indigo-600 hover:bg-indigo-50 cursor-pointer" x-text="currentUserRole !== 'viewer' ? 'แก้ไข' : 'ดูข้อมูล'"></button>
-                                        <button x-show="currentUserRole !== 'viewer'" @click="duplicateTask(task)" class="px-2.5 py-1 border rounded text-emerald-600 hover:bg-emerald-50 cursor-pointer" title="คัดลอกงานไปปีถัดไป">📋 คัดลอก</button>
+                                        <button x-show="currentUserRole !== 'viewer'" @click="duplicateTask(task)" class="px-2.5 py-1 border rounded text-emerald-600 hover:bg-emerald-50 cursor-pointer">📋</button>
                                         <button x-show="currentUserRole !== 'viewer'" @click="deleteTask(task.id)" class="px-2.5 py-1 border rounded text-rose-600 hover:bg-rose-50 cursor-pointer">ลบ</button>
                                     </td>
                                 </tr>
@@ -188,7 +221,7 @@
                 </div>
             </div>
 
-            <!-- TAB 3: REPORTS -->
+            <!-- TAB 3: REPORTS (Detailed General Summary with Budget, SDGs, PDSA) -->
             <div x-show="activeTab === 'reports'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
                 <div>
                     <h2 class="text-base font-bold text-indigo-900">🖨️ ระบบออกรายงานทางการ (แนวนอน / พิมพ์)</h2>
@@ -196,9 +229,9 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Report 1: General Summary -->
+                    <!-- Report 1: General Summary with Budget, SDGs, PDSA -->
                     <div class="bg-slate-50 border p-4 rounded-xl space-y-3">
-                        <h3 class="font-bold text-sm text-indigo-900">1. รายงานสรุปภาพรวมโครงการ / กิจกรรม</h3>
+                        <h3 class="font-bold text-sm text-indigo-900">1. รายงานสรุปภาพรวมโครงการ (งบประมาณ, SDGs, PDSA)</h3>
                         <div class="space-y-2 text-xs">
                             <div>
                                 <label class="block font-semibold mb-1">เลือกกลุ่มงาน</label>
@@ -220,7 +253,7 @@
                                 </div>
                             </div>
                         </div>
-                        <button @click="generateGeneralReport()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded text-xs font-semibold cursor-pointer">ออกรายงานสรุปภาพรวม</button>
+                        <button @click="generateGeneralReport()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded text-xs font-semibold cursor-pointer">ออกรายงานสรุปภาพรวมโครงการ</button>
                     </div>
 
                     <!-- Report 2: Individual Workload -->
@@ -598,6 +631,8 @@
                 calendarMode: 'monthly',
                 isModalOpen: false,
                 selectedCategoryFilter: '',
+                taskStatusTab: 'all',
+                selectedTaskIds: [],
                 ownerSearchQuery: '',
                 ownerSearchInput: '',
                 tasks: [],
@@ -632,9 +667,9 @@
                 dayDetailModal: { open: false, dateStr: '', tasks: [] },
                 currentYearNum: new Date().getFullYear(),
                 currentMonthIndex: new Date().getMonth(),
+                yearlyViewYear: new Date().getFullYear(),
                 monthNames: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'],
 
-                // SDGs ครบถ้วน 17 เป้าหมายหลักและเป้าประสงค์ย่อย (Targets)
                 sdgFullData: [
                     { goalNum: 1, goalTitle: 'ขจัดความยากจนทุกรูปแบบในทุกที่', targets: [{ code: '1.1', title: 'ขจัดความยากจนรุนแรงต่ำกว่า $1.25 ต่อวัน' }, { code: '1.2', title: 'ลดสัดส่วนคนจนทุกมิติลงครึ่งหนึ่ง' }, { code: '1.3', title: 'ดำเนินมาตรการคุ้มครองทางสังคมที่เหมาะสม' }, { code: '1.4', title: 'สิทธิเท่าเทียมในการเข้าถึงทรัพยากรพื้นฐาน' }] },
                     { goalNum: 2, goalTitle: 'ยุติความหิวโหย บรรลุความมั่นคงทางอาหาร', targets: [{ code: '2.1', title: 'เข้าถึงอาหารปลอดภัยและมีโภชนาการตลอดปี' }, { code: '2.2', title: 'ยุติทุพโภชนาการทุกรูปแบบในเด็ก' }, { code: '2.3', title: 'เพิ่มผลิตภาพทางการเกษตรของเกษตรกรรายย่อย' }] },
@@ -659,7 +694,7 @@
                     id: null, category: '', title: '', countWorkload: true,
                     planStart: '', planEnd: '', doStart: '', doEnd: '', summaryStart: '', summaryEnd: '',
                     budgetApproved: 0, budgetUsed: 0, owner: '', subTeamMembers: [], checklist: [],
-                    useSdgs: false, selectedSdgs: [], pdsa: { plan: '', do: '', study: '', act: '' }
+                    useSdgs: false, selectedSdgs: [], isCompleted: false, pdsa: { plan: '', do: '', study: '', act: '' }
                 },
 
                 init() { this.loadLocalStorage(); },
@@ -944,10 +979,63 @@
                 getTaskStatus(task) {
                     let today = new Date().toISOString().split('T')[0];
                     let endDo = task.doEnd || task.planEnd;
+                    if (task.isCompleted) return { text: '✓ เสร็จสิ้นแล้ว', class: 'bg-emerald-100 text-emerald-800 font-bold' };
                     if (!endDo) return { text: 'กำลังดำเนินการ', class: 'bg-blue-100 text-blue-800' };
                     if (today > endDo) return { text: '⚠️ เลยกำหนด', class: 'bg-rose-100 text-rose-700 blink-alert font-bold' };
                     if (today >= (task.doStart || task.planStart)) return { text: '⚡ กำลังทำ', class: 'bg-amber-100 text-amber-800' };
                     return { text: '🕒 รอดำเนินการ', class: 'bg-slate-100 text-slate-700' };
+                },
+
+                get filteredTasksByStatus() {
+                    let list = this.filteredTasks;
+                    let today = new Date().toISOString().split('T')[0];
+                    if (this.taskStatusTab === 'pending') {
+                        return list.filter(t => !t.isCompleted && today < (t.doStart || t.planStart));
+                    } else if (this.taskStatusTab === 'doing') {
+                        return list.filter(t => !t.isCompleted && today >= (t.doStart || t.planStart) && today <= (t.doEnd || t.planEnd));
+                    } else if (this.taskStatusTab === 'completed') {
+                        return list.filter(t => t.isCompleted);
+                    } else if (this.taskStatusTab === 'overdue') {
+                        return list.filter(t => !t.isCompleted && today > (t.doEnd || t.planEnd));
+                    }
+                    return list;
+                },
+
+                toggleTaskCompleted(task) {
+                    task.isCompleted = !task.isCompleted;
+                    this.saveLocalStorage();
+                },
+
+                toggleSelectAllTasks(event) {
+                    if (event.target.checked) {
+                        this.selectedTaskIds = this.filteredTasksByStatus.map(t => t.id);
+                    } else {
+                        this.selectedTaskIds = [];
+                    }
+                },
+
+                batchDuplicateTasks() {
+                    if (this.selectedTaskIds.length === 0) return;
+                    this.selectedTaskIds.forEach(id => {
+                        let original = this.tasks.find(t => t.id === id);
+                        if (original) {
+                            let copy = JSON.parse(JSON.stringify(original));
+                            copy.id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+                            copy.title = copy.title + ' (สำเนาปีถัดไป)';
+                            copy.isCompleted = false;
+                            ['planStart', 'planEnd', 'doStart', 'doEnd', 'summaryStart', 'summaryEnd'].forEach(field => {
+                                if (copy[field]) {
+                                    let parts = copy[field].split('-');
+                                    parts[0] = String(parseInt(parts[0]) + 1);
+                                    copy[field] = parts.join('-');
+                                }
+                            });
+                            this.tasks.push(copy);
+                        }
+                    });
+                    this.saveLocalStorage();
+                    this.selectedTaskIds = [];
+                    alert('คัดลอกงานที่เลือกไปยังปีถัดไปสำเร็จเรียบร้อยแล้ว');
                 },
 
                 openTaskModal() {
@@ -956,7 +1044,7 @@
                         id: null, category: this.categories[0]?.name || '', title: '', countWorkload: true,
                         planStart: today, planEnd: today, doStart: today, doEnd: today, summaryStart: today, summaryEnd: today,
                         budgetApproved: 0, budgetUsed: 0, owner: this.owners[0]?.name || '', subTeamMembers: [], checklist: [],
-                        useSdgs: false, selectedSdgs: [], pdsa: { plan: '', do: '', study: '', act: '' }
+                        useSdgs: false, selectedSdgs: [], isCompleted: false, pdsa: { plan: '', do: '', study: '', act: '' }
                     };
                     this.ownerSearchQuery = '';
                     this.ownerSearchInput = '';
@@ -979,8 +1067,7 @@
                     let copy = JSON.parse(JSON.stringify(task));
                     copy.id = Date.now().toString();
                     copy.title = copy.title + ' (สำเนาปีถัดไป)';
-                    
-                    // เลื่อนปี พ.ศ. ไป 1 ปีอัตโนมัติ
+                    copy.isCompleted = false;
                     ['planStart', 'planEnd', 'doStart', 'doEnd', 'summaryStart', 'summaryEnd'].forEach(field => {
                         if (copy[field]) {
                             let parts = copy[field].split('-');
@@ -988,7 +1075,6 @@
                             copy[field] = parts.join('-');
                         }
                     });
-
                     this.tasks.push(copy);
                     this.saveLocalStorage();
                     alert('คัดลอกงานไปยังปีถัดไปสำเร็จเรียบร้อยแล้ว');
@@ -1034,24 +1120,27 @@
                             <tr class="bg-slate-100 text-slate-700">
                                 <th class="border border-slate-300 p-2">ที่</th>
                                 <th class="border border-slate-300 p-2">กลุ่มงาน / ชื่องาน</th>
-                                <th class="border border-slate-300 p-2">ผู้รับผิดชอบ / คณะทำงาน</th>
-                                <th class="border border-slate-300 p-2">ช่วงเวลาปฏิบัติ (Do)</th>
-                                <th class="border border-slate-300 p-2">งบประมาณใช้จริง</th>
+                                <th class="border border-slate-300 p-2">งบประมาณ (อนุมัติ / ใช้จริง)</th>
+                                <th class="border border-slate-300 p-2">SDGs ที่เกี่ยวข้อง</th>
+                                <th class="border border-slate-300 p-2">วงจร PDSA</th>
                             </tr>
                         </thead>
                         <tbody>`;
                     filtered.forEach((t, i) => {
-                        let teamStr = (t.subTeamMembers && t.subTeamMembers.length > 0) ? `<br><span class="text-[10px] text-slate-500">ทีม: ${t.subTeamMembers.join(', ')}</span>` : '';
+                        let budgetStr = `${(t.budgetApproved || 0).toLocaleString()} ฿ / ${(t.budgetUsed || 0).toLocaleString()} ฿`;
+                        let sdgsStr = (t.selectedSdgs && t.selectedSdgs.length > 0) ? t.selectedSdgs.join(', ') : '-';
+                        let pdsaStr = `P: ${t.pdsa?.plan || '-'}<br>D: ${t.pdsa?.do || '-'}<br>S: ${t.pdsa?.study || '-'}<br>A: ${t.pdsa?.act || '-'}`;
+
                         html += `<tr>
                             <td class="border border-slate-300 p-2 text-center">${i+1}</td>
-                            <td class="border border-slate-300 p-2"><b>[${t.category}]</b> ${t.title}</td>
-                            <td class="border border-slate-300 p-2">${t.owner || '-'}${teamStr}</td>
-                            <td class="border border-slate-300 p-2 text-center">${t.doStart || '-'} ถึง ${t.doEnd || '-'}</td>
-                            <td class="border border-slate-300 p-2 text-right">${(t.budgetUsed || 0).toLocaleString()} ฿</td>
+                            <td class="border border-slate-300 p-2"><b>[${t.category}]</b> ${t.title}<br><span class="text-[10px] text-slate-500">ผู้รับผิดชอบ: ${t.owner || '-'}</span></td>
+                            <td class="border border-slate-300 p-2 text-center">${budgetStr}</td>
+                            <td class="border border-slate-300 p-2">${sdgsStr}</td>
+                            <td class="border border-slate-300 p-2">${pdsaStr}</td>
                         </tr>`;
                     });
                     html += `</tbody></table>`;
-                    this.printModal = { open: true, title: 'รายงานสรุปภาพรวมโครงการและกิจกรรมประจำปี', subtitle: 'กลุ่มงาน: ' + (this.reportCategory || 'ทุกกลุ่มงานทั้งหมด'), htmlContent: html, reporterName: this.currentUserName };
+                    this.printModal = { open: true, title: 'รายงานสรุปภาพรวมโครงการ (งบประมาณ, SDGs, PDSA)', subtitle: 'กลุ่มงาน: ' + (this.reportCategory || 'ทุกกลุ่มงานทั้งหมด'), htmlContent: html, reporterName: this.currentUserName };
                 },
 
                 generateWorkloadReport() {
@@ -1062,7 +1151,6 @@
                     let startTermDate = this.workloadTerm === '1' ? `${this.workloadYear}-01-01` : `${this.workloadYear}-07-01`;
                     let endTermDate = this.workloadTerm === '1' ? `${this.workloadYear}-06-30` : `${this.workloadYear}-12-31`;
 
-                    // กรองเฉพาะงานที่มีช่วงปฏิบัติ (Do) อยู่ในช่วงรอบประเมินที่เลือกเท่านั้น
                     let userTasks = this.tasks.filter(t => {
                         let isOwnerOrTeam = (t.owner === this.workloadPerson || (t.subTeamMembers && t.subTeamMembers.includes(this.workloadPerson)));
                         let hasWorkload = t.countWorkload;
