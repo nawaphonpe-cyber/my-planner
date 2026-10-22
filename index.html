@@ -103,7 +103,7 @@
                     <button x-show="currentUserRole !== 'viewer'" @click="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-xs cursor-pointer">+ เพิ่มงาน</button>
                 </div>
 
-                <!-- Monthly View (With Checklist Count Badges) -->
+                <!-- Monthly View -->
                 <div x-show="calendarMode === 'monthly'" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col">
                     <div class="grid grid-cols-7 bg-slate-100 border-b text-center text-xs font-bold text-slate-600 py-2">
                         <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
@@ -113,7 +113,7 @@
                             <div class="min-h-[120px] p-1 flex flex-col bg-white justify-between relative" :class="day.isCurrentMonth ? '' : 'bg-slate-50 text-slate-300'">
                                 <div class="flex justify-between items-center">
                                     <span class="text-xs font-semibold px-1 rounded" :class="day.isToday ? (currentUserRole === 'viewer' ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white') : ''" x-text="day.dayNum"></span>
-                                    <!-- ป้ายสัญลักษณ์จำนวนเช็คลิสต์ -->
+                                    <!-- ป้ายสัญลักษณ์จำนวนเช็คลิสต์ (คลิกเพื่อดูและติ๊กได้ทันที) -->
                                     <template x-if="day.dateStr && getDayChecklistSummary(day.dateStr).total > 0">
                                         <span @click="openDayDetails(day.dateStr)" 
                                               class="text-[9px] px-1.5 py-0.5 rounded-full font-bold text-white cursor-pointer shadow-xs"
@@ -157,7 +157,7 @@
                 </div>
             </div>
 
-            <!-- TAB 2: TASKS (Sorted by Overdue first, then Current, then Future) -->
+            <!-- TAB 2: TASKS -->
             <div x-show="activeTab === 'tasks'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
                 <div class="flex justify-between items-center border-b pb-3 flex-wrap gap-2">
                     <div class="flex items-center gap-3 flex-wrap">
@@ -170,8 +170,8 @@
                         </select>
                     </div>
                     <div class="flex gap-2">
-                        <button x-show="selectedTaskIds.length > 0 && currentUserRole !== 'viewer'" @click="batchDuplicateTasks()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs cursor-pointer">📋 คัดลอกงานที่เลือกไปปีถัดไป (<span x-text="selectedTaskIds.length"></span>)</button>
-                        <button x-show="currentUserRole !== 'viewer'" @click="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs cursor-pointer">+ เพิ่มงานใหม่</button>
+                        <button x-show="selectedTaskIds.length > 0 && currentUserRole !== 'viewer'" @click="openDuplicateModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs cursor-pointer">📋 คัดลอกงานที่เลือกไปยังปี... (<span x-text="selectedTaskIds.length"></span>)</button>
+                        <button x-show="currentUserRole !== 'viewer'" @click="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-xs cursor-pointer">+ เพิ่มงานใหม่</button>
                     </div>
                 </div>
 
@@ -190,7 +190,7 @@
                             <tr class="bg-slate-100 text-slate-700 border-b">
                                 <th class="p-3 w-8 text-center"><input type="checkbox" @click="toggleSelectAllTasks($event)" class="rounded text-indigo-600"></th>
                                 <th class="p-3">สถานะงาน</th>
-                                <th class="p-3">กลุ่มงาน / ชื่องาน</th>
+                                <th class="p-3">กลุ่มงาน / ชื่องาน / หลักฐาน</th>
                                 <th class="p-3">ผู้รับผิดชอบ</th>
                                 <th class="p-3">ช่วงปฏิบัติ (Do)</th>
                                 <th class="p-3 text-center">งบประมาณ (อนุมัติ/ใช้จริง)</th>
@@ -209,6 +209,9 @@
                                     <td class="p-3">
                                         <span class="text-[10px] px-1.5 py-0.5 rounded text-white font-semibold inline-block mb-0.5" :style="'background-color: ' + getCategoryColor(task.category)" x-text="task.category"></span>
                                         <p class="font-bold text-slate-900 text-sm" x-text="task.title"></p>
+                                        <template x-if="task.evidenceUrl">
+                                            <a :href="task.evidenceUrl" target="_blank" class="text-[11px] text-indigo-600 underline hover:text-indigo-800 inline-block mt-0.5">🔗 ลิงก์หลักฐานแนบ</a>
+                                        </template>
                                     </td>
                                     <td class="p-3" x-text="task.owner || '-'"></td>
                                     <td class="p-3 text-slate-600" x-text="(task.doStart || '-') + ' ถึง ' + (task.doEnd || '-')"></td>
@@ -219,7 +222,7 @@
                                     <td class="p-3 text-center space-x-1 whitespace-nowrap">
                                         <button x-show="currentUserRole !== 'viewer'" @click="toggleTaskCompleted(task)" class="px-2 py-1 border rounded text-[10px] font-semibold" :class="task.isCompleted ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-slate-50 text-slate-700'" x-text="task.isCompleted ? '✓ เสร็จแล้ว' : 'Mark เสร็จ'"></button>
                                         <button @click="editTask(task)" class="px-2.5 py-1 border rounded text-indigo-600 hover:bg-indigo-50 cursor-pointer" x-text="currentUserRole !== 'viewer' ? 'แก้ไข' : 'ดูข้อมูล'"></button>
-                                        <button x-show="currentUserRole !== 'viewer'" @click="duplicateTask(task)" class="px-2.5 py-1 border rounded text-emerald-600 hover:bg-emerald-50 cursor-pointer">📋</button>
+                                        <button x-show="currentUserRole !== 'viewer'" @click="openDuplicateSingleModal(task)" class="px-2.5 py-1 border rounded text-emerald-600 hover:bg-emerald-50 cursor-pointer">📋</button>
                                         <button x-show="currentUserRole !== 'viewer'" @click="deleteTask(task.id)" class="px-2.5 py-1 border rounded text-rose-600 hover:bg-rose-50 cursor-pointer">ลบ</button>
                                     </td>
                                 </tr>
@@ -237,7 +240,6 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Report 1: General Summary with Budget, SDGs, PDSA -->
                     <div class="bg-slate-50 border p-4 rounded-xl space-y-3">
                         <h3 class="font-bold text-sm text-indigo-900">1. รายงานสรุปภาพรวมโครงการ (งบประมาณ, SDGs, PDSA)</h3>
                         <div class="space-y-2 text-xs">
@@ -264,7 +266,6 @@
                         <button @click="generateGeneralReport()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded text-xs font-semibold cursor-pointer">ออกรายงานสรุปภาพรวมโครงการ</button>
                     </div>
 
-                    <!-- Report 2: Individual Workload with Owner Name -->
                     <div class="bg-indigo-50/60 border border-indigo-200 p-4 rounded-xl space-y-3">
                         <h3 class="font-bold text-sm text-indigo-900">2. รายงานภาระงานรายบุคคล</h3>
                         <div class="space-y-2 text-xs">
@@ -430,6 +431,12 @@
                     </div>
                 </div>
 
+                <!-- ลิงก์หลักฐานแนบ -->
+                <div>
+                    <label class="block font-semibold mb-1 text-indigo-900">ลิงก์หลักฐานแนบ (เช่น Google Drive, ไฟล์ PDF, รูปภาพ)</label>
+                    <input type="url" x-model="currentTask.evidenceUrl" :disabled="currentUserRole === 'viewer'" placeholder="https://..." class="w-full border rounded p-2 bg-white">
+                </div>
+
                 <div class="bg-amber-100 border-2 border-amber-300 p-3 rounded-xl flex items-center justify-between">
                     <div>
                         <span class="font-bold text-amber-900">📊 นับภาระงาน</span>
@@ -577,7 +584,7 @@
         </div>
     </div>
 
-    <!-- DAY DETAILS MODAL -->
+    <!-- DAY DETAILS & CHECKLIST TICK MODAL -->
     <div x-show="dayDetailModal.open" x-cloak class="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-3 z-50">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4" @click.stop>
             <h3 class="text-base font-bold text-indigo-900 border-b pb-2" x-text="'รายละเอียดในวันที่: ' + dayDetailModal.dateStr"></h3>
@@ -589,19 +596,48 @@
                         <p class="text-xs text-slate-500" x-text="'ผู้รับผิดชอบ: ' + (task.owner || '-')"></p>
                     </div>
                 </template>
-                <!-- เช็คลิสต์ประจำวัน -->
+
+                <!-- ติ๊กเช็คลิสต์บนปฏิทินได้ทันที พร้อมแบ่งประเภท -->
                 <div class="pt-2 border-t" x-show="dayDetailModal.checklists && dayDetailModal.checklists.length > 0">
-                    <h4 class="font-bold text-xs text-indigo-900 mb-1">📌 เช็คลิสต์ประจำวันนี้:</h4>
-                    <template x-for="chk in dayDetailModal.checklists" :key="chk.text">
-                        <div class="text-xs flex items-center gap-2 py-0.5">
-                            <input type="checkbox" :checked="chk.done" disabled class="rounded text-indigo-600">
-                            <span :class="chk.done ? 'line-through text-slate-400' : 'text-slate-800'" x-text="chk.text"></span>
-                        </div>
-                    </template>
+                    <h4 class="font-bold text-xs text-indigo-900 mb-2">📌 เช็คลิสต์ประจำวัน (สามารถติ๊กทำเครื่องหมายได้ทันที):</h4>
+                    <div class="space-y-2">
+                        <template x-for="item in dayDetailModal.checklists" :key="item.chkIndex">
+                            <div class="text-xs flex items-center justify-between bg-slate-50 p-2 rounded border">
+                                <label class="flex items-center gap-2 cursor-pointer flex-1">
+                                    <input type="checkbox" x-model="item.chk.done" @change="saveLocalStorage()" :disabled="currentUserRole === 'viewer'" class="rounded text-indigo-600 w-4 h-4">
+                                    <div>
+                                        <span class="text-[10px] px-1 py-0.5 rounded font-bold mr-1" :class="item.chk.phase === 'plan' ? 'bg-purple-100 text-purple-800' : (item.chk.phase === 'do' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800')" x-text="item.chk.phase === 'plan' ? 'วางแผน' : (item.chk.phase === 'do' ? 'ทำงาน' : 'สรุป')"></span>
+                                        <span :class="item.chk.done ? 'line-through text-slate-400 font-medium' : 'text-slate-800 font-semibold'" x-text="item.chk.text"></span>
+                                    </div>
+                                </label>
+                                <span class="text-[10px] text-slate-400" x-text="'จากงาน: ' + item.taskTitle"></span>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
             <div class="flex justify-end pt-2 border-t">
                 <button @click="dayDetailModal.open = false" class="px-4 py-2 bg-slate-200 rounded-lg text-xs cursor-pointer">ปิด</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DUPLICATE TARGET YEAR MODAL -->
+    <div x-show="duplicateModal.open" x-cloak class="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-3 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4" @click.stop>
+            <h3 class="text-base font-bold text-indigo-900 border-b pb-2">📋 เลือกปี พ.ศ. ปลายทางที่ต้องการคัดลอก</h3>
+            <div class="space-y-3 text-xs">
+                <label class="block font-semibold">เลือกปี พ.ศ. ใหม่:</label>
+                <select x-model.number="duplicateModal.targetYear" class="w-full border rounded p-2 bg-white font-bold">
+                    <template x-for="y in [currentYearNum, currentYearNum+1, currentYearNum+2, currentYearNum+3]" :key="y">
+                        <option :value="y" x-text="'พ.ศ. ' + (y + 543)"></option>
+                    </template>
+                </select>
+                <p class="text-[11px] text-slate-500">ระบบจะทำการเลื่อนปีศักราชของวันที่ในงานที่เลือกไปยังปี พ.ศ. ที่ท่านกำหนดให้อัตโนมัติ</p>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t">
+                <button @click="duplicateModal.open = false" class="px-4 py-2 bg-slate-200 rounded-lg text-xs cursor-pointer">ยกเลิก</button>
+                <button @click="confirmBatchDuplicate()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold cursor-pointer">ยืนยันคัดลอก</button>
             </div>
         </div>
     </div>
@@ -683,6 +719,7 @@
                 workloadTerm: '1',
                 printModal: { open: false, title: '', subtitle: '', htmlContent: '', reporterName: '' },
                 dayDetailModal: { open: false, dateStr: '', tasks: [], checklists: [] },
+                duplicateModal: { open: false, targetYear: new Date().getFullYear(), singleTask: null },
                 currentYearNum: new Date().getFullYear(),
                 currentMonthIndex: new Date().getMonth(),
                 yearlyViewYear: new Date().getFullYear(),
@@ -712,7 +749,7 @@
                     id: null, category: '', title: '', countWorkload: true,
                     planStart: '', planEnd: '', doStart: '', doEnd: '', summaryStart: '', summaryEnd: '',
                     budgetApproved: 0, budgetUsed: 0, owner: '', subTeamMembers: [], checklist: [],
-                    useSdgs: false, selectedSdgs: [], isCompleted: false, pdsa: { plan: '', do: '', study: '', act: '' }
+                    evidenceUrl: '', useSdgs: false, selectedSdgs: [], isCompleted: false, pdsa: { plan: '', do: '', study: '', act: '' }
                 },
 
                 init() { this.loadLocalStorage(); },
@@ -1004,8 +1041,10 @@
                     let matchedChecklists = [];
                     this.tasks.forEach(t => {
                         if (t.checklist) {
-                            t.checklist.forEach(chk => {
-                                if (chk.date === dateStr) matchedChecklists.push(chk);
+                            t.checklist.forEach((chk, idx) => {
+                                if (chk.date === dateStr) {
+                                    matchedChecklists.push({ chk, taskTitle: t.title, taskId: t.id, chkIndex: idx });
+                                }
                             });
                         }
                     });
@@ -1019,15 +1058,16 @@
 
                 getTaskStatus(task) {
                     let today = new Date().toISOString().split('T')[0];
+                    let startDo = task.doStart || task.planStart;
                     let endDo = task.doEnd || task.planEnd;
                     if (task.isCompleted) return { text: '✓ เสร็จสิ้นแล้ว', class: 'bg-emerald-100 text-emerald-800 font-bold' };
-                    if (!endDo) return { text: 'กำลังดำเนินการ', class: 'bg-blue-100 text-blue-800' };
+                    if (!endDo) return { text: 'รอดำเนินการ', class: 'bg-slate-100 text-slate-700' };
                     if (today > endDo) return { text: '⚠️ เลยกำหนด', class: 'bg-rose-100 text-rose-700 blink-alert font-bold' };
-                    if (today >= (task.doStart || task.planStart)) return { text: '⚡ กำลังทำ', class: 'bg-amber-100 text-amber-800' };
-                    return { text: '🕒 รอดำเนินการ', class: 'bg-slate-100 text-slate-700' };
+                    if (today >= startDo && today <= endDo) return { text: '⚡ กำลังทำ', class: 'bg-amber-100 text-amber-800' };
+                    if (today < startDo) return { text: '🕒 รอดำเนินการ', class: 'bg-slate-100 text-slate-700' };
+                    return { text: 'กำลังดำเนินการ', class: 'bg-blue-100 text-blue-800' };
                 },
 
-                // จัดเรียงรายการงาน: เลยกำหนดมาด้านบนสุด ตามด้วยปัจจุบัน และงานในอนาคต
                 get sortedTasksByPriority() {
                     let list = this.filteredTasks;
                     let today = new Date().toISOString().split('T')[0];
@@ -1064,28 +1104,57 @@
                     }
                 },
 
-                batchDuplicateTasks() {
+                openDuplicateModal() {
                     if (this.selectedTaskIds.length === 0) return;
-                    this.selectedTaskIds.forEach(id => {
-                        let original = this.tasks.find(t => t.id === id);
-                        if (original) {
-                            let copy = JSON.parse(JSON.stringify(original));
-                            copy.id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
-                            copy.title = copy.title + ' (สำเนาปีถัดไป)';
-                            copy.isCompleted = false;
-                            ['planStart', 'planEnd', 'doStart', 'doEnd', 'summaryStart', 'summaryEnd'].forEach(field => {
-                                if (copy[field]) {
-                                    let parts = copy[field].split('-');
-                                    parts[0] = String(parseInt(parts[0]) + 1);
-                                    copy[field] = parts.join('-');
+                    this.duplicateModal = { open: true, targetYear: this.currentYearNum + 1, singleTask: null };
+                },
+
+                openDuplicateSingleModal(task) {
+                    this.duplicateModal = { open: true, targetYear: this.currentYearNum + 1, singleTask: task };
+                },
+
+                confirmBatchDuplicate() {
+                    let targetY = this.duplicateModal.targetYear;
+                    let tasksToCopy = [];
+
+                    if (this.duplicateModal.singleTask) {
+                        tasksToCopy = [this.duplicateModal.singleTask];
+                    } else {
+                        tasksToCopy = this.tasks.filter(t => this.selectedTaskIds.includes(t.id));
+                    }
+
+                    tasksToCopy.forEach(original => {
+                        let copy = JSON.parse(JSON.stringify(original));
+                        copy.id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+                        copy.title = copy.title + ` (พ.ศ. ${targetY + 543})`;
+                        copy.isCompleted = false;
+
+                        // คํานวณเลื่อนปีไปยังเป้าหมาย
+                        ['planStart', 'planEnd', 'doStart', 'doEnd', 'summaryStart', 'summaryEnd'].forEach(field => {
+                            if (copy[field]) {
+                                let parts = copy[field].split('-');
+                                parts[0] = String(targetY);
+                                copy[field] = parts.join('-');
+                            }
+                        });
+
+                        if (copy.checklist) {
+                            copy.checklist.forEach(chk => {
+                                if (chk.date) {
+                                    let parts = chk.date.split('-');
+                                    parts[0] = String(targetY);
+                                    chk.date = parts.join('-');
                                 }
                             });
-                            this.tasks.push(copy);
                         }
+
+                        this.tasks.push(copy);
                     });
+
                     this.saveLocalStorage();
                     this.selectedTaskIds = [];
-                    alert('คัดลอกงานที่เลือกไปยังปีถัดไปสำเร็จเรียบร้อยแล้ว');
+                    this.duplicateModal.open = false;
+                    alert(`คัดลอกงานไปยังปี พ.ศ. ${targetY + 543} สำเร็จเรียบร้อยแล้ว`);
                 },
 
                 openTaskModal() {
@@ -1094,7 +1163,7 @@
                         id: null, category: this.categories[0]?.name || '', title: '', countWorkload: true,
                         planStart: today, planEnd: today, doStart: today, doEnd: today, summaryStart: today, summaryEnd: today,
                         budgetApproved: 0, budgetUsed: 0, owner: this.owners[0]?.name || '', subTeamMembers: [], checklist: [],
-                        useSdgs: false, selectedSdgs: [], isCompleted: false, pdsa: { plan: '', do: '', study: '', act: '' }
+                        evidenceUrl: '', useSdgs: false, selectedSdgs: [], isCompleted: false, pdsa: { plan: '', do: '', study: '', act: '' }
                     };
                     this.ownerSearchQuery = '';
                     this.ownerSearchInput = '';
@@ -1111,23 +1180,6 @@
                     this.ownerSearchQuery = '';
                     this.ownerSearchInput = '';
                     this.isModalOpen = true;
-                },
-
-                duplicateTask(task) {
-                    let copy = JSON.parse(JSON.stringify(task));
-                    copy.id = Date.now().toString();
-                    copy.title = copy.title + ' (สำเนาปีถัดไป)';
-                    copy.isCompleted = false;
-                    ['planStart', 'planEnd', 'doStart', 'doEnd', 'summaryStart', 'summaryEnd'].forEach(field => {
-                        if (copy[field]) {
-                            let parts = copy[field].split('-');
-                            parts[0] = String(parseInt(parts[0]) + 1);
-                            copy[field] = parts.join('-');
-                        }
-                    });
-                    this.tasks.push(copy);
-                    this.saveLocalStorage();
-                    alert('คัดลอกงานไปยังปีถัดไปสำเร็จเรียบร้อยแล้ว');
                 },
 
                 saveTask() {
