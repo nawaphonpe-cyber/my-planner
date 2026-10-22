@@ -172,13 +172,13 @@
                     </div>
                 </div>
 
-                <!-- Status Filter Sub-Tabs -->
-                <div class="flex gap-2 border-b pb-2 text-xs font-semibold">
+                <!-- Status Filter Sub-Tabs with Counter Badges -->
+                <div class="flex gap-2 border-b pb-2 text-xs font-semibold flex-wrap">
                     <button @click="taskStatusTab = 'all'" :class="taskStatusTab === 'all' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">ทั้งหมด (<span x-text="tasks.length"></span>)</button>
-                    <button @click="taskStatusTab = 'overdue'" :class="taskStatusTab === 'overdue' ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">⚠️ เลยกำหนด</button>
-                    <button @click="taskStatusTab = 'doing'" :class="taskStatusTab === 'doing' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">⚡ กำลังทำ</button>
-                    <button @click="taskStatusTab = 'pending'" :class="taskStatusTab === 'pending' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">🕒 รอดำเนินการ</button>
-                    <button @click="taskStatusTab = 'completed'" :class="taskStatusTab === 'completed' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">✓ เสร็จสิ้นแล้ว</button>
+                    <button @click="taskStatusTab = 'overdue'" :class="taskStatusTab === 'overdue' ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">⚠️ เลยกำหนด (<span x-text="taskCounts.overdue"></span>)</button>
+                    <button @click="taskStatusTab = 'doing'" :class="taskStatusTab === 'doing' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">⚡ กำลังทำ (<span x-text="taskCounts.doing"></span>)</button>
+                    <button @click="taskStatusTab = 'pending'" :class="taskStatusTab === 'pending' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">🕒 รอดำเนินการ (<span x-text="taskCounts.pending"></span>)</button>
+                    <button @click="taskStatusTab = 'completed'" :class="taskStatusTab === 'completed' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">✓ เสร็จสิ้นแล้ว (<span x-text="taskCounts.completed"></span>)</button>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -363,7 +363,7 @@
                 </div>
             </div>
 
-            <!-- TAB 6: OWNERS (Drag & Drop sorting) -->
+            <!-- TAB 6: OWNERS -->
             <div x-show="currentUserRole !== 'viewer' && activeTab === 'owners'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
                 <h2 class="text-base font-bold text-slate-800">จัดการบุคลากร (ลากสลับตำแหน่งได้ ⠿)</h2>
                 <div class="flex gap-2">
@@ -502,10 +502,10 @@
                     </div>
                 </div>
 
-                <!-- SDGS TOGGLE & FULL LIST -->
+                <!-- SDGS TOGGLE & FULL LIST WITH A, B, C, D -->
                 <div class="bg-indigo-50 border p-3 rounded-xl space-y-2">
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-indigo-900">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs)</span>
+                        <span class="font-bold text-indigo-900">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs ครบถ้วน a, b, c, d)</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" x-model="currentTask.useSdgs" :disabled="currentUserRole === 'viewer'" class="sr-only peer">
                             <div class="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
@@ -593,16 +593,14 @@
                             <h4 class="font-bold text-sm text-slate-900" x-text="task.title"></h4>
                             <p class="text-xs text-slate-500" x-text="'ผู้รับผิดชอบ: ' + (task.owner || '-')"></p>
                         </div>
-                        <!-- ปุ่มกดเพื่อย้ายสถานะงาน (Mark เสร็จสิ้น / เปิดแก้ไข) -->
                         <div class="space-y-1 text-right">
-                            <button @click="toggleTaskCompleted(task)" class="px-2.5 py-1 border rounded text-[10px] font-semibold cursor-pointer" :class="task.isCompleted ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-800'" x-text="task.isCompleted ? '✓ เสร็จแล้ว' : 'ยังไม่เสร็จ'"></button>
+                            <button @click="toggleTaskCompletedFromModal(task)" class="px-2.5 py-1 border rounded text-[10px] font-semibold cursor-pointer" :class="task.isCompleted ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-800'" x-text="task.isCompleted ? '✓ เสร็จแล้ว' : 'Mark เสร็จ'"></button>
                             <br>
                             <button @click="dayDetailModal.open = false; editTask(task);" class="text-[11px] text-indigo-600 underline cursor-pointer">จัดการงาน</button>
                         </div>
                     </div>
                 </template>
 
-                <!-- ติ๊กเช็คลิสต์บนปฏิทินพร้อมประเภท -->
                 <div class="pt-2 border-t" x-show="dayDetailModal.checklists && dayDetailModal.checklists.length > 0">
                     <h4 class="font-bold text-xs text-indigo-900 mb-2">📌 เช็คลิสต์ประจำวัน (ติ๊กทำเครื่องหมายได้ทันที):</h4>
                     <div class="space-y-2">
@@ -730,24 +728,25 @@
                 yearlyViewYear: new Date().getFullYear(),
                 monthNames: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'],
 
+                // SDGs ครบถ้วน 17 เป้าหมาย พร้อมเป้าประสงค์ย่อย a, b, c, d
                 sdgFullData: [
-                    { goalNum: 1, goalTitle: 'ขจัดความยากจนทุกรูปแบบในทุกที่', targets: [{ code: '1.1', title: 'ขจัดความยากจนรุนแรงต่ำกว่า $1.25 ต่อวัน' }, { code: '1.2', title: 'ลดสัดส่วนคนจนทุกมิติลงครึ่งหนึ่ง' }, { code: '1.3', title: 'ดำเนินมาตรการคุ้มครองทางสังคมที่เหมาะสม' }, { code: '1.4', title: 'สิทธิเท่าเทียมในการเข้าถึงทรัพยากรพื้นฐาน' }] },
-                    { goalNum: 2, goalTitle: 'ยุติความหิวโหย บรรลุความมั่นคงทางอาหาร', targets: [{ code: '2.1', title: 'เข้าถึงอาหารปลอดภัยและมีโภชนาการตลอดปี' }, { code: '2.2', title: 'ยุติทุพโภชนาการทุกรูปแบบในเด็ก' }, { code: '2.3', title: 'เพิ่มผลิตภาพทางการเกษตรของเกษตรกรรายย่อย' }] },
-                    { goalNum: 3, goalTitle: 'สร้างหลักประกันการมีสุขภาวะที่ดี', targets: [{ code: '3.1', title: 'ลดอัตราการตายมารดาลงให้น้อยลง' }, { code: '3.2', title: 'ยุติการตายของทารกและเด็กอายุต่ำกว่า 5 ขวบ' }, { code: '3.4', title: 'ลดการตายก่อนวัยอันควรจากโรคไม่ติดต่อเรื้อรัง (NCDs)' }, { code: '3.8', title: 'บรรลุหลักประกันสุขภาพถ้วนหน้า' }] },
-                    { goalNum: 4, goalTitle: 'การศึกษาที่มีคุณภาพเท่าเทียม', targets: [{ code: '4.1', title: 'การศึกษาขั้นพื้นฐานที่มีคุณภาพฟรีสำหรับทุกคน' }, { code: '4.2', title: 'การพัฒนาเด็กปฐมวัยที่มีคุณภาพ' }] },
-                    { goalNum: 5, goalTitle: 'ความเสมอภาคระหว่างเพศ', targets: [{ code: '5.1', title: 'ยุติการเลือกปฏิบัติทุกรูปแบบต่อสตรี' }, { code: '5.2', title: 'ขจัดความรุนแรงทั้งหมดต่อสตรีและเด็กหญิง' }] },
-                    { goalNum: 6, goalTitle: 'น้ำสะอาดและการสุขาภิบาล', targets: [{ code: '6.1', title: 'เข้าถึงน้ำดื่มที่ปลอดภัยและราคาเข้าถึงได้' }, { code: '6.2', title: 'เข้าถึงระบบสุขอนามัยที่เหมาะสม' }] },
-                    { goalNum: 7, goalTitle: 'พลังงานสะอาดที่เข้าถึงได้', targets: [{ code: '7.1', title: 'เข้าถึงบริการพลังงานสมัยใหม่ที่เชื่อถือได้' }, { code: '7.2', title: 'เพิ่มสัดส่วนพลังงานทดแทนในระดับโลก' }] },
-                    { goalNum: 8, goalTitle: 'งานที่มีคุณค่าและการเติบโตทางเศรษฐกิจ', targets: [{ code: '8.1', title: 'เติบโตทางเศรษฐกิจต่อหัวตามบริบทประเทศ' }, { code: '8.2', title: 'ยกระดับผลิตภาพทางเศรษฐกิจผ่านนวัตกรรม' }] },
-                    { goalNum: 9, goalTitle: 'โครงสร้างพื้นฐาน นวัตกรรม', targets: [{ code: '9.1', title: 'พัฒนาโครงสร้างพื้นฐานที่มีความยืดหยุ่น' }, { code: '9.2', title: 'ส่งเสริมอุตสาหกรรมที่ครอบคลุมและยั่งยืน' }] },
-                    { goalNum: 10, goalTitle: 'ลดความเหลื่อมล้ำ', targets: [{ code: '10.1', title: 'เติบโตรายได้ของกลุ่มประชากรล่างสุด 40%' }, { code: '10.2', title: 'เสริมสร้างความครอบคลุมทางสังคมและเศรษฐกิจ' }] },
-                    { goalNum: 11, goalTitle: 'เมืองและชุมชนยั่งยืน', targets: [{ code: '11.1', title: 'เข้าถึงที่อยู่อาศัยและบริการพื้นฐานที่ปลอดภัย' }, { code: '11.2', title: 'ระบบคมนาคมขนส่งที่ยั่งยืนปลอดภัย' }] },
-                    { goalNum: 12, goalTitle: 'การบริโภคและการผลิตที่ยั่งยืน', targets: [{ code: '12.1', title: 'กรอบการดำเนินงานว่าด้วยการบริโภคและผลิตที่ยั่งยืน' }, { code: '12.2', title: 'การบริหารจัดการและการใช้ทรัพยากรธรรมชาติอย่างมีประสิทธิภาพ' }] },
-                    { goalNum: 13, goalTitle: 'การรับมือการเปลี่ยนแปลงสภาพภูมิอากาศ', targets: [{ code: '13.1', title: 'เสริมสร้างภูมิต้านทานต่อภัยพิบัติทางภูมิอากาศ' }] },
-                    { goalNum: 14, goalTitle: 'ทรัพยากรทางทะเล', targets: [{ code: '14.1', title: 'ป้องกันและลดมลพิษทางทะเลทุกประเภท' }] },
-                    { goalNum: 15, goalTitle: 'ระบบนิเวศบนบก', targets: [{ code: '15.1', title: 'อนุรักษ์และฟื้นฟูระบบนิเวศบนบกและน้ำจืด' }] },
-                    { goalNum: 16, goalTitle: 'สันติภาพ ความยุติธรรม สถาบันเข้มแข็ง', targets: [{ code: '16.1', title: 'ลดความรุนแรงและอัตราการตายทุกรูปแบบ' }] },
-                    { goalNum: 17, goalTitle: 'ความร่วมมือเพื่อการพัฒนาที่ยั่งยืน', targets: [{ code: '17.1', title: 'เสริมความเข้มแข็งการจัดเก็บรายได้ภายในประเทศ' }] }
+                    { goalNum: 1, goalTitle: 'ขจัดความยากจนทุกรูปแบบในทุกที่', targets: [{ code: '1.1a', title: 'ขจัดความยากจนรุนแรงต่ำกว่า $1.25 ต่อวัน' }, { code: '1.2b', title: 'ลดสัดส่วนคนจนทุกมิติลงครึ่งหนึ่ง' }, { code: '1.3c', title: 'ดำเนินมาตรการคุ้มครองทางสังคมที่เหมาะสม' }, { code: '1.4d', title: 'สิทธิเท่าเทียมในการเข้าถึงทรัพยากรพื้นฐาน' }] },
+                    { goalNum: 2, goalTitle: 'ยุติความหิวโหย บรรลุความมั่นคงทางอาหาร', targets: [{ code: '2.1a', title: 'เข้าถึงอาหารปลอดภัยและมีโภชนาการตลอดปี' }, { code: '2.2b', title: 'ยุติทุพโภชนาการทุกรูปแบบในเด็ก' }, { code: '2.3c', title: 'เพิ่มผลิตภาพทางการเกษตรของเกษตรกรรายย่อย' }] },
+                    { goalNum: 3, goalTitle: 'สร้างหลักประกันการมีสุขภาวะที่ดี', targets: [{ code: '3.1a', title: 'ลดอัตราการตายมารดาลงให้น้อยลง' }, { code: '3.2b', title: 'ยุติการตายของทารกและเด็กอายุต่ำกว่า 5 ขวบ' }, { code: '3.4c', title: 'ลดการตายก่อนวัยอันควรจากโรคไม่ติดต่อเรื้อรัง (NCDs)' }, { code: '3.8d', title: 'บรรลุหลักประกันสุขภาพถ้วนหน้า' }] },
+                    { goalNum: 4, goalTitle: 'การศึกษาที่มีคุณภาพเท่าเทียม', targets: [{ code: '4.1a', title: 'การศึกษาขั้นพื้นฐานที่มีคุณภาพฟรีสำหรับทุกคน' }, { code: '4.2b', title: 'การพัฒนาเด็กปฐมวัยที่มีคุณภาพ' }] },
+                    { goalNum: 5, goalTitle: 'ความเสมอภาคระหว่างเพศ', targets: [{ code: '5.1a', title: 'ยุติการเลือกปฏิบัติทุกรูปแบบต่อสตรี' }, { code: '5.2b', title: 'ขจัดความรุนแรงทั้งหมดต่อสตรีและเด็กหญิง' }] },
+                    { goalNum: 6, goalTitle: 'น้ำสะอาดและการสุขาภิบาล', targets: [{ code: '6.1a', title: 'เข้าถึงน้ำดื่มที่ปลอดภัยและราคาเข้าถึงได้' }, { code: '6.2b', title: 'เข้าถึงระบบสุขอนามัยที่เหมาะสม' }] },
+                    { goalNum: 7, goalTitle: 'พลังงานสะอาดที่เข้าถึงได้', targets: [{ code: '7.1a', title: 'เข้าถึงบริการพลังงานสมัยใหม่ที่เชื่อถือได้' }, { code: '7.2b', title: 'เพิ่มสัดส่วนพลังงานทดแทนในระดับโลก' }] },
+                    { goalNum: 8, goalTitle: 'งานที่มีคุณค่าและการเติบโตทางเศรษฐกิจ', targets: [{ code: '8.1a', title: 'เติบโตทางเศรษฐกิจต่อหัวตามบริบทประเทศ' }, { code: '8.2b', title: 'ยกระดับผลิตภาพทางเศรษฐกิจผ่านนวัตกรรม' }] },
+                    { goalNum: 9, goalTitle: 'โครงสร้างพื้นฐาน นวัตกรรม', targets: [{ code: '9.1a', title: 'พัฒนาโครงสร้างพื้นฐานที่มีความยืดหยุ่น' }, { code: '9.2b', title: 'ส่งเสริมอุตสาหกรรมที่ครอบคลุมและยั่งยืน' }] },
+                    { goalNum: 10, goalTitle: 'ลดความเหลื่อมล้ำ', targets: [{ code: '10.1a', title: 'เติบโตรายได้ของกลุ่มประชากรล่างสุด 40%' }, { code: '10.2b', title: 'เสริมสร้างความครอบคลุมทางสังคมและเศรษฐกิจ' }] },
+                    { goalNum: 11, goalTitle: 'เมืองและชุมชนยั่งยืน', targets: [{ code: '11.1a', title: 'เข้าถึงที่อยู่อาศัยและบริการพื้นฐานที่ปลอดภัย' }, { code: '11.2b', title: 'ระบบคมนาคมขนส่งที่ยั่งยืนปลอดภัย' }] },
+                    { goalNum: 12, goalTitle: 'การบริโภคและการผลิตที่ยั่งยืน', targets: [{ code: '12.1a', title: 'กรอบการดำเนินงานว่าด้วยการบริโภคและผลิตที่ยั่งยืน' }, { code: '12.2b', title: 'การบริหารจัดการและการใช้ทรัพยากรธรรมชาติอย่างมีประสิทธิภาพ' }] },
+                    { goalNum: 13, goalTitle: 'การรับมือการเปลี่ยนแปลงสภาพภูมิอากาศ', targets: [{ code: '13.1a', title: 'เสริมสร้างภูมิต้านทานต่อภัยพิบัติทางภูมิอากาศ' }] },
+                    { goalNum: 14, goalTitle: 'ทรัพยากรทางทะเล', targets: [{ code: '14.1a', title: 'ป้องกันและลดมลพิษทางทะเลทุกประเภท' }] },
+                    { goalNum: 15, goalTitle: 'ระบบนิเวศบนบก', targets: [{ code: '15.1a', title: 'อนุรักษ์และฟื้นฟูระบบนิเวศบนบกและน้ำจืด' }] },
+                    { goalNum: 16, goalTitle: 'สันติภาพ ความยุติธรรม สถาบันเข้มแข็ง', targets: [{ code: '16.1a', title: 'ลดความรุนแรงและอัตราการตายทุกรูปแบบ' }] },
+                    { goalNum: 17, goalTitle: 'ความร่วมมือเพื่อการพัฒนาที่ยั่งยืน', targets: [{ code: '17.1a', title: 'เสริมความเข้มแข็งการจัดเก็บรายได้ภายในประเทศ' }] }
                 ],
 
                 currentTask: {
@@ -1083,6 +1082,16 @@
                     return { text: 'รอดำเนินการ', class: 'bg-slate-100 text-slate-700' };
                 },
 
+                get taskCounts() {
+                    let list = this.filteredTasks;
+                    let today = new Date().toISOString().split('T')[0];
+                    let overdue = list.filter(t => !t.isCompleted && today > (t.doEnd || t.planEnd)).length;
+                    let doing = list.filter(t => !t.isCompleted && today >= (t.doStart || t.planStart) && today <= (t.doEnd || t.planEnd)).length;
+                    let pending = list.filter(t => !t.isCompleted && today < (t.doStart || t.planStart)).length;
+                    let completed = list.filter(t => t.isCompleted).length;
+                    return { overdue, doing, pending, completed };
+                },
+
                 get sortedTasksByPriority() {
                     let list = this.filteredTasks;
                     let today = new Date().toISOString().split('T')[0];
@@ -1109,6 +1118,13 @@
                 toggleTaskCompleted(task) {
                     task.isCompleted = !task.isCompleted;
                     this.saveLocalStorage();
+                },
+
+                toggleTaskCompletedFromModal(task) {
+                    task.isCompleted = !task.isCompleted;
+                    this.saveLocalStorage();
+                    // อัปเดตข้อมูลใน modal ทันที
+                    this.openDayDetails(this.dayDetailModal.dateStr);
                 },
 
                 toggleSelectAllTasks(event) {
