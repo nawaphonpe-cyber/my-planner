@@ -111,7 +111,7 @@
                     </div>
                 </div>
 
-                <!-- Yearly View (Clean: Show only work dates, click to view details) -->
+                <!-- Yearly View (Sun-Sat Correct, Show only Do work dates) -->
                 <div x-show="calendarMode === 'yearly'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <template x-for="(mName, mIdx) in monthNames" :key="mIdx">
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 space-y-2">
@@ -120,10 +120,10 @@
                                 <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
                             </div>
                             <div class="grid grid-cols-7 gap-1 text-center text-xs">
-                                <template x-for="dCell in buildYearlyMonthGrid(currentYearNum, mIdx)" :key="dCell.dateStr || Math.random()">
+                                <template x-for="dCell in buildYearlyMonthGridCorrect(currentYearNum, mIdx)" :key="dCell.dateStr || Math.random()">
                                     <div class="py-1 rounded font-semibold flex flex-col items-center justify-center relative cursor-pointer transition-transform hover:scale-110"
                                          @click="dCell.isWorkDay ? openDayDetails(dCell.dateStr) : null"
-                                         :style="dCell.isWorkDay ? `background: ${dCell.bgStyle}; color: white;` : 'background-color: transparent; color: #cbd5e1;'"
+                                         :style="dCell.isWorkDay ? `background: ${dCell.bgStyle}; color: white;` : (dCell.dayNum ? 'background-color: transparent; color: #cbd5e1;' : 'visibility: hidden;') "
                                          :title="dCell.tooltip">
                                         <span x-text="dCell.dayNum"></span>
                                     </div>
@@ -187,37 +187,73 @@
                 </div>
             </div>
 
-            <!-- TAB 3: REPORTS -->
+            <!-- TAB 3: REPORTS (Separated General & Individual) -->
             <div x-show="activeTab === 'reports'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
                 <div>
                     <h2 class="text-base font-bold text-indigo-900">🖨️ ระบบออกรายงานทางการ (แนวนอน / พิมพ์)</h2>
-                    <p class="text-xs text-slate-500 mt-1">เลือกช่วงวันที่และกลุ่มงานที่ต้องการออกรายงาน</p>
+                    <p class="text-xs text-slate-500 mt-1">เลือกประเภทรายงานและกำหนดช่วงเวลาที่ต้องการออกรายงาน</p>
                 </div>
 
-                <div class="bg-slate-50 border p-4 rounded-xl space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                        <div>
-                            <label class="block font-semibold mb-1">เลือกกลุ่มงาน</label>
-                            <select x-model="reportCategory" class="w-full border rounded p-2 bg-white font-semibold">
-                                <option value="">-- ทุกกลุ่มงานทั้งหมด --</option>
-                                <template x-for="cat in categories" :key="cat.id">
-                                    <option :value="cat.name" x-text="cat.name"></option>
-                                </template>
-                            </select>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Report 1: General Summary -->
+                    <div class="bg-slate-50 border p-4 rounded-xl space-y-3">
+                        <h3 class="font-bold text-sm text-indigo-900">1. รายงานสรุปภาพรวมโครงการ / กิจกรรม</h3>
+                        <div class="space-y-2 text-xs">
+                            <div>
+                                <label class="block font-semibold mb-1">เลือกกลุ่มงาน</label>
+                                <select x-model="reportCategory" class="w-full border rounded p-2 bg-white font-semibold">
+                                    <option value="">-- ทุกกลุ่มงานทั้งหมด --</option>
+                                    <template x-for="cat in categories" :key="cat.id">
+                                        <option :value="cat.name" x-text="cat.name"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block font-semibold mb-1">ตั้งแต่วันที่</label>
+                                    <input type="date" x-model="reportStartDate" class="w-full border rounded p-1.5 bg-white">
+                                </div>
+                                <div>
+                                    <label class="block font-semibold mb-1">ถึงวันที่</label>
+                                    <input type="date" x-model="reportEndDate" class="w-full border rounded p-1.5 bg-white">
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block font-semibold mb-1">ตั้งแต่วันที่</label>
-                            <input type="date" x-model="reportStartDate" class="w-full border rounded p-1.5 bg-white">
-                        </div>
-                        <div>
-                            <label class="block font-semibold mb-1">ถึงวันที่</label>
-                            <input type="date" x-model="reportEndDate" class="w-full border rounded p-1.5 bg-white">
-                        </div>
+                        <button @click="generateGeneralReport()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded text-xs font-semibold cursor-pointer">ออกรายงานสรุปภาพรวม</button>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                        <button @click="generateGeneralReport()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded text-xs font-semibold cursor-pointer">ออกรายงานสรุปภาพรวมตามช่วงเวลา</button>
-                        <button @click="generateWorkloadReport()" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded text-xs font-semibold cursor-pointer">ออกรายงานภาระงานรายบุคคลตามช่วงเวลา</button>
+                    <!-- Report 2: Individual Workload -->
+                    <div class="bg-indigo-50/60 border border-indigo-200 p-4 rounded-xl space-y-3">
+                        <h3 class="font-bold text-sm text-indigo-900">2. รายงานภาระงานรายบุคคล</h3>
+                        <div class="space-y-2 text-xs">
+                            <div>
+                                <label class="block font-semibold mb-1">เลือกบุคลากร *</label>
+                                <select x-model="workloadPerson" class="w-full border rounded p-2 bg-white font-bold">
+                                    <option value="">-- เลือกรายชื่อบุคลากร --</option>
+                                    <template x-for="o in sortedOwners" :key="o.id">
+                                        <option :value="o.name" x-text="o.name"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block font-semibold mb-1">ปี พ.ศ.</label>
+                                    <select x-model.number="workloadYear" class="w-full border rounded p-2 bg-white font-bold">
+                                        <template x-for="y in [currentYearNum, currentYearNum + 1, currentYearNum - 1]" :key="y">
+                                            <option :value="y" x-text="'พ.ศ. ' + (y + 543)"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block font-semibold mb-1">รอบประเมิน</label>
+                                    <select x-model="workloadTerm" class="w-full border rounded p-2 bg-white font-bold">
+                                        <option value="1">รอบ 1 (1 ม.ค. - 30 มิ.ย.)</option>
+                                        <option value="2">รอบ 2 (1 ก.ค. - 31 ธ.ค.)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <button @click="generateWorkloadReport()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded text-xs font-semibold cursor-pointer">ออกรายงานภาระงานรายบุคคล</button>
                     </div>
                 </div>
             </div>
@@ -416,26 +452,36 @@
                     </div>
                 </div>
 
-                <!-- SDGS WITH SUB-ITEMS (a, b, c, d...) -->
+                <!-- SDGS GROUPED WITH SUB-ITEMS -->
                 <div class="bg-indigo-50 border p-3 rounded-xl space-y-2">
-                    <span class="font-bold text-indigo-900">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs แบบละเอียดครบทุกข้อย่อย a, b, c, d)</span>
-                    <div class="space-y-2 max-h-48 overflow-y-auto bg-white p-2 rounded border">
-                        <template x-for="goal in fullSdgList" :key="goal.id">
-                            <label class="flex items-start gap-2 p-1 hover:bg-slate-50 rounded cursor-pointer">
-                                <input type="checkbox" :value="goal.id" x-model="currentTask.selectedSdgs" class="mt-0.5 rounded text-indigo-600">
-                                <div>
-                                    <span class="font-bold text-indigo-950" x-text="goal.id + ': ' + goal.title"></span>
-                                    <p class="text-[10px] text-slate-500" x-text="goal.desc"></p>
+                    <span class="font-bold text-indigo-900">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs หลัก และข้อย่อย a, b, c, d)</span>
+                    <div class="space-y-3 max-h-52 overflow-y-auto bg-white p-3 rounded border">
+                        <template x-for="group in sdgGroupedList" :key="group.mainId">
+                            <div class="border-b pb-2 last:border-0">
+                                <label class="flex items-center gap-2 font-bold text-indigo-900 cursor-pointer">
+                                    <input type="checkbox" :value="group.mainId" x-model="currentTask.selectedSdgs" class="rounded text-indigo-600">
+                                    <span x-text="group.mainId + ': ' + group.mainTitle"></span>
+                                </label>
+                                <div class="pl-6 mt-1 space-y-1">
+                                    <template x-for="sub in group.subItems" :key="sub.id">
+                                        <label class="flex items-start gap-2 text-[11px] text-slate-600 cursor-pointer hover:text-slate-900">
+                                            <input type="checkbox" :value="sub.id" x-model="currentTask.selectedSdgs" class="mt-0.5 rounded text-indigo-600">
+                                            <div>
+                                                <span class="font-semibold text-indigo-950" x-text="sub.id + ': ' + sub.title"></span>
+                                                <span class="text-slate-500" x-text="'- ' + sub.desc"></span>
+                                            </div>
+                                        </label>
+                                    </template>
                                 </div>
-                            </label>
+                            </div>
                         </template>
                     </div>
                 </div>
 
-                <!-- CHECKLISTS 3 PHASES -->
+                <!-- CHECKLISTS 3 PHASES (Plan, Do, Summary) with Drag & Drop -->
                 <div class="bg-indigo-50 border p-3 rounded-xl space-y-3">
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-indigo-900">📌 เช็คลิสต์ปฏิบัติงาน (วางแผน, ทำงาน, สรุป)</span>
+                        <span class="font-bold text-indigo-900">📌 เช็คลิสต์ 3 ช่วง (วางแผน, ทำงาน, สรุปผล)</span>
                         <select @change="applyTemplate($event.target.value)" :disabled="currentUserRole === 'viewer'" class="border rounded p-1 text-xs bg-white font-semibold">
                             <option value="">-- เลือกเทมเพลตเช็คลิสต์ --</option>
                             <template x-for="tpl in allTemplates" :key="tpl.id">
@@ -577,25 +623,65 @@
                 currentMonthIndex: new Date().getMonth(),
                 monthNames: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'],
 
-                // SDGs ครบถ้วนถึงระดับ a, b, c, d
-                fullSdgList: [
-                    { id: 'SDG 1.1', title: 'ขจัดความยากจนรุนแรง (a)', desc: 'ขจัดความยากจนรุนแรงสำหรับทุกคนในทุกที่' },
-                    { id: 'SDG 1.2', title: 'ลดความยากจนทุกมิติ (b)', desc: 'ลดสัดส่วนของชายหญิงและเด็กทุกวัยที่มีความยากจน' },
-                    { id: 'SDG 2.1', title: 'ยุติความหิวโหยเข้าถึงอาหาร (a)', desc: 'ยุติความหิวโหยและเข้าถึงอาหารที่ปลอดภัยตลอดปี' },
-                    { id: 'SDG 2.2', title: 'ยุติทุพโภชนาการทุกรูปแบบ (b)', desc: 'ยุติทุพโภชนาการทุกรูปแบบรวมถึงเด็กเตี้ยแคระ' },
-                    { id: 'SDG 3.1', title: 'ลดอัตราการตายมารดา (a)', desc: 'ลดอัตราส่วนการตายของมารดาลงให้ต่ำกว่า 70 ต่อแสนการเกิดมีชีพ' },
-                    { id: 'SDG 3.2', title: 'ยุติการตายของเด็กทารก (b)', desc: 'ยุติการตายของทารกแรกเกิดและเด็กอายุต่ำกว่า 5 ขวบ' },
-                    { id: 'SDG 3.4', title: 'ลดการตายจากโรคไม่ติดต่อเรื้อรัง (c)', desc: 'ลดการตายก่อนวัยอันควรจากโรค NCDs ลงหนึ่งในสาม' },
-                    { id: 'SDG 3.8', title: 'หลักประกันสุขภาพถ้วนหน้า (d)', desc: 'บรรลุการคุ้มครองสุขภาพถ้วนหน้าและการเข้าถึงบริการ' },
-                    { id: 'SDG 4.1', title: 'การศึกษาขั้นพื้นฐานที่มีคุณภาพ (a)', desc: 'เด็กทุกคนจบการศึกษาประถมศึกษาและมัธยมศึกษาที่มีคุณภาพ' },
-                    { id: 'SDG 4.2', title: 'การพัฒนาเด็กปฐมวัย (b)', desc: 'เด็กทุกคนเข้าถึงการพัฒนาและการดูแลเด็กปฐมวัยที่มีคุณภาพ' },
-                    { id: 'SDG 5.1', title: 'ยุติการเลือกปฏิบัติสตรี (a)', desc: 'ยุติการเลือกปฏิบัติทุกรูปแบบต่อสตรีและเด็กหญิง' },
-                    { id: 'SDG 5.2', title: 'ขจัดความรุนแรงต่อสตรี (b)', desc: 'ขจัดความรุนแรงทั้งหมดต่อสตรีและเด็กหญิงในที่สาธารณะและส่วนตัว' },
-                    { id: 'SDG 8.1', title: 'การเติบโตทางเศรษฐกิจต่อหัว (a)', desc: 'รักษาการเติบโตทางเศรษฐกิจต่อหัวตามบริบทประเทศ' },
-                    { id: 'SDG 8.2', title: 'ยกระดับผลิตภาพทางเศรษฐกิจ (b)', desc: 'บรรลุระดับความหลากหลายสูงขึ้นและการยกระดับเทคโนโลยี' },
-                    { id: 'SDG 16.1', title: 'ลดความรุนแรงทุกรูปแบบ (a)', desc: 'ลดอัตราการ Mutilation และการตายจากความรุนแรงทุกรูปแบบ' },
-                    { id: 'SDG 16.6', title: 'พัฒนาสถาบันที่มีประสิทธิผล (b)', desc: 'พัฒนาสถาบันที่มีประสิทธิผล โปร่งใส และมีความรับผิดชอบ' },
-                    { id: 'SDG 17.1', title: 'เสริมความเข้มแข็งการจัดเก็บรายได้ (a)', desc: 'เสริมความเข้มแข็งการจัดเก็บรายได้ภายในประเทศ' }
+                // SDGs หมวดหมู่หลัก และข้อย่อย a, b, c, d
+                sdgGroupedList: [
+                    {
+                        mainId: 'SDG 1', mainTitle: 'ขจัดความยากจนทุกรูปแบบ',
+                        subItems: [
+                            { id: 'SDG 1.1', title: 'ขจัดความยากจนรุนแรง (a)', desc: 'ขจัดความยากจนรุนแรงสำหรับทุกคนในทุกที่' },
+                            { id: 'SDG 1.2', title: 'ลดความยากจนทุกมิติ (b)', desc: 'ลดสัดส่วนของชายหญิงและเด็กทุกวัยที่มีความยากจน' }
+                        ]
+                    },
+                    {
+                        mainId: 'SDG 2', mainTitle: 'ยุติความหิวโหย เกษตรยั่งยืน',
+                        subItems: [
+                            { id: 'SDG 2.1', title: 'เข้าถึงอาหารปลอดภัย (a)', desc: 'ยุติความหิวโหยและเข้าถึงอาหารปลอดภัยตลอดปี' },
+                            { id: 'SDG 2.2', title: 'ยุติทุพโภชนาการ (b)', desc: 'ยุติทุพโภชนาการทุกรูปแบบรวมถึงเด็กเตี้ยแคระ' }
+                        ]
+                    },
+                    {
+                        mainId: 'SDG 3', mainTitle: 'สุขภาพและความเป็นอยู่ที่ดี',
+                        subItems: [
+                            { id: 'SDG 3.1', title: 'ลดการตายมารดา (a)', desc: 'ลดอัตราส่วนการตายของมารดา' },
+                            { id: 'SDG 3.2', title: 'ยุติการตายเด็กทารก (b)', desc: 'ยุติการตายของทารกแรกเกิดและเด็กอายุต่ำกว่า 5 ขวบ' },
+                            { id: 'SDG 3.4', title: 'ลดโรคไม่ติดต่อเรื้อรัง (c)', desc: 'ลดการตายก่อนวัยอันควรจากโรค NCDs' },
+                            { id: 'SDG 3.8', title: 'หลักประกันสุขภาพถ้วนหน้า (d)', desc: 'บรรลุการคุ้มครองสุขภาพถ้วนหน้า' }
+                        ]
+                    },
+                    {
+                        mainId: 'SDG 4', mainTitle: 'การศึกษาที่มีคุณภาพ',
+                        subItems: [
+                            { id: 'SDG 4.1', title: 'การศึกษาขั้นพื้นฐาน (a)', desc: 'เด็กทุกคนจบประถมและมัธยมศึกษาที่มีคุณภาพ' },
+                            { id: 'SDG 4.2', title: 'พัฒนาเด็กปฐมวัย (b)', desc: 'เข้าถึงการพัฒนาและการดูแลเด็กปฐมวัย' }
+                        ]
+                    },
+                    {
+                        mainId: 'SDG 5', mainTitle: 'ความเสมอภาคทางเพศ',
+                        subItems: [
+                            { id: 'SDG 5.1', title: 'ยุติการเลือกปฏิบัติสตรี (a)', desc: 'ยุติการเลือกปฏิบัติทุกรูปแบบต่อสตรีและเด็กหญิง' },
+                            { id: 'SDG 5.2', title: 'ขจัดความรุนแรงต่อสตรี (b)', desc: 'ขจัดความรุนแรงทั้งหมดต่อสตรีและเด็กหญิง' }
+                        ]
+                    },
+                    {
+                        mainId: 'SDG 8', mainTitle: 'เศรษฐกิจและการเติบโตที่ยั่งยืน',
+                        subItems: [
+                            { id: 'SDG 8.1', title: 'เติบโตเศรษฐกิจต่อหัว (a)', desc: 'รักษาการเติบโตทางเศรษฐกิจต่อหัวตามบริบท' },
+                            { id: 'SDG 8.2', title: 'ยกระดับผลิตภาพทางเศรษฐกิจ (b)', desc: 'บรรลุความหลากหลายและยกระดับเทคโนโลยี' }
+                        ]
+                    },
+                    {
+                        mainId: 'SDG 16', mainTitle: 'สังคมสงบสุขและยุติธรรม',
+                        subItems: [
+                            { id: 'SDG 16.1', title: 'ลดความรุนแรงทุกรูปแบบ (a)', desc: 'ลดอัตราการตายจากความรุนแรงทุกรูปแบบ' },
+                            { id: 'SDG 16.6', title: 'พัฒนาสถาบันโปร่งใส (b)', desc: 'พัฒนาสถาบันที่มีประสิทธิผล โปร่งใส และรับผิดชอบ' }
+                        ]
+                    },
+                    {
+                        mainId: 'SDG 17', mainTitle: 'ความร่วมมือเพื่อการพัฒนา',
+                        subItems: [
+                            { id: 'SDG 17.1', title: 'เสริมจัดเก็บรายได้ภายใน (a)', desc: 'เสริมความเข้มแข็งการจัดเก็บรายได้ภายในประเทศ' }
+                        ]
+                    }
                 ],
 
                 currentTask: {
@@ -826,14 +912,19 @@
                     return `background-color: ${baseColor}; font-weight: 500; ` + shapeClass;
                 },
 
-                buildYearlyMonthGrid(year, month) {
+                // ปฏิทินรายปีตรงตามจริง (Sun-Sat) และแสดงเฉพาะ Do (ปฏิบัติจริง) เท่านั้น
+                buildYearlyMonthGridCorrect(year, month) {
+                    let firstDow = new Date(year, month, 1).getDay();
                     let totalDays = new Date(year, month + 1, 0).getDate();
                     let days = [];
+                    for (let i = 0; i < firstDow; i++) {
+                        days.push({ dayNum: '', dateStr: '', isWorkDay: false });
+                    }
                     for (let d = 1; d <= totalDays; d++) {
                         let ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                         let matched = this.tasks.filter(t => {
-                            let start = t.planStart || t.doStart || '';
-                            let end = t.summaryEnd || t.doEnd || start;
+                            let start = t.doStart || '';
+                            let end = t.doEnd || start;
                             return start && ds >= start && ds <= (end || start);
                         });
                         let isWorkDay = matched.length > 0;
@@ -855,8 +946,8 @@
 
                 openDayDetails(dateStr) {
                     let matched = this.tasks.filter(t => {
-                        let start = t.planStart || t.doStart || '';
-                        let end = t.summaryEnd || t.doEnd || start;
+                        let start = t.doStart || '';
+                        let end = t.doEnd || start;
                         return start && dateStr >= start && dateStr <= (end || start);
                     });
                     this.dayDetailModal = { open: true, dateStr, tasks: matched };
@@ -956,13 +1047,19 @@
                 },
 
                 generateWorkloadReport() {
-                    let targetPerson = this.currentUserName;
-                    let userTasks = this.tasks.filter(t => (t.owner === targetPerson || (t.subTeamMembers && t.subTeamMembers.includes(targetPerson))) && t.countWorkload);
+                    if (!this.workloadPerson) {
+                        alert('กรุณาเลือกบุคลากรก่อนออกรายงานภาระงาน');
+                        return;
+                    }
+                    let startTermDate = this.workloadTerm === '1' ? `${this.workloadYear}-01-01` : `${this.workloadYear}-07-01`;
+                    let endTermDate = this.workloadTerm === '1' ? `${this.workloadYear}-06-30` : `${this.workloadYear}-12-31`;
+
+                    let userTasks = this.tasks.filter(t => (t.owner === this.workloadPerson || (t.subTeamMembers && t.subTeamMembers.includes(this.workloadPerson))) && t.countWorkload);
                     let totalDays = 0;
 
                     let html = `<div class="mb-4 text-xs space-y-1">
-                        <p><b>ชื่อ-นามสกุล:</b> ${targetPerson}</p>
-                        <p><b>ช่วงรายงาน:</b> ${this.reportStartDate} ถึง ${this.reportEndDate}</p>
+                        <p><b>ชื่อ-นามสกุล:</b> ${this.workloadPerson}</p>
+                        <p><b>ปี พ.ศ.:</b> ${this.workloadYear + 543} (รอบประเมินที่ ${this.workloadTerm}: ${startTermDate} ถึง ${endTermDate})</p>
                     </div>`;
 
                     html += `<table class="w-full border-collapse border border-slate-300 text-xs">
@@ -984,7 +1081,7 @@
                         let diffDays = Math.max(1, Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1);
                         totalDays += diffDays;
 
-                        let role = t.owner === targetPerson ? 'ผู้รับผิดชอบหลัก' : 'คณะทำงาน/ผู้ร่วมงาน';
+                        let role = t.owner === this.workloadPerson ? 'ผู้รับผิดชอบหลัก' : 'คณะทำงาน/ผู้ร่วมงาน';
                         let sdgsStr = (t.selectedSdgs && t.selectedSdgs.length > 0) ? t.selectedSdgs.join(', ') : '-';
 
                         html += `<tr>
@@ -1006,7 +1103,7 @@
                         <p><b>สรุปภาระงานรวม:</b> จำนวนงานทั้งสิ้น ${userTasks.length} งาน | จำนวนวันปฏิบัติงานรวมทั้งหมด ${totalDays} วัน</p>
                     </div>`;
 
-                    this.printModal = { open: true, title: 'รายงานภาระงานรายบุคคลประจำปีงบประมาณ', subtitle: `ช่วงวันที่ ${this.reportStartDate} ถึง ${this.reportEndDate}`, htmlContent: html, reporterName: targetPerson };
+                    this.printModal = { open: true, title: 'รายงานภาระงานรายบุคคลประจำปีงบประมาณ', subtitle: `รอบประเมินที่ ${this.workloadTerm} พ.ศ. ${this.workloadYear + 543}`, htmlContent: html, reporterName: this.workloadPerson };
                 }
             };
         }
