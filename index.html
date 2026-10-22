@@ -45,7 +45,6 @@
                 </div>
                 <button @click="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg text-sm font-semibold cursor-pointer">เข้าสู่ระบบ (เจ้าหน้าที่/แอดมิน)</button>
             </div>
-            <!-- ตัดคำว่าสีเขียวสดใสออกตามรีเควส -->
             <button @click="handleViewerLogin()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-semibold cursor-pointer">👀 เข้าชมระบบ (Viewer / ผู้บริหาร)</button>
         </div>
     </div>
@@ -382,11 +381,10 @@
                 </div>
             </div>
 
-            <!-- TAB 7: USERS & PERMISSIONS (Admin can change admin pass & restrict categories per user) -->
+            <!-- TAB 7: USERS -->
             <div x-show="currentUserRole === 'admin' && activeTab === 'users'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
                 <h2 class="text-base font-bold text-slate-800">จัดการสิทธิ์ผู้ใช้งานระบบ</h2>
                 
-                <!-- เปลี่ยนรหัสผ่านแอดมินหลัก -->
                 <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl space-y-3 text-xs">
                     <h3 class="font-bold text-indigo-900 text-sm">🔑 เปลี่ยนรหัสผ่านผู้ดูแลระบบ (Admin)</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -400,7 +398,6 @@
                     </div>
                 </div>
 
-                <!-- เพิ่มผู้ใช้งานพร้อมกำหนดสิทธิ์กลุ่มงานเฉพาะ -->
                 <div class="bg-slate-50 border p-4 rounded-xl space-y-3 text-xs">
                     <h3 class="font-bold text-indigo-900 text-sm">👤 เพิ่มผู้ใช้งานใหม่ (กำหนดสิทธิ์กลุ่มงานได้)</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -421,7 +418,6 @@
                         </div>
                     </div>
                     
-                    <!-- เลือกสิทธิ์กลุ่มงานเฉพาะ -->
                     <div class="pt-2">
                         <label class="block font-semibold mb-1 text-indigo-900">กำหนดกลุ่มงานที่อนุญาตให้จัดการ (หากไม่เลือก = จัดการได้ทุกกลุ่มงาน)</label>
                         <div class="flex flex-wrap gap-2 bg-white p-2 border rounded">
@@ -437,7 +433,6 @@
                     <button @click="addUser()" class="bg-indigo-600 text-white px-4 py-2 rounded font-semibold cursor-pointer">บันทึกเพิ่มผู้ใช้</button>
                 </div>
 
-                <!-- รายชื่อผู้ใช้ทั้งหมด -->
                 <div class="space-y-2">
                     <h3 class="font-bold text-slate-700 text-xs">รายชื่อผู้ใช้งานในระบบ</h3>
                     <template x-for="u in appUsers" :key="u.id">
@@ -552,7 +547,7 @@
                     </div>
                 </div>
 
-                <!-- SDGS TOGGLE & FULL LIST WITH A, B, C, D -->
+                <!-- SDGS TOGGLE & FULL LIST -->
                 <div class="bg-indigo-50 border p-3 rounded-xl space-y-2">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-indigo-900">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs ครบถ้วน a, b, c, d)</span>
@@ -624,14 +619,18 @@
                 </div>
             </div>
 
-            <div class="flex justify-end gap-2 pt-3 border-t">
+            <!-- เพิ่มปุ่มย้ายสถานะ (เสร็จสิ้น/ยังไม่เสร็จ) ไว้มุมล่างขวาฝั่งเดียวกับบันทึกข้อมูล -->
+            <div class="flex justify-between items-center pt-3 border-t">
                 <button @click="isModalOpen = false" class="px-4 py-2 border rounded-lg cursor-pointer">ปิด</button>
-                <button x-show="currentUserRole !== 'viewer'" @click="saveTask()" class="px-5 py-2 bg-indigo-600 text-white rounded-lg font-semibold cursor-pointer">บันทึกข้อมูลงาน</button>
+                <div class="flex items-center gap-2">
+                    <button x-show="currentUserRole !== 'viewer'" @click="currentTask.isCompleted = !currentTask.isCompleted" type="button" class="px-4 py-2 border rounded-lg font-semibold cursor-pointer" :class="currentTask.isCompleted ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-700'" x-text="currentTask.isCompleted ? '✓ สถานะ: เสร็จสิ้นแล้ว' : '⏳ สถานะ: ยังไม่เสร็จสิ้น'"></button>
+                    <button x-show="currentUserRole !== 'viewer'" @click="saveTask()" class="px-5 py-2 bg-indigo-600 text-white rounded-lg font-semibold cursor-pointer">บันทึกข้อมูลงาน</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- DAY DETAILS & CHECKLIST TICK & STATUS JUMP MODAL -->
+    <!-- DAY DETAILS MODAL -->
     <div x-show="dayDetailModal.open" x-cloak class="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-3 z-50">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4" @click.stop>
             <h3 class="text-base font-bold text-indigo-900 border-b pb-2" x-text="'รายละเอียดในวันที่: ' + dayDetailModal.dateStr"></h3>
@@ -1165,7 +1164,8 @@
                 },
 
                 getTaskStatus(task) {
-                    let today = new Date().toISOString().split('T')[0];
+                    // ดึงวันที่ปัจจุบันตามโซนเวลาประเทศไทยที่ถูกต้อง
+                    let today = new Date().toLocaleDateString('en-CA');
                     let startDo = task.doStart || task.planStart || '';
                     let endDo = task.doEnd || task.planEnd || '';
                     if (task.isCompleted) return { text: '✓ เสร็จสิ้นแล้ว', class: 'bg-emerald-100 text-emerald-800 font-bold' };
@@ -1178,7 +1178,7 @@
 
                 get taskCounts() {
                     let list = this.filteredTasks;
-                    let today = new Date().toISOString().split('T')[0];
+                    let today = new Date().toLocaleDateString('en-CA');
                     let overdue = list.filter(t => !t.isCompleted && today > (t.doEnd || t.planEnd)).length;
                     let doing = list.filter(t => !t.isCompleted && today >= (t.doStart || t.planStart) && today <= (t.doEnd || t.planEnd)).length;
                     let pending = list.filter(t => !t.isCompleted && today < (t.doStart || t.planStart)).length;
@@ -1188,7 +1188,7 @@
 
                 get sortedTasksByPriority() {
                     let list = this.filteredTasks;
-                    let today = new Date().toISOString().split('T')[0];
+                    let today = new Date().toLocaleDateString('en-CA');
 
                     if (this.taskStatusTab !== 'all') {
                         if (this.taskStatusTab === 'overdue') list = list.filter(t => !t.isCompleted && today > (t.doEnd || t.planEnd));
@@ -1283,7 +1283,7 @@
                 },
 
                 openTaskModal() {
-                    let today = new Date().toISOString().split('T')[0];
+                    let today = new Date().toLocaleDateString('en-CA');
                     this.currentTask = {
                         id: null, category: this.availableCategoriesForUser[0]?.name || '', title: '', countWorkload: true,
                         planStart: today, planEnd: today, doStart: today, doEnd: today, summaryStart: today, summaryEnd: today,
