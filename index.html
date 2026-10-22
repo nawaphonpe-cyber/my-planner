@@ -313,17 +313,22 @@
                         </div>
                     </div>
                     <div class="space-y-1">
-                        <label class="block font-semibold">ขั้นตอนย่อย (คลิกลากสลับตำแหน่ง ⠿)</label>
+                        <label class="block font-semibold">ขั้นตอนย่อย (เลือกประเภท และลากสลับตำแหน่งได้ ⠿)</label>
                         <div class="space-y-1" x-sort x-sort:item="newTemplateItems">
                             <template x-for="(item, idx) in newTemplateItems" :key="idx">
                                 <div class="flex gap-2 items-center bg-white border p-1.5 rounded cursor-move" x-sort:item="idx">
                                     <span class="text-slate-400 font-bold">⠿</span>
-                                    <input type="text" x-model="newTemplateItems[idx]" class="flex-1 border rounded p-1 text-xs">
+                                    <select x-model="item.phase" class="border rounded p-1 text-[10px] font-semibold bg-slate-50">
+                                        <option value="plan">วางแผน</option>
+                                        <option value="do">ทำงาน</option>
+                                        <option value="summary">สรุป</option>
+                                    </select>
+                                    <input type="text" x-model="item.text" class="flex-1 border rounded p-1 text-xs" placeholder="รายละเอียดขั้นตอน...">
                                     <button @click="newTemplateItems.splice(idx, 1)" type="button" class="text-rose-600 font-bold px-2 cursor-pointer">&times;</button>
                                 </div>
                             </template>
                         </div>
-                        <button @click="newTemplateItems.push('')" type="button" class="mt-2 bg-slate-200 px-3 py-1 rounded text-xs font-semibold cursor-pointer">+ เพิ่มขั้นตอนย่อย</button>
+                        <button @click="newTemplateItems.push({phase: 'do', text: ''})" type="button" class="mt-2 bg-slate-200 px-3 py-1 rounded text-xs font-semibold cursor-pointer">+ เพิ่มขั้นตอนย่อย</button>
                     </div>
                     <button @click="saveTemplate()" type="button" class="bg-indigo-600 text-white px-4 py-2 rounded font-semibold cursor-pointer" x-text="editingTemplateId ? 'บันทึกการแก้ไข' : 'บันทึกเทมเพลตใหม่'"></button>
                     <button x-show="editingTemplateId" @click="cancelEditTemplate()" type="button" class="bg-slate-300 text-slate-700 px-4 py-2 rounded font-semibold cursor-pointer ml-2">ยกเลิก</button>
@@ -468,9 +473,15 @@
                             </template>
                         </select>
                     </div>
-                    <div class="sm:col-span-2">
-                        <label class="block font-semibold mb-1">ชื่องาน / โครงการ *</label>
-                        <input type="text" x-model="currentTask.title" :disabled="currentUserRole === 'viewer'" placeholder="ระบุชื่องาน..." class="w-full border rounded p-2 bg-white font-medium">
+                    <div class="sm:col-span-2 relative">
+                        <label class="block font-semibold mb-1">ชื่องาน / โครงการ * (พิมพ์ค้นหาหรือพิมพ์ชื่อใหม่ได้ระบบจะจำให้อัตโนมัติ)</label>
+                        <input type="text" x-model="currentTask.title" @focus="showTitleSuggestions = true" @input="showTitleSuggestions = true" :disabled="currentUserRole === 'viewer'" placeholder="พิมพ์หรือเลือกชื่องาน..." class="w-full border rounded p-2 bg-white font-medium">
+                        <!-- รายการแนะนำชื่องานจากเทมเพลต (เรียงตามตัวอักษร) -->
+                        <div x-show="showTitleSuggestions && filteredTaskTitles.length > 0" @click.outside="showTitleSuggestions = false" class="absolute z-30 left-0 right-0 bg-white border rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto">
+                            <template x-for="tTitle in filteredTaskTitles" :key="tTitle">
+                                <div @click="currentTask.title = tTitle; showTitleSuggestions = false;" class="p-2 hover:bg-indigo-50 cursor-pointer text-xs font-medium border-b last:border-0" x-text="tTitle"></div>
+                            </template>
+                        </div>
                     </div>
                 </div>
 
@@ -547,10 +558,10 @@
                     </div>
                 </div>
 
-                <!-- SDGS CORRECT FULL DATA (17 Goals with Targets a, b, c, d...) -->
+                <!-- SDGS TOGGLE & FULL LIST -->
                 <div class="bg-indigo-50 border p-3 rounded-xl space-y-2">
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-indigo-900">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs 17 เป้าหมาย ครบถ้วนถูกต้องตามสากล)</span>
+                        <span class="font-bold text-indigo-900">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs ครบถ้วน a, b, c, d)</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" x-model="currentTask.useSdgs" :disabled="currentUserRole === 'viewer'" class="sr-only peer">
                             <div class="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
@@ -619,13 +630,11 @@
                 </div>
             </div>
 
-            <!-- เพิ่มปุ่มย้ายสถานะ (เสร็จสิ้น/ยังไม่เสร็จ) ไว้มุมล่างขวาฝั่งเดียวกับบันทึกข้อมูล -->
-            <div class="flex justify-between items-center pt-3 border-t">
-                <button @click="isModalOpen = false" class="px-4 py-2 border rounded-lg cursor-pointer">ปิด</button>
-                <div class="flex items-center gap-2">
-                    <button x-show="currentUserRole !== 'viewer'" @click="currentTask.isCompleted = !currentTask.isCompleted" type="button" class="px-4 py-2 border rounded-lg font-semibold cursor-pointer" :class="currentTask.isCompleted ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-700'" x-text="currentTask.isCompleted ? '✓ สถานะ: เสร็จสิ้นแล้ว' : '⏳ สถานะ: ยังไม่เสร็จสิ้น'"></button>
-                    <button x-show="currentUserRole !== 'viewer'" @click="saveTask()" class="px-5 py-2 bg-indigo-600 text-white rounded-lg font-semibold cursor-pointer">บันทึกข้อมูลงาน</button>
-                </div>
+            <!-- BUTTONS BOTTOM RIGHT -->
+            <div class="flex justify-end items-center pt-3 border-t gap-2">
+                <button x-show="currentUserRole !== 'viewer'" @click="currentTask.isCompleted = !currentTask.isCompleted" type="button" class="px-4 py-2 border rounded-lg font-semibold cursor-pointer" :class="currentTask.isCompleted ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-700'" x-text="currentTask.isCompleted ? '✓ สถานะ: เสร็จสิ้นแล้ว' : '⏳ สถานะ: ยังไม่เสร็จสิ้น'"></button>
+                <button @click="isModalOpen = false" class="px-4 py-2 border rounded-lg cursor-pointer bg-slate-100">ปิด</button>
+                <button x-show="currentUserRole !== 'viewer'" @click="saveTask()" class="px-5 py-2 bg-indigo-600 text-white rounded-lg font-semibold cursor-pointer">บันทึกข้อมูลงาน</button>
             </div>
         </div>
     </div>
@@ -741,6 +750,7 @@
                 selectedTaskIds: [],
                 ownerSearchQuery: '',
                 ownerSearchInput: '',
+                showTitleSuggestions: false,
                 tasks: [],
                 categories: [
                     { id: '1', name: 'กลุ่มงานบริหารทั่วไป', color: '#7c3aed' },
@@ -751,7 +761,12 @@
                     { id: '2', name: 'เจ้าหน้าที่ ข' }
                 ],
                 allTemplates: [
-                    { id: 't1', icon: '🚀', name: 'เทมเพลตโครงการมาตรฐาน', items: ['สำรวจความต้องการ', 'เสนออนุมัติโครงการ', 'ดำเนินโครงการ', 'สรุปประเมินผล'] }
+                    { id: 't1', icon: '🚀', name: 'เทมเพลตโครงการมาตรฐาน', items: [
+                        { phase: 'plan', text: 'สำรวจความต้องการ' },
+                        { phase: 'plan', text: 'เสนออนุมัติโครงการ' },
+                        { phase: 'do', text: 'ดำเนินโครงการ' },
+                        { phase: 'summary', text: 'สรุปประเมินผล' }
+                    ]}
                 ],
                 appUsers: [
                     { id: 'admin-1', name: 'ผู้ดูแลระบบหลัก', passcode: '1234', role: 'admin', allowedCategories: [] }
@@ -761,7 +776,7 @@
                 newOwnerName: '',
                 newTemplateName: '',
                 newTemplateIcon: '📋',
-                newTemplateItems: [''],
+                newTemplateItems: [{ phase: 'do', text: '' }],
                 editingTemplateId: null,
                 newUser: { name: '', passcode: '', role: 'editor', allowedCategories: [] },
                 reportCategory: '',
@@ -777,15 +792,14 @@
                 currentMonthIndex: new Date().getMonth(),
                 yearlyViewYear: new Date().getFullYear(),
                 monthNames: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'],
-                lastStoredStart: '', // สำหรับคำนวณการเลื่อนของเช็คลิสต์
+                lastStoredStart: '',
 
-                // SDGs ข้อย่อยครบถ้วนถูกต้องตาม UN Framework (17 Goals พร้อมข้อย่อย a, b, c, d...)
                 sdgFullData: [
                     { goalNum: 1, goalTitle: 'ขจัดความยากจนทุกรูปแบบในทุกที่', targets: [{ code: '1.1', title: 'ขจัดความยากจนรุนแรงสำหรับทุกคนในทุกที่' }, { code: '1.2', title: 'ลดสัดส่วนคนจนทุกมิติลงอย่างน้อยครึ่งหนึ่ง' }, { code: '1.3', title: 'ดำเนินระบบและมาตรการคุ้มครองทางสังคมที่เหมาะสม' }, { code: '1.4', title: 'สิทธิเท่าเทียมในการเข้าถึงทรัพยากรและบริการพื้นฐาน' }, { code: '1.5', title: 'สร้างภูมิต้านทานแก่ผู้ยากไร้ต่อภัยพิบัติ' }, { code: '1.a', title: 'ระดมทรัพยากรเพื่อยุติความยากจน' }, { code: '1.b', title: 'สร้างกรอบนโยบายระดับประเทศที่สนับสนุนคนจน' }] },
                     { goalNum: 2, goalTitle: 'ยุติความหิวโหย บรรลุความมั่นคงทางอาหาร', targets: [{ code: '2.1', title: 'ยุติความหิวโหยและเข้าถึงอาหารปลอดภัยตลอดปี' }, { code: '2.2', title: 'ยุติทุพโภชนาการทุกรูปแบบในเด็ก' }, { code: '2.3', title: 'เพิ่มผลิตภาพทางการเกษตรและรายได้ของเกษตรกรรายย่อย' }, { code: '2.4', title: 'การผลิตอาหารที่ยั่งยืนและปฏิบัติทางการเกษตรที่มีภูมิคุ้มกัน' }, { code: '2.5', title: 'รักษาความหลากหลายทางชีวภาพของพืชและสัตว์เลี้ยง' }, { code: '2.a', title: 'เพิ่มการลงทุนในโครงสร้างพื้นฐานชนบทและการวิจัยเกษตร' }, { code: '2.b', title: 'แก้ไขและป้องกันการกีดกันทางการค้าเกษตรโลก' }, { code: '2.c', title: 'ประกันกลไกตลาดอาหารที่มีเสถียรภาพ' }] },
                     { goalNum: 3, goalTitle: 'สร้างหลักประกันการมีสุขภาวะที่ดี', targets: [{ code: '3.1', title: 'ลดอัตราการตายมารดาลงให้น้อยกว่า 70 ต่อแสนการเกิด' }, { code: '3.2', title: 'ยุติการตายของทารกและเด็กอายุต่ำกว่า 5 ขวบ' }, { code: '3.3', title: 'ยุติโรคติดต่อสำคัญ เช่น เอดส์ วัณโรค มาลาเรีย' }, { code: '3.4', title: 'ลดการตายก่อนวัยอันควรจากโรคไม่ติดต่อเรื้อรัง (NCDs)' }, { code: '3.5', title: 'ป้องกันและรักษาการใช้สารเสพติดและการดื่มแอลกอฮอล์' }, { code: '3.6', title: 'ลดจำนวนผู้เสียชีวิตและบาดเจ็บจากอุบัติเหตุทางถนน' }, { code: '3.7', title: 'เข้าถึงบริการสุขภาพทางเพศและอนามัยเจริญพันธุ์' }, { code: '3.8', title: 'บรรลุหลักประกันสุขภาพถ้วนหน้า (UHC)' }, { code: '3.9', title: 'ลดการเจ็บป่วยและเสียชีวิตจากสารเคมีอันตรายและมลพิษ' }, { code: '3.a', title: 'เสริมสร้างการดำเนินงานอนุสัญญาควบคุมยาสูบโลก' }, { code: '3.b', title: 'สนับสนุนการวิจัยและพัฒนาวัคซีนและยา' }, { code: '3.c', title: 'เพิ่มการจัดสรรงบประมาณสาธารณสุขและการพัฒนาบุคลากร' }, { code: '3.d', title: 'เสริมสมรรถนะการบริหารจัดการความเสี่ยงด้านสุขภาพ' }] },
                     { goalNum: 4, goalTitle: 'การศึกษาที่มีคุณภาพเท่าเทียม', targets: [{ code: '4.1', title: 'การศึกษาขั้นพื้นฐานที่มีคุณภาพฟรีสำหรับเด็กทุกคน' }, { code: '4.2', title: 'เข้าถึงการพัฒนาและการดูแลเด็กปฐมวัยที่มีคุณภาพ' }, { code: '4.3', title: 'เข้าถึงการศึกษาวิชาชีพและอุดมศึกษาที่เท่าเทียม' }, { code: '4.4', title: 'เพิ่มจำนวนเยาวชนและผู้ใหญ่ที่มีทักษะประกอบอาชีพ' }, { code: '4.5', title: 'ขจัดความเหลื่อมล้ำทางเพศและการเข้าถึงการศึกษา' }, { code: '4.6', title: 'เยาวชนและผู้ใหญ่ทุกคนมีความรู้หนังสือและตัวเลข' }, { code: '4.7', title: 'การศึกษาเพื่อการพัฒนาที่ยั่งยืนและวัฒนธรรมสันติภาพ' }, { code: '4.a', title: 'สร้างและยกระดับสถานศึกษาที่ปลอดภัยและเหมาะสม' }, { code: '4.b', title: 'เพิ่มทุนการศึกษาสำหรับประเทศกำลังพัฒนา' }, { code: '4.c', title: 'เพิ่มจำนวนครูที่มีคุณสมบัติผ่านการฝึกอบรม' }] },
-                    { goalNum: 5, goalTitle: 'ความเสมอภาคระหว่างเพศ', targets: [{ code: '5.1', title: 'ยุติการเลือกปฏิบัติทุกรูปแบบต่อสตรีและเด็กหญิง' }, { code: '5.2', title: 'ขจัดความรุนแรงทั้งหมดต่อสตรีและเด็กหญิงในที่สาธารณะและส่วนตัว' }, { code: '5.3', title: 'ขจัด ารปฏิบัติที่เป็นอันตราย เช่น การสมรสในเด็ก' }, { code: '5.4', title: 'ตระหนักและให้คุณค่างานดูแลและงานบ้านที่ไม่ได้รับค่าจ้าง' }, { code: '5.5', title: 'ประกันการมีส่วนร่วมและโอกาสผู้นำที่เท่าเทียม' }, { code: '5.6', title: 'หลักประกันการเข้าถึงสุขภาพทางเพศและอนามัยเจริญพันธุ์' }, { code: '5.a', title: 'สิทธิเท่าเทียมในการถือครองที่ดินและทรัพย์สิน' }, { code: '5.b', title: 'ใช้ประโยชน์จากเทคโนโลยีเพื่อเสริมพลังสตรี' }, { code: '5.c', title: 'รับ าสนับสนุนนโยบายและกฎหมายเพื่อความเสมอภาค' }] },
+                    { goalNum: 5, goalTitle: 'ความเสมอภาคระหว่างเพศ', targets: [{ code: '5.1', title: 'ยุติการเลือกปฏิบัติทุกรูปแบบต่อสตรีและเด็กหญิง' }, { code: '5.2', title: 'ขจัดความรุนแรงทั้งหมดต่อสตรีและเด็กหญิงในที่สาธารณะและส่วนตัว' }, { code: '5.3', title: 'ขจัดทางปฏิบัติที่เป็นอันตราย เช่น การสมรสในเด็ก' }, { code: '5.4', title: 'ตระหนักและให้คุณค่างานดูแลและงานบ้านที่ไม่ได้รับค่าจ้าง' }, { code: '5.5', title: 'ประกันการมีส่วนร่วมและโอกาสผู้นำที่เท่าเทียม' }, { code: '5.6', title: 'หลักประกันการเข้าถึงสุขภาพทางเพศและอนามัยเจริญพันธุ์' }, { code: '5.a', title: 'สิทธิเท่าเทียมในการถือครองที่ดินและทรัพย์สิน' }, { code: '5.b', title: 'ใช้ประโยชน์จากเทคโนโลยีเพื่อเสริมพลังสตรี' }, { code: '5.c', title: 'รับและสนับสนุนนโยบายและกฎหมายเพื่อความเสมอภาค' }] },
                     { goalNum: 6, goalTitle: 'น้ำสะอาดและการสุขาภิบาล', targets: [{ code: '6.1', title: 'เข้าถึงน้ำดื่มที่ปลอดภัยและราคาเข้าถึงได้สำหรับทุกคน' }, { code: '6.2', title: 'เข้าถึงระบบสุขอนามัยที่เพียงพอและเหมาะสม' }, { code: '6.3', title: 'ปรับปรุงคุณภาพน้ำโดยลดมลพิษและการปล่อยน้ำเสีย' }, { code: '6.4', title: 'เพิ่มประสิทธิภาพการใช้น้ำและแก้ปัญหาการขาดแคลน' }, { code: '6.5', title: 'การบริหารจัดการทรัพยากรน้ำแบบองค์รวมทุกระดับ' }, { code: '6.6', title: 'ปกป้องและฟื้นฟูระบบนิเวศที่เกี่ยวกับน้ำ' }, { code: '6.a', title: 'ขยายความร่วมมือด้านการจัดการน้ำแก่ประเทศกำลังพัฒนา' }, { code: '6.b', title: 'สนับสนุนการมีส่วนร่วมของชุมชนท้องถิ่นจัดการน้ำ' }] },
                     { goalNum: 7, goalTitle: 'พลังงานสะอาดที่เข้าถึงได้', targets: [{ code: '7.1', title: 'ประกันการเข้าถึงบริการพลังงานสมัยใหม่ที่เชื่อถือได้' }, { code: '7.2', title: 'เพิ่มสัดส่วนพลังงานทดแทนในโครงสร้างพลังงานโลก' }, { code: '7.3', title: 'เพิ่มอัตราการปรับปรุงประสิทธิภาพการใช้พลังงานโลก' }, { code: '7.4', title: 'ความร่วมมือระหว่างประเทศเพื่อเข้าถึงเทคโนโลยีพลังงานสะอาด' }, { code: '7.b', title: 'ขยายโครงสร้างพื้นฐานและยกระดับเทคโนโลยีพลังงาน' }] },
                     { goalNum: 8, goalTitle: 'งานที่มีคุณค่าและการเติบโตทางเศรษฐกิจ', targets: [{ code: '8.1', title: 'เติบโตทางเศรษฐกิจต่อหัวตามบริบทประเทศ' }, { code: '8.2', title: 'ยกระดับผลิตภาพทางเศรษฐกิจผ่านนวัตกรรมเทคโนโลยี' }, { code: '8.3', title: 'นโยบายสนับสนุนกิจกรรมการผลิตและการจ้างงานงานมั่นคง' }, { code: '8.4', title: 'ปรับปรุงประสิทธิภาพการใช้ทรัพยากรโลกในการบริโภคผลิต' }, { code: '8.5', title: 'การจ้างงานเต็มที่และมีผลิตภาพสำหรับทุกคน' }, { code: '8.6', title: 'ลดสัดส่วนเยาวชนที่ไม่ได้ทำงานหรือศึกษา' }, { code: '8.7', title: 'ขจัดแรงงานบังคับ การค้ามนุษย์ และแรงงานเด็ก' }, { code: '8.8', title: 'ปกป้องสิทธิแรงงานและสร้างสภาพแวดล้อมปลอดภัย' }, { code: '8.9', title: 'นโยบายส่งเสริมการท่องเที่ยวที่ยั่งยืนสร้างงาน' }, { code: '8.10', title: 'เสริมความเข้มแข็งสถาบันการเงินเพื่อเข้าถึงบริการทั่วถึง' }] },
@@ -900,6 +914,20 @@
                     return this.sortedOwners.filter(o => o.name.toLowerCase().includes(this.ownerSearchQuery.toLowerCase()));
                 },
 
+                // คลังเทมเพลตชื่องาน (เรียงตามตัวอักษร)
+                get sortedTaskTitles() {
+                    let titlesSet = new Set();
+                    this.tasks.forEach(t => { if (t.title) titlesSet.add(t.title.trim()); });
+                    return Array.from(titlesSet).sort((a, b) => a.localeCompare(b, 'th'));
+                },
+
+                get filteredTaskTitles() {
+                    let query = (this.currentTask.title || '').toLowerCase();
+                    let list = this.sortedTaskTitles;
+                    if (!query) return list;
+                    return list.filter(t => t.toLowerCase().includes(query));
+                },
+
                 toggleSelectAllTeam() {
                     if (this.currentTask.subTeamMembers.length === this.sortedOwners.length) {
                         this.currentTask.subTeamMembers = [];
@@ -975,7 +1003,7 @@
 
                 saveTemplate() {
                     if (!this.newTemplateName.trim()) return;
-                    let validItems = this.newTemplateItems.filter(i => i.trim() !== '');
+                    let validItems = this.newTemplateItems.filter(i => i.text && i.text.trim() !== '');
                     if (this.editingTemplateId) {
                         let t = this.allTemplates.find(x => x.id === this.editingTemplateId);
                         if (t) {
@@ -989,20 +1017,20 @@
                     }
                     this.newTemplateName = '';
                     this.newTemplateIcon = '📋';
-                    this.newTemplateItems = [''];
+                    this.newTemplateItems = [{ phase: 'do', text: '' }];
                     this.saveLocalStorage();
                 },
                 editTemplate(tpl) {
                     this.editingTemplateId = tpl.id;
                     this.newTemplateName = tpl.name;
                     this.newTemplateIcon = tpl.icon || '📋';
-                    this.newTemplateItems = [...tpl.items];
+                    this.newTemplateItems = JSON.parse(JSON.stringify(tpl.items || []));
                 },
                 cancelEditTemplate() {
                     this.editingTemplateId = null;
                     this.newTemplateName = '';
                     this.newTemplateIcon = '📋';
-                    this.newTemplateItems = [''];
+                    this.newTemplateItems = [{ phase: 'do', text: '' }];
                 },
                 deleteTemplate(id) {
                     this.allTemplates = this.allTemplates.filter(t => t.id !== id);
@@ -1024,15 +1052,14 @@
                 applyTemplate(tplId) {
                     if (!tplId) return;
                     let found = this.allTemplates.find(t => t.id === tplId);
-                    if (found) {
+                    if (found && found.items) {
                         let today = this.currentTask.doStart || new Date().toLocaleDateString('en-CA');
-                        found.items.forEach(text => {
-                            this.currentTask.checklist.push({ phase: 'do', date: today, text, done: false });
+                        found.items.forEach(item => {
+                            this.currentTask.checklist.push({ phase: item.phase || 'do', date: today, text: item.text, done: false });
                         });
                     }
                 },
 
-                // ฟังก์ชันเลื่อนเช็คลิสต์อัตโนมัติตามวันเริ่มต้นงานที่เปลี่ยนไป
                 onDateChanged() {
                     let newStart = this.currentTask.doStart || this.currentTask.planStart;
                     if (!newStart || !this.lastStoredStart) {
@@ -1320,6 +1347,7 @@
                     };
                     this.ownerSearchQuery = '';
                     this.ownerSearchInput = '';
+                    this.showTitleSuggestions = false;
                     this.isModalOpen = true;
                 },
 
@@ -1337,6 +1365,7 @@
                     if (this.currentTask.useSdgs === undefined) this.currentTask.useSdgs = this.currentTask.selectedSdgs.length > 0;
                     this.ownerSearchQuery = '';
                     this.ownerSearchInput = '';
+                    this.showTitleSuggestions = false;
                     this.isModalOpen = true;
                 },
 
