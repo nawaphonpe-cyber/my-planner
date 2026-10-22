@@ -82,7 +82,6 @@
                     </div>
                     
                     <div class="flex items-center gap-2">
-                        <!-- เลือกปีสำหรับปฏิทินรายปี -->
                         <div x-show="calendarMode === 'yearly'" class="flex items-center gap-1">
                             <label class="text-xs font-semibold">เลือกปี พ.ศ.:</label>
                             <select x-model.number="yearlyViewYear" class="border rounded p-1 text-xs bg-white font-bold">
@@ -92,7 +91,6 @@
                             </select>
                         </div>
                         
-                        <!-- ควบคุมเดือนสำหรับปฏิทินรายเดือน -->
                         <div x-show="calendarMode === 'monthly'" class="flex items-center gap-2">
                             <button @click="prevMonth()" class="bg-slate-100 px-3 py-1.5 rounded-lg text-xs cursor-pointer">&lt; ก่อนหน้า</button>
                             <h2 class="text-sm sm:text-base font-bold w-40 text-center" :class="currentUserRole === 'viewer' ? 'text-emerald-900' : 'text-indigo-900'" x-text="currentMonthName"></h2>
@@ -113,7 +111,6 @@
                             <div class="min-h-[120px] p-1 flex flex-col bg-white justify-between relative" :class="day.isCurrentMonth ? '' : 'bg-slate-50 text-slate-300'">
                                 <div class="flex justify-between items-center">
                                     <span class="text-xs font-semibold px-1 rounded" :class="day.isToday ? (currentUserRole === 'viewer' ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white') : ''" x-text="day.dayNum"></span>
-                                    <!-- ป้ายสัญลักษณ์จำนวนเช็คลิสต์ (คลิกเพื่อดูและติ๊กได้ทันที) -->
                                     <template x-if="day.dateStr && getDayChecklistSummary(day.dateStr).total > 0">
                                         <span @click="openDayDetails(day.dateStr)" 
                                               class="text-[9px] px-1.5 py-0.5 rounded-full font-bold text-white cursor-pointer shadow-xs"
@@ -366,16 +363,17 @@
                 </div>
             </div>
 
-            <!-- TAB 6: OWNERS -->
+            <!-- TAB 6: OWNERS (Drag & Drop sorting) -->
             <div x-show="currentUserRole !== 'viewer' && activeTab === 'owners'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
-                <h2 class="text-base font-bold text-slate-800">จัดการบุคลากร (เรียงตามตัวอักษร)</h2>
+                <h2 class="text-base font-bold text-slate-800">จัดการบุคลากร (ลากสลับตำแหน่งได้ ⠿)</h2>
                 <div class="flex gap-2">
                     <input type="text" x-model="newOwnerName" placeholder="ชื่อ-นามสกุล..." class="border rounded px-3 py-2 text-xs flex-1 bg-white">
                     <button @click="addOwner()" class="bg-indigo-600 text-white px-4 py-2 rounded text-xs cursor-pointer">+ เพิ่ม</button>
                 </div>
-                <div class="space-y-2">
-                    <template x-for="o in sortedOwners" :key="o.id">
-                        <div class="border rounded p-3 bg-slate-50 flex items-center justify-between gap-3">
+                <div class="space-y-2" x-sort="onSortOwners">
+                    <template x-for="o in owners" :key="o.id">
+                        <div class="border rounded p-3 bg-slate-50 flex items-center justify-between gap-3 cursor-move" :x-sort:item="o.id">
+                            <span class="text-slate-400 font-bold">⠿</span>
                             <input type="text" x-model="o.name" @change="saveLocalStorage()" class="flex-1 border rounded px-2 py-1 text-xs bg-white font-bold">
                             <button @click="deleteOwner(o.id)" class="text-rose-600 text-xs px-2 py-1 border rounded bg-white cursor-pointer">ลบ</button>
                         </div>
@@ -431,7 +429,6 @@
                     </div>
                 </div>
 
-                <!-- ลิงก์หลักฐานแนบ -->
                 <div>
                     <label class="block font-semibold mb-1 text-indigo-900">ลิงก์หลักฐานแนบ (เช่น Google Drive, ไฟล์ PDF, รูปภาพ)</label>
                     <input type="url" x-model="currentTask.evidenceUrl" :disabled="currentUserRole === 'viewer'" placeholder="https://..." class="w-full border rounded p-2 bg-white">
@@ -584,22 +581,30 @@
         </div>
     </div>
 
-    <!-- DAY DETAILS & CHECKLIST TICK MODAL -->
+    <!-- DAY DETAILS & CHECKLIST TICK & STATUS JUMP MODAL -->
     <div x-show="dayDetailModal.open" x-cloak class="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-3 z-50">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4" @click.stop>
             <h3 class="text-base font-bold text-indigo-900 border-b pb-2" x-text="'รายละเอียดในวันที่: ' + dayDetailModal.dateStr"></h3>
             <div class="space-y-3 max-h-60 overflow-y-auto">
                 <template x-for="task in dayDetailModal.tasks" :key="task.id">
-                    <div class="p-3 bg-slate-50 border rounded-lg space-y-1">
-                        <span class="text-[10px] px-1.5 py-0.5 rounded text-white font-semibold inline-block" :style="'background-color: ' + getCategoryColor(task.category)" x-text="task.category"></span>
-                        <h4 class="font-bold text-sm text-slate-900" x-text="task.title"></h4>
-                        <p class="text-xs text-slate-500" x-text="'ผู้รับผิดชอบ: ' + (task.owner || '-')"></p>
+                    <div class="p-3 bg-slate-50 border rounded-lg space-y-1 flex justify-between items-center">
+                        <div>
+                            <span class="text-[10px] px-1.5 py-0.5 rounded text-white font-semibold inline-block" :style="'background-color: ' + getCategoryColor(task.category)" x-text="task.category"></span>
+                            <h4 class="font-bold text-sm text-slate-900" x-text="task.title"></h4>
+                            <p class="text-xs text-slate-500" x-text="'ผู้รับผิดชอบ: ' + (task.owner || '-')"></p>
+                        </div>
+                        <!-- ปุ่มกดเพื่อย้ายสถานะงาน (Mark เสร็จสิ้น / เปิดแก้ไข) -->
+                        <div class="space-y-1 text-right">
+                            <button @click="toggleTaskCompleted(task)" class="px-2.5 py-1 border rounded text-[10px] font-semibold cursor-pointer" :class="task.isCompleted ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-800'" x-text="task.isCompleted ? '✓ เสร็จแล้ว' : 'ยังไม่เสร็จ'"></button>
+                            <br>
+                            <button @click="dayDetailModal.open = false; editTask(task);" class="text-[11px] text-indigo-600 underline cursor-pointer">จัดการงาน</button>
+                        </div>
                     </div>
                 </template>
 
-                <!-- ติ๊กเช็คลิสต์บนปฏิทินได้ทันที พร้อมแบ่งประเภท -->
+                <!-- ติ๊กเช็คลิสต์บนปฏิทินพร้อมประเภท -->
                 <div class="pt-2 border-t" x-show="dayDetailModal.checklists && dayDetailModal.checklists.length > 0">
-                    <h4 class="font-bold text-xs text-indigo-900 mb-2">📌 เช็คลิสต์ประจำวัน (สามารถติ๊กทำเครื่องหมายได้ทันที):</h4>
+                    <h4 class="font-bold text-xs text-indigo-900 mb-2">📌 เช็คลิสต์ประจำวัน (ติ๊กทำเครื่องหมายได้ทันที):</h4>
                     <div class="space-y-2">
                         <template x-for="item in dayDetailModal.checklists" :key="item.chkIndex">
                             <div class="text-xs flex items-center justify-between bg-slate-50 p-2 rounded border">
@@ -815,7 +820,17 @@
                 },
 
                 get sortedOwners() {
-                    return [...this.owners].sort((a, b) => a.name.localeCompare(b.name, 'th'));
+                    return [...this.owners];
+                },
+
+                onSortOwners(itemIds) {
+                    let sorted = [];
+                    itemIds.forEach(id => {
+                        let found = this.owners.find(o => o.id === id);
+                        if (found) sorted.push(found);
+                    });
+                    this.owners = sorted;
+                    this.saveLocalStorage();
                 },
 
                 get filteredOwnersMain() {
@@ -1058,14 +1073,14 @@
 
                 getTaskStatus(task) {
                     let today = new Date().toISOString().split('T')[0];
-                    let startDo = task.doStart || task.planStart;
-                    let endDo = task.doEnd || task.planEnd;
+                    let startDo = task.doStart || task.planStart || '';
+                    let endDo = task.doEnd || task.planEnd || '';
                     if (task.isCompleted) return { text: '✓ เสร็จสิ้นแล้ว', class: 'bg-emerald-100 text-emerald-800 font-bold' };
                     if (!endDo) return { text: 'รอดำเนินการ', class: 'bg-slate-100 text-slate-700' };
                     if (today > endDo) return { text: '⚠️ เลยกำหนด', class: 'bg-rose-100 text-rose-700 blink-alert font-bold' };
-                    if (today >= startDo && today <= endDo) return { text: '⚡ กำลังทำ', class: 'bg-amber-100 text-amber-800' };
+                    if (today >= startDo && today <= endDo) return { text: '⚡ กำลังทำ', class: 'bg-amber-100 text-amber-800 font-bold' };
                     if (today < startDo) return { text: '🕒 รอดำเนินการ', class: 'bg-slate-100 text-slate-700' };
-                    return { text: 'กำลังดำเนินการ', class: 'bg-blue-100 text-blue-800' };
+                    return { text: 'รอดำเนินการ', class: 'bg-slate-100 text-slate-700' };
                 },
 
                 get sortedTasksByPriority() {
@@ -1129,7 +1144,6 @@
                         copy.title = copy.title + ` (พ.ศ. ${targetY + 543})`;
                         copy.isCompleted = false;
 
-                        // คํานวณเลื่อนปีไปยังเป้าหมาย
                         ['planStart', 'planEnd', 'doStart', 'doEnd', 'summaryStart', 'summaryEnd'].forEach(field => {
                             if (copy[field]) {
                                 let parts = copy[field].split('-');
