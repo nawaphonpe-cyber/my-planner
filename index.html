@@ -13,7 +13,7 @@
         [x-cloak] { display: none !important; }
         .task-continuous-bar {
             display: block; width: 100%; padding: 2px 6px; font-size: 10px; line-height: 1.2;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; margin-bottom: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; margin-bottom: 0px;
         }
         .bar-single { border-radius: 4px; }
         .bar-start { border-top-left-radius: 4px; border-bottom-left-radius: 4px; margin-right: -4px; padding-right: 8px; z-index: 10; position: relative; }
@@ -88,7 +88,7 @@
                     <button x-show="currentUserRole !== 'viewer'" @click="openTaskModal()" class="bg-indigo-600 text-white px-3.5 py-1.5 rounded-lg text-xs cursor-pointer">+ เพิ่มงาน</button>
                 </div>
 
-                <!-- Monthly View -->
+                <!-- Monthly View (Seamless Bars) -->
                 <div x-show="calendarMode === 'monthly'" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col">
                     <div class="grid grid-cols-7 bg-slate-100 border-b text-center text-xs font-bold text-slate-600 py-2">
                         <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
@@ -99,7 +99,7 @@
                                 <div class="flex justify-between items-center">
                                     <span class="text-xs font-semibold px-1 rounded" :class="day.isToday ? 'bg-indigo-600 text-white' : ''" x-text="day.dayNum"></span>
                                 </div>
-                                <div class="space-y-0.5 my-1 flex-1 overflow-hidden">
+                                <div class="space-y-0 my-1 flex-1 overflow-hidden">
                                     <template x-for="item in getContinuousTasksForDate(day.dateStr)" :key="item.task.id + '-' + item.phase">
                                         <div @click="editTask(item.task)" class="task-continuous-bar font-medium text-white shadow-xs" :style="getPhaseStyle(item)" :title="item.task.title">
                                             <span x-text="item.barType === 'start' || item.barType === 'single' ? item.label + item.task.title : '...'"></span>
@@ -111,7 +111,7 @@
                     </div>
                 </div>
 
-                <!-- Yearly View (Sun-Sat Correct, Show only Do work dates) -->
+                <!-- Yearly View -->
                 <div x-show="calendarMode === 'yearly'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <template x-for="(mName, mIdx) in monthNames" :key="mIdx">
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 space-y-2">
@@ -176,8 +176,9 @@
                                         <span x-text="(task.budgetApproved || 0).toLocaleString() + ' ฿'"></span> / 
                                         <span class="text-indigo-600 font-bold" x-text="(task.budgetUsed || 0).toLocaleString() + ' ฿'"></span>
                                     </td>
-                                    <td class="p-3 text-center space-x-1">
+                                    <td class="p-3 text-center space-x-1 whitespace-nowrap">
                                         <button @click="editTask(task)" class="px-2.5 py-1 border rounded text-indigo-600 hover:bg-indigo-50 cursor-pointer" x-text="currentUserRole !== 'viewer' ? 'แก้ไข' : 'ดูข้อมูล'"></button>
+                                        <button x-show="currentUserRole !== 'viewer'" @click="duplicateTask(task)" class="px-2.5 py-1 border rounded text-emerald-600 hover:bg-emerald-50 cursor-pointer" title="คัดลอกงานไปปีถัดไป">📋 คัดลอก</button>
                                         <button x-show="currentUserRole !== 'viewer'" @click="deleteTask(task.id)" class="px-2.5 py-1 border rounded text-rose-600 hover:bg-rose-50 cursor-pointer">ลบ</button>
                                     </td>
                                 </tr>
@@ -187,7 +188,7 @@
                 </div>
             </div>
 
-            <!-- TAB 3: REPORTS (Separated General & Individual) -->
+            <!-- TAB 3: REPORTS -->
             <div x-show="activeTab === 'reports'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
                 <div>
                     <h2 class="text-base font-bold text-indigo-900">🖨️ ระบบออกรายงานทางการ (แนวนอน / พิมพ์)</h2>
@@ -258,7 +259,7 @@
                 </div>
             </div>
 
-            <!-- TAB 4: TEMPLATES CHECKLIST -->
+            <!-- TAB 4: TEMPLATES -->
             <div x-show="currentUserRole !== 'viewer' && activeTab === 'templates'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
                 <h2 class="text-base font-bold text-slate-800">จัดการเทมเพลตเช็คลิสต์</h2>
                 <div class="bg-slate-50 border p-4 rounded-xl space-y-3 text-xs">
@@ -427,19 +428,23 @@
                     </div>
                 </div>
 
-                <!-- OWNERS & MULTI-SELECT TEAM -->
+                <!-- OWNERS & SEARCHABLE TEAM WITH SELECT ALL -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-indigo-50/50 p-3 rounded-xl border">
                     <div>
-                        <label class="block font-semibold mb-1 text-indigo-900">ผู้รับผิดชอบหลัก</label>
+                        <label class="block font-semibold mb-1 text-indigo-900">ผู้รับผิดชอบหลัก (ค้นหา/พิมพ์ชื่อ)</label>
+                        <input type="text" x-model="ownerSearchInput" placeholder="พิมพ์ค้นหาชื่อผู้รับผิดชอบ..." class="w-full border rounded p-2 bg-white font-bold mb-1">
                         <select x-model="currentTask.owner" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-2 bg-white font-bold">
                             <option value="">-- เลือกผู้รับผิดชอบ --</option>
-                            <template x-for="o in sortedOwners" :key="o.id">
+                            <template x-for="o in filteredOwnersMain" :key="o.id">
                                 <option :value="o.name" x-text="o.name"></option>
                             </template>
                         </select>
                     </div>
                     <div>
-                        <label class="block font-semibold mb-1 text-indigo-900">คณะทำงาน / ผู้ร่วมงาน (เลือกได้หลายคน)</label>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="font-semibold text-indigo-900">คณะทำงาน / ผู้ร่วมงาน (เลือกได้หลายคน)</label>
+                            <button @click="toggleSelectAllTeam()" type="button" class="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded cursor-pointer">เลือกทั้งหมด / ไม่เลือก</button>
+                        </div>
                         <div class="bg-white border rounded p-2 max-h-32 overflow-y-auto space-y-1">
                             <input type="text" x-model="ownerSearchQuery" placeholder="🔍 ค้นหาชื่อ..." class="w-full border rounded p-1 text-[11px] mb-1">
                             <template x-for="o in filteredOwnersForSelect" :key="o.id">
@@ -452,23 +457,28 @@
                     </div>
                 </div>
 
-                <!-- SDGS GROUPED WITH SUB-ITEMS -->
+                <!-- SDGS TOGGLE & FULL LIST -->
                 <div class="bg-indigo-50 border p-3 rounded-xl space-y-2">
-                    <span class="font-bold text-indigo-900">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs หลัก และข้อย่อย a, b, c, d)</span>
-                    <div class="space-y-3 max-h-52 overflow-y-auto bg-white p-3 rounded border">
-                        <template x-for="group in sdgGroupedList" :key="group.mainId">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-indigo-900">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs)</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" x-model="currentTask.useSdgs" :disabled="currentUserRole === 'viewer'" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+                    <div x-show="currentTask.useSdgs" class="space-y-3 max-h-52 overflow-y-auto bg-white p-3 rounded border">
+                        <template x-for="group in sdgFullData" :key="group.goalNum">
                             <div class="border-b pb-2 last:border-0">
                                 <label class="flex items-center gap-2 font-bold text-indigo-900 cursor-pointer">
-                                    <input type="checkbox" :value="group.mainId" x-model="currentTask.selectedSdgs" class="rounded text-indigo-600">
-                                    <span x-text="group.mainId + ': ' + group.mainTitle"></span>
+                                    <input type="checkbox" :value="'Goal ' + group.goalNum" x-model="currentTask.selectedSdgs" class="rounded text-indigo-600">
+                                    <span x-text="'Goal ' + group.goalNum + ': ' + group.goalTitle"></span>
                                 </label>
                                 <div class="pl-6 mt-1 space-y-1">
-                                    <template x-for="sub in group.subItems" :key="sub.id">
+                                    <template x-for="target in group.targets" :key="target.code">
                                         <label class="flex items-start gap-2 text-[11px] text-slate-600 cursor-pointer hover:text-slate-900">
-                                            <input type="checkbox" :value="sub.id" x-model="currentTask.selectedSdgs" class="mt-0.5 rounded text-indigo-600">
+                                            <input type="checkbox" :value="target.code" x-model="currentTask.selectedSdgs" class="mt-0.5 rounded text-indigo-600">
                                             <div>
-                                                <span class="font-semibold text-indigo-950" x-text="sub.id + ': ' + sub.title"></span>
-                                                <span class="text-slate-500" x-text="'- ' + sub.desc"></span>
+                                                <span class="font-semibold text-indigo-950" x-text="target.code + ': ' + target.title"></span>
                                             </div>
                                         </label>
                                     </template>
@@ -478,7 +488,7 @@
                     </div>
                 </div>
 
-                <!-- CHECKLISTS 3 PHASES (Plan, Do, Summary) with Drag & Drop -->
+                <!-- CHECKLISTS 3 PHASES WITH TEMPLATES & DRAG DROP -->
                 <div class="bg-indigo-50 border p-3 rounded-xl space-y-3">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-indigo-900">📌 เช็คลิสต์ 3 ช่วง (วางแผน, ทำงาน, สรุปผล)</span>
@@ -526,7 +536,7 @@
         </div>
     </div>
 
-    <!-- DAY DETAILS MODAL (Yearly Click View) -->
+    <!-- DAY DETAILS MODAL -->
     <div x-show="dayDetailModal.open" x-cloak class="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-3 z-50">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4" @click.stop>
             <h3 class="text-base font-bold text-indigo-900 border-b pb-2" x-text="'งานในวันที่: ' + dayDetailModal.dateStr"></h3>
@@ -589,6 +599,7 @@
                 isModalOpen: false,
                 selectedCategoryFilter: '',
                 ownerSearchQuery: '',
+                ownerSearchInput: '',
                 tasks: [],
                 categories: [
                     { id: '1', name: 'กลุ่มงานบริหารทั่วไป', color: '#7c3aed' },
@@ -623,72 +634,32 @@
                 currentMonthIndex: new Date().getMonth(),
                 monthNames: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'],
 
-                // SDGs หมวดหมู่หลัก และข้อย่อย a, b, c, d
-                sdgGroupedList: [
-                    {
-                        mainId: 'SDG 1', mainTitle: 'ขจัดความยากจนทุกรูปแบบ',
-                        subItems: [
-                            { id: 'SDG 1.1', title: 'ขจัดความยากจนรุนแรง (a)', desc: 'ขจัดความยากจนรุนแรงสำหรับทุกคนในทุกที่' },
-                            { id: 'SDG 1.2', title: 'ลดความยากจนทุกมิติ (b)', desc: 'ลดสัดส่วนของชายหญิงและเด็กทุกวัยที่มีความยากจน' }
-                        ]
-                    },
-                    {
-                        mainId: 'SDG 2', mainTitle: 'ยุติความหิวโหย เกษตรยั่งยืน',
-                        subItems: [
-                            { id: 'SDG 2.1', title: 'เข้าถึงอาหารปลอดภัย (a)', desc: 'ยุติความหิวโหยและเข้าถึงอาหารปลอดภัยตลอดปี' },
-                            { id: 'SDG 2.2', title: 'ยุติทุพโภชนาการ (b)', desc: 'ยุติทุพโภชนาการทุกรูปแบบรวมถึงเด็กเตี้ยแคระ' }
-                        ]
-                    },
-                    {
-                        mainId: 'SDG 3', mainTitle: 'สุขภาพและความเป็นอยู่ที่ดี',
-                        subItems: [
-                            { id: 'SDG 3.1', title: 'ลดการตายมารดา (a)', desc: 'ลดอัตราส่วนการตายของมารดา' },
-                            { id: 'SDG 3.2', title: 'ยุติการตายเด็กทารก (b)', desc: 'ยุติการตายของทารกแรกเกิดและเด็กอายุต่ำกว่า 5 ขวบ' },
-                            { id: 'SDG 3.4', title: 'ลดโรคไม่ติดต่อเรื้อรัง (c)', desc: 'ลดการตายก่อนวัยอันควรจากโรค NCDs' },
-                            { id: 'SDG 3.8', title: 'หลักประกันสุขภาพถ้วนหน้า (d)', desc: 'บรรลุการคุ้มครองสุขภาพถ้วนหน้า' }
-                        ]
-                    },
-                    {
-                        mainId: 'SDG 4', mainTitle: 'การศึกษาที่มีคุณภาพ',
-                        subItems: [
-                            { id: 'SDG 4.1', title: 'การศึกษาขั้นพื้นฐาน (a)', desc: 'เด็กทุกคนจบประถมและมัธยมศึกษาที่มีคุณภาพ' },
-                            { id: 'SDG 4.2', title: 'พัฒนาเด็กปฐมวัย (b)', desc: 'เข้าถึงการพัฒนาและการดูแลเด็กปฐมวัย' }
-                        ]
-                    },
-                    {
-                        mainId: 'SDG 5', mainTitle: 'ความเสมอภาคทางเพศ',
-                        subItems: [
-                            { id: 'SDG 5.1', title: 'ยุติการเลือกปฏิบัติสตรี (a)', desc: 'ยุติการเลือกปฏิบัติทุกรูปแบบต่อสตรีและเด็กหญิง' },
-                            { id: 'SDG 5.2', title: 'ขจัดความรุนแรงต่อสตรี (b)', desc: 'ขจัดความรุนแรงทั้งหมดต่อสตรีและเด็กหญิง' }
-                        ]
-                    },
-                    {
-                        mainId: 'SDG 8', mainTitle: 'เศรษฐกิจและการเติบโตที่ยั่งยืน',
-                        subItems: [
-                            { id: 'SDG 8.1', title: 'เติบโตเศรษฐกิจต่อหัว (a)', desc: 'รักษาการเติบโตทางเศรษฐกิจต่อหัวตามบริบท' },
-                            { id: 'SDG 8.2', title: 'ยกระดับผลิตภาพทางเศรษฐกิจ (b)', desc: 'บรรลุความหลากหลายและยกระดับเทคโนโลยี' }
-                        ]
-                    },
-                    {
-                        mainId: 'SDG 16', mainTitle: 'สังคมสงบสุขและยุติธรรม',
-                        subItems: [
-                            { id: 'SDG 16.1', title: 'ลดความรุนแรงทุกรูปแบบ (a)', desc: 'ลดอัตราการตายจากความรุนแรงทุกรูปแบบ' },
-                            { id: 'SDG 16.6', title: 'พัฒนาสถาบันโปร่งใส (b)', desc: 'พัฒนาสถาบันที่มีประสิทธิผล โปร่งใส และรับผิดชอบ' }
-                        ]
-                    },
-                    {
-                        mainId: 'SDG 17', mainTitle: 'ความร่วมมือเพื่อการพัฒนา',
-                        subItems: [
-                            { id: 'SDG 17.1', title: 'เสริมจัดเก็บรายได้ภายใน (a)', desc: 'เสริมความเข้มแข็งการจัดเก็บรายได้ภายในประเทศ' }
-                        ]
-                    }
+                // SDGs ครบถ้วน 17 เป้าหมายหลักและเป้าประสงค์ย่อย (Targets)
+                sdgFullData: [
+                    { goalNum: 1, goalTitle: 'ขจัดความยากจนทุกรูปแบบในทุกที่', targets: [{ code: '1.1', title: 'ขจัดความยากจนรุนแรงต่ำกว่า $1.25 ต่อวัน' }, { code: '1.2', title: 'ลดสัดส่วนคนจนทุกมิติลงครึ่งหนึ่ง' }, { code: '1.3', title: 'ดำเนินมาตรการคุ้มครองทางสังคมที่เหมาะสม' }, { code: '1.4', title: 'สิทธิเท่าเทียมในการเข้าถึงทรัพยากรพื้นฐาน' }] },
+                    { goalNum: 2, goalTitle: 'ยุติความหิวโหย บรรลุความมั่นคงทางอาหาร', targets: [{ code: '2.1', title: 'เข้าถึงอาหารปลอดภัยและมีโภชนาการตลอดปี' }, { code: '2.2', title: 'ยุติทุพโภชนาการทุกรูปแบบในเด็ก' }, { code: '2.3', title: 'เพิ่มผลิตภาพทางการเกษตรของเกษตรกรรายย่อย' }] },
+                    { goalNum: 3, goalTitle: 'สร้างหลักประกันการมีสุขภาวะที่ดี', targets: [{ code: '3.1', title: 'ลดอัตราการตายมารดาลงให้น้อยลง' }, { code: '3.2', title: 'ยุติการตายของทารกและเด็กอายุต่ำกว่า 5 ขวบ' }, { code: '3.4', title: 'ลดการตายก่อนวัยอันควรจากโรคไม่ติดต่อเรื้อรัง (NCDs)' }, { code: '3.8', title: 'บรรลุหลักประกันสุขภาพถ้วนหน้า' }] },
+                    { goalNum: 4, goalTitle: 'การศึกษาที่มีคุณภาพเท่าเทียม', targets: [{ code: '4.1', title: 'การศึกษาขั้นพื้นฐานที่มีคุณภาพฟรีสำหรับทุกคน' }, { code: '4.2', title: 'การพัฒนาเด็กปฐมวัยที่มีคุณภาพ' }] },
+                    { goalNum: 5, goalTitle: 'ความเสมอภาคระหว่างเพศ', targets: [{ code: '5.1', title: 'ยุติการเลือกปฏิบัติทุกรูปแบบต่อสตรี' }, { code: '5.2', title: 'ขจัดความรุนแรงทั้งหมดต่อสตรีและเด็กหญิง' }] },
+                    { goalNum: 6, goalTitle: 'น้ำสะอาดและการสุขาภิบาล', targets: [{ code: '6.1', title: 'เข้าถึงน้ำดื่มที่ปลอดภัยและราคาเข้าถึงได้' }, { code: '6.2', title: 'เข้าถึงระบบสุขอนามัยที่เหมาะสม' }] },
+                    { goalNum: 7, goalTitle: 'พลังงานสะอาดที่เข้าถึงได้', targets: [{ code: '7.1', title: 'เข้าถึงบริการพลังงานสมัยใหม่ที่เชื่อถือได้' }, { code: '7.2', title: 'เพิ่มสัดส่วนพลังงานทดแทนในระดับโลก' }] },
+                    { goalNum: 8, goalTitle: 'งานที่มีคุณค่าและการเติบโตทางเศรษฐกิจ', targets: [{ code: '8.1', title: 'เติบโตทางเศรษฐกิจต่อหัวตามบริบทประเทศ' }, { code: '8.2', title: 'ยกระดับผลิตภาพทางเศรษฐกิจผ่านนวัตกรรม' }] },
+                    { goalNum: 9, goalTitle: 'โครงสร้างพื้นฐาน นวัตกรรม', targets: [{ code: '9.1', title: 'พัฒนาโครงสร้างพื้นฐานที่มีความยืดหยุ่น' }, { code: '9.2', title: 'ส่งเสริมอุตสาหกรรมที่ครอบคลุมและยั่งยืน' }] },
+                    { goalNum: 10, goalTitle: 'ลดความเหลื่อมล้ำ', targets: [{ code: '10.1', title: 'เติบโตรายได้ของกลุ่มประชากรล่างสุด 40%' }, { code: '10.2', title: 'เสริมสร้างความครอบคลุมทางสังคมและเศรษฐกิจ' }] },
+                    { goalNum: 11, goalTitle: 'เมืองและชุมชนยั่งยืน', targets: [{ code: '11.1', title: 'เข้าถึงที่อยู่อาศัยและบริการพื้นฐานที่ปลอดภัย' }, { code: '11.2', title: 'ระบบคมนาคมขนส่งที่ยั่งยืนปลอดภัย' }] },
+                    { goalNum: 12, goalTitle: 'การบริโภคและการผลิตที่ยั่งยืน', targets: [{ code: '12.1', title: 'กรอบการดำเนินงานว่าด้วยการบริโภคและผลิตที่ยั่งยืน' }, { code: '12.2', title: 'การบริหารจัดการและการใช้ทรัพยากรธรรมชาติอย่างมีประสิทธิภาพ' }] },
+                    { goalNum: 13, goalTitle: 'การรับมือการเปลี่ยนแปลงสภาพภูมิอากาศ', targets: [{ code: '13.1', title: 'เสริมสร้างภูมิต้านทานต่อภัยพิบัติทางภูมิอากาศ' }] },
+                    { goalNum: 14, goalTitle: 'ทรัพยากรทางทะเล', targets: [{ code: '14.1', title: 'ป้องกันและลดมลพิษทางทะเลทุกประเภท' }] },
+                    { goalNum: 15, goalTitle: 'ระบบนิเวศบนบก', targets: [{ code: '15.1', title: 'อนุรักษ์และฟื้นฟูระบบนิเวศบนบกและน้ำจืด' }] },
+                    { goalNum: 16, goalTitle: 'สันติภาพ ความยุติธรรม สถาบันเข้มแข็ง', targets: [{ code: '16.1', title: 'ลดความรุนแรงและอัตราการตายทุกรูปแบบ' }] },
+                    { goalNum: 17, goalTitle: 'ความร่วมมือเพื่อการพัฒนาที่ยั่งยืน', targets: [{ code: '17.1', title: 'เสริมความเข้มแข็งการจัดเก็บรายได้ภายในประเทศ' }] }
                 ],
 
                 currentTask: {
                     id: null, category: '', title: '', countWorkload: true,
                     planStart: '', planEnd: '', doStart: '', doEnd: '', summaryStart: '', summaryEnd: '',
                     budgetApproved: 0, budgetUsed: 0, owner: '', subTeamMembers: [], checklist: [],
-                    selectedSdgs: [], pdsa: { plan: '', do: '', study: '', act: '' }
+                    useSdgs: false, selectedSdgs: [], pdsa: { plan: '', do: '', study: '', act: '' }
                 },
 
                 init() { this.loadLocalStorage(); },
@@ -757,9 +728,22 @@
                     return [...this.owners].sort((a, b) => a.name.localeCompare(b.name, 'th'));
                 },
 
+                get filteredOwnersMain() {
+                    if (!this.ownerSearchInput) return this.sortedOwners;
+                    return this.sortedOwners.filter(o => o.name.toLowerCase().includes(this.ownerSearchInput.toLowerCase()));
+                },
+
                 get filteredOwnersForSelect() {
                     if (!this.ownerSearchQuery) return this.sortedOwners;
                     return this.sortedOwners.filter(o => o.name.toLowerCase().includes(this.ownerSearchQuery.toLowerCase()));
+                },
+
+                toggleSelectAllTeam() {
+                    if (this.currentTask.subTeamMembers.length === this.sortedOwners.length) {
+                        this.currentTask.subTeamMembers = [];
+                    } else {
+                        this.currentTask.subTeamMembers = this.sortedOwners.map(o => o.name);
+                    }
                 },
 
                 getCategoryColor(catName) {
@@ -912,7 +896,6 @@
                     return `background-color: ${baseColor}; font-weight: 500; ` + shapeClass;
                 },
 
-                // ปฏิทินรายปีตรงตามจริง (Sun-Sat) และแสดงเฉพาะ Do (ปฏิบัติจริง) เท่านั้น
                 buildYearlyMonthGridCorrect(year, month) {
                     let firstDow = new Date(year, month, 1).getDay();
                     let totalDays = new Date(year, month + 1, 0).getDate();
@@ -973,9 +956,10 @@
                         id: null, category: this.categories[0]?.name || '', title: '', countWorkload: true,
                         planStart: today, planEnd: today, doStart: today, doEnd: today, summaryStart: today, summaryEnd: today,
                         budgetApproved: 0, budgetUsed: 0, owner: this.owners[0]?.name || '', subTeamMembers: [], checklist: [],
-                        selectedSdgs: [], pdsa: { plan: '', do: '', study: '', act: '' }
+                        useSdgs: false, selectedSdgs: [], pdsa: { plan: '', do: '', study: '', act: '' }
                     };
                     this.ownerSearchQuery = '';
+                    this.ownerSearchInput = '';
                     this.isModalOpen = true;
                 },
 
@@ -985,14 +969,38 @@
                     if (!this.currentTask.checklist) this.currentTask.checklist = [];
                     if (!this.currentTask.subTeamMembers) this.currentTask.subTeamMembers = [];
                     if (!this.currentTask.selectedSdgs) this.currentTask.selectedSdgs = [];
+                    if (this.currentTask.useSdgs === undefined) this.currentTask.useSdgs = this.currentTask.selectedSdgs.length > 0;
                     this.ownerSearchQuery = '';
+                    this.ownerSearchInput = '';
                     this.isModalOpen = true;
+                },
+
+                duplicateTask(task) {
+                    let copy = JSON.parse(JSON.stringify(task));
+                    copy.id = Date.now().toString();
+                    copy.title = copy.title + ' (สำเนาปีถัดไป)';
+                    
+                    // เลื่อนปี พ.ศ. ไป 1 ปีอัตโนมัติ
+                    ['planStart', 'planEnd', 'doStart', 'doEnd', 'summaryStart', 'summaryEnd'].forEach(field => {
+                        if (copy[field]) {
+                            let parts = copy[field].split('-');
+                            parts[0] = String(parseInt(parts[0]) + 1);
+                            copy[field] = parts.join('-');
+                        }
+                    });
+
+                    this.tasks.push(copy);
+                    this.saveLocalStorage();
+                    alert('คัดลอกงานไปยังปีถัดไปสำเร็จเรียบร้อยแล้ว');
                 },
 
                 saveTask() {
                     if (!this.currentTask.title.trim() || !this.currentTask.category) {
                         alert('กรุณากรอกชื่องานและเลือกกลุ่มงานหลัก');
                         return;
+                    }
+                    if (!this.currentTask.useSdgs) {
+                        this.currentTask.selectedSdgs = [];
                     }
                     if (!this.currentTask.id) {
                         this.currentTask.id = Date.now().toString();
@@ -1054,7 +1062,15 @@
                     let startTermDate = this.workloadTerm === '1' ? `${this.workloadYear}-01-01` : `${this.workloadYear}-07-01`;
                     let endTermDate = this.workloadTerm === '1' ? `${this.workloadYear}-06-30` : `${this.workloadYear}-12-31`;
 
-                    let userTasks = this.tasks.filter(t => (t.owner === this.workloadPerson || (t.subTeamMembers && t.subTeamMembers.includes(this.workloadPerson))) && t.countWorkload);
+                    // กรองเฉพาะงานที่มีช่วงปฏิบัติ (Do) อยู่ในช่วงรอบประเมินที่เลือกเท่านั้น
+                    let userTasks = this.tasks.filter(t => {
+                        let isOwnerOrTeam = (t.owner === this.workloadPerson || (t.subTeamMembers && t.subTeamMembers.includes(this.workloadPerson)));
+                        let hasWorkload = t.countWorkload;
+                        let doStart = t.doStart || t.planStart || '';
+                        let inTerm = doStart && doStart >= startTermDate && doStart <= endTermDate;
+                        return isOwnerOrTeam && hasWorkload && inTerm;
+                    });
+
                     let totalDays = 0;
 
                     let html = `<div class="mb-4 text-xs space-y-1">
