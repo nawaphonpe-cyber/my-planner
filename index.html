@@ -11,48 +11,39 @@
     <style>
         html, body { font-family: 'Sarabun', sans-serif; width: 100%; height: 100%; margin: 0; padding: 0; -webkit-text-size-adjust: 100%; }
         [x-cloak]{display:none !important;}
-        .summary-bar-style {
-            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.3), rgba(255,255,255,0.3) 4px, transparent 4px, transparent 8px);
-            border-bottom: 2px dashed rgba(0,0,0,0.2);
-        }
         @keyframes custom-blink {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.3; transform: scale(0.96); }
         }
-        .blink-alert {
-            animation: custom-blink 1s infinite ease-in-out;
-        }
+        .blink-alert { animation: custom-blink 1s infinite ease-in-out; }
         @media (max-width: 768px) {
             .calendar-cell { min-height: 90px !important; padding: 2px !important; }
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-full flex flex-col" x-data="plannerApp()" @keydown.escape.window="dialog.open && closeDialog(false)">
+<body class="bg-slate-50 text-slate-800 min-h-full flex flex-col" x-data="plannerApp()">
 
     <!-- LOGIN SCREEN -->
     <div x-show="!isLoggedIn" x-cloak class="fixed inset-0 z-[100] bg-slate-900/80 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 space-y-6 text-center" @click.stop>
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 space-y-6 text-center">
             <div class="space-y-2">
                 <h2 class="text-xl sm:text-2xl font-bold text-indigo-900">ระบบวางแผนการทำงานประจำปี</h2>
-                <p class="text-xs sm:text-sm text-slate-500">กรุณากรอกรหัสผ่านเพื่อเข้าใช้งาน หรือเข้าชมระบบ</p>
+                <p class="text-xs sm:text-sm text-slate-500">กรอกรหัสผ่านเพื่อเข้าใช้งาน หรือเข้าชมระบบ</p>
             </div>
-
             <div class="space-y-4 text-left">
                 <div>
-                    <label class="block text-xs font-semibold mb-1 text-slate-700">รหัสผ่านเข้าใช้งาน (Password)</label>
-                    <input type="password" x-model="loginPassword" @keyup.enter="handleLogin()" placeholder="กรอกรหัสผ่าน..." class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <label class="block text-xs font-semibold mb-1 text-slate-700">รหัสผ่าน (Password)</label>
+                    <input type="password" x-model="loginPassword" @keyup.enter="handleLogin()" placeholder="รหัสผ่านเริ่มต้น 1234..." class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
                 <button @click="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg text-sm font-semibold transition-colors cursor-pointer">
                     เข้าสู่ระบบเจ้าหน้าที่
                 </button>
             </div>
-
             <div class="relative flex py-2 items-center">
                 <div class="flex-grow border-t border-slate-200"></div>
                 <span class="flex-shrink mx-4 text-slate-400 text-xs">หรือ</span>
                 <div class="flex-grow border-t border-slate-200"></div>
             </div>
-
             <button @click="handleViewerLogin()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-lg text-sm font-semibold transition-colors cursor-pointer">
                 👀 เข้าสู่ระบบสำหรับผู้เข้าชม (View Only)
             </button>
@@ -61,154 +52,50 @@
 
     <!-- MAIN APP -->
     <div x-show="isLoggedIn" x-cloak class="flex-1 flex flex-col w-full">
-        <!-- HEADER -->
-        <header :class="isEditor ? 'bg-indigo-700' : 'bg-emerald-700'" class="text-white shadow-md w-full transition-colors duration-300">
+        <header class="bg-indigo-700 text-white shadow-md w-full">
             <div class="w-full px-4 sm:px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-3">
                 <div class="text-center md:text-left">
                     <h1 class="text-xl sm:text-2xl font-bold">ระบบวางแผนการทำงานประจำปี</h1>
-                    <p class="text-xs sm:text-sm opacity-90" x-text="'ผู้ใช้งาน: ' + currentUserName + ' (' + (isEditor ? 'สิทธิ์เจ้าหน้าที่ - แก้ไขได้' : 'สิทธิ์ผู้บริหาร / ผู้ชม - ดูอย่างเดียว') + ')'"></p>
+                    <p class="text-xs sm:text-sm opacity-90" x-text="'ผู้ใช้งาน: ' + currentUserName"></p>
                 </div>
-                <div class="flex flex-wrap items-center justify-center gap-2">
-                    <button @click="loadData(true)" :class="isEditor ? 'bg-indigo-800 hover:bg-indigo-900' : 'bg-emerald-800 hover:bg-emerald-900'" class="text-white px-3 py-1.5 rounded-lg text-xs cursor-pointer">🔄 โหลดข้อมูลใหม่</button>
-                    <button @click="logout()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-xs cursor-pointer">🚪 ออกจากระบบ</button>
-                </div>
+                <button @click="logout()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-xs cursor-pointer">🚪 ออกจากระบบ</button>
             </div>
         </header>
 
-        <div x-show="isSaving" x-cloak class="fixed top-0 inset-x-0 z-[80] bg-amber-500 text-white text-center text-sm py-1.5 shadow font-medium" x-text="savingMessage"></div>
-
         <main class="flex-1 w-full px-3 sm:px-6 py-4 sm:py-6 flex flex-col">
-            <div x-show="isLoading" class="text-center py-20 text-slate-500 font-medium" x-text="loadingMessage"></div>
+            <div x-show="isLoading" class="text-center py-20 text-slate-500 font-medium">กำลังโหลดข้อมูล...</div>
 
-            <div x-show="!isLoading" x-cloak class="flex-1 flex flex-col">
-                <!-- NAVIGATION TABS -->
-                <div class="flex border-b border-slate-200 mb-4 sm:mb-6 overflow-x-auto scrollbar-thin">
-                    <button @click="activeTab = 'calendarView'" :class="activeTab === 'calendarView' ? (isEditor ? 'border-indigo-600 text-indigo-600' : 'border-emerald-600 text-emerald-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">มุมมองปฏิทิน</button>
-                    <button @click="activeTab = 'tasks'" :class="activeTab === 'tasks' ? (isEditor ? 'border-indigo-600 text-indigo-600' : 'border-emerald-600 text-emerald-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">รายการงาน & PDSA</button>
-                    <button @click="activeTab = 'reports'" :class="activeTab === 'reports' ? (isEditor ? 'border-indigo-600 text-indigo-600' : 'border-emerald-600 text-emerald-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">ออกรายงาน PDF & ภาระงาน</button>
-                    <button x-show="isEditor" @click="activeTab = 'templates'" :class="activeTab === 'templates' ? (isEditor ? 'border-indigo-600 text-indigo-600' : 'border-emerald-600 text-emerald-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการเทมเพลตเช็คลิสต์</button>
-                    <button x-show="isEditor" @click="activeTab = 'categories'" :class="activeTab === 'categories' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการกลุ่มงานหลักและหัวข้อย่อย</button>
-                    <button x-show="isEditor" @click="activeTab = 'owners'" :class="activeTab === 'owners' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการรายชื่อบุคลากร</button>
-                    <button x-show="isMainAdmin" @click="activeTab = 'users'" :class="activeTab === 'users' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">🔑 จัดการผู้ใช้งานและสิทธิ์</button>
+            <div x-show="!isLoading" x-cloak class="flex-1 flex flex-col space-y-4">
+                <div class="flex border-b border-slate-200 mb-4 overflow-x-auto">
+                    <button @click="activeTab = 'calendarView'" :class="activeTab === 'calendarView' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-4 text-sm font-semibold border-b-2 cursor-pointer">มุมมองปฏิทิน</button>
+                    <button @click="activeTab = 'tasks'" :class="activeTab === 'tasks' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-4 text-sm font-semibold border-b-2 cursor-pointer">รายการงาน & PDSA</button>
+                    <button @click="activeTab = 'reports'" :class="activeTab === 'reports' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-4 text-sm font-semibold border-b-2 cursor-pointer">ออกรายงาน PDF & ภาระงาน</button>
+                    <button @click="activeTab = 'categories'" :class="activeTab === 'categories' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-4 text-sm font-semibold border-b-2 cursor-pointer">จัดการกลุ่มงาน</button>
+                    <button @click="activeTab = 'owners'" :class="activeTab === 'owners' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-4 text-sm font-semibold border-b-2 cursor-pointer">จัดการบุคลากร</button>
                 </div>
 
-                <!-- TAB 1: CALENDAR -->
-                <div x-show="activeTab === 'calendarView'" class="space-y-4 sm:space-y-6 flex-1 flex flex-col">
-                    <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-center gap-3">
-                        <div class="flex items-center justify-between w-full lg:w-auto gap-2">
-                            <div x-show="calendarMode === 'monthly'" class="flex items-center justify-between w-full lg:w-auto gap-2">
-                                <button @click="prevMonth()" class="bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg text-xs sm:text-sm cursor-pointer">&lt; ก่อนหน้า</button>
-                                <h2 class="text-sm sm:text-lg font-bold text-indigo-900 w-36 sm:w-48 text-center" x-text="currentMonthName"></h2>
-                                <button @click="nextMonth()" class="bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg text-xs sm:text-sm cursor-pointer">ถัดไป &gt;</button>
-                            </div>
-                            <div x-show="calendarMode === 'yearly'" class="flex items-center justify-between w-full lg:w-auto gap-2">
-                                <button @click="currentYearNum--" class="bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg text-xs sm:text-sm cursor-pointer">&lt; ก่อนหน้า</button>
-                                <h2 class="text-sm sm:text-lg font-bold text-indigo-900 w-36 sm:w-48 text-center" x-text="'ปี พ.ศ. ' + (currentYearNum + 543)"></h2>
-                                <button @click="currentYearNum++" class="bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg text-xs sm:text-sm cursor-pointer">ถัดไป &gt;</button>
-                            </div>
+                <!-- CALENDAR TAB -->
+                <div x-show="activeTab === 'calendarView'" class="space-y-4 flex-1 flex flex-col">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <button @click="prevMonth()" class="bg-slate-100 px-3 py-1.5 rounded-lg text-sm cursor-pointer">&lt; ก่อนหน้า</button>
+                            <h2 class="text-base font-bold text-indigo-900 w-40 text-center" x-text="currentMonthName"></h2>
+                            <button @click="nextMonth()" class="bg-slate-100 px-3 py-1.5 rounded-lg text-sm cursor-pointer">ถัดไป &gt;</button>
                         </div>
-
-                        <div class="flex flex-wrap items-center justify-end gap-2 w-full lg:w-auto">
-                            <div class="relative" x-data="{ openDropdown: false }">
-                                <button @click="openDropdown = !openDropdown" type="button" class="border bg-white rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 flex items-center gap-2 cursor-pointer shadow-xs">
-                                    <span>📌 กรองกลุ่มงาน (<span x-text="calendarFilterCats.length === 0 ? 'ทั้งหมด' : calendarFilterCats.length"></span>)</span>
-                                    <span>▼</span>
-                                </button>
-                                <div x-show="openDropdown" @click.away="openDropdown = false" x-cloak class="absolute left-0 sm:left-auto sm:right-0 mt-2 w-64 bg-white border rounded-xl shadow-xl z-30 p-3 space-y-2">
-                                    <div class="flex justify-between items-center border-b pb-1">
-                                        <span class="text-xs font-bold text-slate-700">เลือกกลุ่มงานที่ต้องการแสดง</span>
-                                        <button @click="calendarFilterCats = []" class="text-[10px] text-indigo-600 font-semibold cursor-pointer">ล้างตัวกรอง</button>
-                                    </div>
-                                    <div class="max-h-48 overflow-y-auto space-y-1">
-                                        <template x-for="cat in categories" :key="cat.id">
-                                            <label class="flex items-center gap-2 text-xs p-1 hover:bg-slate-50 rounded cursor-pointer">
-                                                <input type="checkbox" :value="cat.name" x-model="calendarFilterCats" class="rounded border-slate-300 text-indigo-600 w-3.5 h-3.5">
-                                                <span x-text="cat.name" class="font-medium text-slate-700"></span>
-                                            </label>
-                                        </template>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="bg-slate-100 p-1 rounded-lg flex text-xs font-semibold">
-                                <button @click="calendarMode = 'monthly'" :class="calendarMode === 'monthly' ? 'bg-white text-indigo-700 shadow' : 'text-slate-600'" class="px-2.5 py-1 rounded-md cursor-pointer">รายเดือน</button>
-                                <button @click="calendarMode = 'yearly'" :class="calendarMode === 'yearly' ? 'bg-white text-indigo-700 shadow' : 'text-slate-600'" class="px-2.5 py-1 rounded-md cursor-pointer">ภาพรวมปี</button>
-                            </div>
-                            <button x-show="isEditor" @click="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium cursor-pointer">+ เพิ่มงาน</button>
-                        </div>
+                        <button @click="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg text-sm font-medium cursor-pointer">+ เพิ่มงาน</button>
                     </div>
 
-                    <!-- Monthly Calendar -->
-                    <div x-show="calendarMode === 'monthly'" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col">
-                        <div class="grid grid-cols-7 bg-slate-100 border-b border-slate-200 text-center text-[11px] sm:text-xs font-bold text-slate-600 py-2 sm:py-3">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col">
+                        <div class="grid grid-cols-7 bg-slate-100 border-b text-center text-xs font-bold text-slate-600 py-2">
                             <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
                         </div>
                         <div class="grid grid-cols-7 bg-slate-200 gap-px flex-1">
-                            <template x-for="day in calendarDays" :key="day.dateStr">
-                                <div class="calendar-cell min-h-[110px] sm:min-h-[140px] p-1 flex flex-col bg-white justify-between relative" :class="day.isCurrentMonth ? '' : 'bg-slate-50 text-slate-400'">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-[11px] sm:text-xs font-semibold px-1 py-0.2 rounded" :class="day.isToday ? 'bg-indigo-600 text-white' : ''" x-text="day.dayNum"></span>
-                                        
-                                        <template x-if="getChecklistCountForDate(day.dateStr).total > 0">
-                                            <button @click="openDayChecklistPopup(day.dateStr)" 
-                                                    class="text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded-full font-bold shadow-xs cursor-pointer hover:opacity-80 transition-transform"
-                                                    :class="getChecklistCountForDate(day.dateStr).pending > 0 ? 'bg-amber-500 text-white' : 'bg-emerald-600 text-white'"
-                                                    :title="'เช็คลิสต์วันที่ ' + day.dateStr">
-                                                📌 <span x-text="getChecklistCountForDate(day.dateStr).pending > 0 ? getChecklistCountForDate(day.dateStr).pending : '✓'"></span>
-                                            </button>
-                                        </template>
-                                    </div>
-
-                                    <div class="space-y-0.5 sm:space-y-1 my-1 flex-1">
-                                        <template x-for="(item, idx) in getTasksForDate(day.dateStr).slice(0, 2)" :key="item.task.id + '-' + item.type">
-                                            <div @click="editTask(item.task)" 
-                                                 class="text-[9px] sm:text-[10px] py-0.5 sm:py-1 cursor-pointer font-medium transition-all relative flex items-center shadow-xs px-1 truncate"
-                                                 :class="[
-                                                     getDistinctCategoryColorClass(item.task.id, item.task.category, item.type),
-                                                     item.isStart ? 'rounded-l-md ml-0 pl-1 border-l-2 sm:border-l-4 border-black/25' : '',
-                                                     item.isEnd ? 'rounded-r-md mr-0 pr-1 border-r-2 sm:border-r-4 border-black/25' : '',
-                                                     !item.isStart && !item.isEnd ? 'rounded-none mx-[-4px] px-1 opacity-95' : ''
-                                                 ]"
-                                                 :title="item.task.category + ': ' + item.task.title">
-                                                <span class="truncate block w-full flex items-center justify-between">
-                                                    <span x-text="item.isStart ? (item.type === 'Plan' ? '[P] ' : (item.type === 'Summary' ? '[สรุป] ' : '[D] ')) + item.task.category + ': ' + item.task.title : (item.isEnd ? '■ ' + item.task.category + ': ' + item.task.title : '')"></span>
-                                                </span>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-
-                    <!-- Yearly Calendar -->
-                    <div x-show="calendarMode === 'yearly'" class="space-y-3">
-                        <div class="bg-white p-3 rounded-xl border border-slate-200 flex flex-wrap gap-3 text-xs items-center">
-                            <span class="font-bold text-slate-700">แถบสีกลุ่มงานหลัก:</span>
-                            <template x-for="(cat, idx) in categories" :key="cat.id">
-                                <span class="flex items-center gap-1.5">
-                                    <span class="w-3 h-3 rounded-md border" :class="getDistinctCategoryColorClass('year-' + cat.id, cat.name, 'Do')"></span>
-                                    <span x-text="cat.name"></span>
-                                </span>
-                            </template>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                            <template x-for="(mName, mIdx) in monthNames" :key="mIdx">
-                                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 space-y-2">
-                                    <h3 class="font-bold text-indigo-900 text-center text-sm border-b pb-1" x-text="mName + ' ' + (currentYearNum + 543)"></h3>
-                                    <div class="grid grid-cols-7 text-center text-[10px] font-bold text-slate-400">
-                                        <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
-                                    </div>
-                                    <div class="grid grid-cols-7 gap-1 text-center text-[10px]">
-                                        <template x-for="dCell in buildMonth(currentYearNum, mIdx)" :key="dCell.dateStr">
-                                            <div @click="openYearCellPopup(dCell)"
-                                                 class="py-1 rounded font-semibold transition-all relative cursor-pointer flex flex-col items-center justify-center" 
-                                                 :class="yearCellClass(dCell)">
-                                                <span x-text="dCell.dayNum"></span>
-                                                <template x-if="getTasksCountForDate(dCell.dateStr) >= 2">
-                                                    <span class="absolute -top-1 -right-1 bg-rose-600 text-white text-[8px] px-1 py-0.1 rounded-full font-bold" x-text="getTasksCountForDate(dCell.dateStr)"></span>
-                                                </template>
-                                            </div>
+                            <template x-for="day in calendarDays" :key="day.dateStr || Math.random()">
+                                <div class="calendar-cell min-h-[120px] p-1 flex flex-col bg-white justify-between" :class="day.isCurrentMonth ? '' : 'bg-slate-50 text-slate-300'">
+                                    <span class="text-xs font-semibold px-1 rounded" :class="day.isToday ? 'bg-indigo-600 text-white' : ''" x-text="day.dayNum"></span>
+                                    <div class="space-y-1 my-1 flex-1">
+                                        <template x-for="item in getTasksForDate(day.dateStr)" :key="item.task.id">
+                                            <div @click="editTask(item.task)" class="text-[10px] p-1 rounded bg-indigo-600 text-white truncate cursor-pointer font-medium" x-text="item.task.title"></div>
                                         </template>
                                     </div>
                                 </div>
@@ -217,2020 +104,284 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: TASKS -->
-                <div x-show="activeTab === 'tasks'" class="space-y-4">
-                    <div x-show="isEditor" class="bg-slate-100 border border-slate-300 p-3 sm:p-4 rounded-xl flex flex-col sm:flex-row flex-wrap items-center justify-between gap-3">
-                        <div class="flex items-center gap-2 flex-wrap text-xs w-full sm:w-auto">
-                            <span class="font-bold text-slate-700">จัดการรายการเลือก (<span x-text="selectedTaskIds.length"></span>):</span>
-                            <div class="flex items-center gap-1">
-                                <span>จากปี</span>
-                                <input type="number" x-model.number="rolloverFromYear" class="w-14 border rounded px-1 py-0.5 bg-white text-center font-bold">
-                                <span>ไปปี</span>
-                                <input type="number" x-model.number="rolloverToYear" class="w-14 border rounded px-1 py-0.5 bg-white text-center font-bold">
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-end">
-                            <button @click="toggleSelectAll()" class="bg-white border hover:bg-slate-50 px-2.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer">
-                                <span x-text="selectedTaskIds.length === filteredTasksByStatus.length ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด'"></span>
-                            </button>
-                            <button @click="rolloverSelectedTasks()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer shadow">
-                                📋 คัดลอกไปปีใหม่
-                            </button>
-                            <button @click="deleteSelectedTasks()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer shadow">
-                                🗑️ ลบที่เลือก
-                            </button>
-                        </div>
+                <!-- TASKS TAB -->
+                <div x-show="activeTab === 'tasks'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
+                    <div class="flex justify-between items-center border-b pb-3">
+                        <h2 class="font-bold text-slate-700">รายการงานทั้งหมดในระบบ</h2>
+                        <button @click="openTaskModal()" class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium">+ เพิ่มงานใหม่</button>
                     </div>
-
-                    <!-- ส่วนจัดการนำเข้า/ส่งออกข้อมูล Excel & Backup -->
-                    <div x-show="isEditor" class="bg-indigo-50 border border-indigo-200 p-3 sm:p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                        <div>
-                            <span class="font-bold text-indigo-900 text-sm">📊 จัดการข้อมูลด้วยไฟล์ Excel (CSV/JSON)</span>
-                            <p class="text-slate-600">ดาวน์โหลดฟอร์มตัวอย่างเพื่อกรอกข้อมูลภายนอก หรืออัปโหลดไฟล์เพิ่มข้อมูลต่อจากเดิม</p>
-                        </div>
-                        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-                            <button @click="downloadExcelTemplate()" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-lg font-semibold cursor-pointer shadow">
-                                📄 โหลดฟอร์ม Excel (ตัวอย่าง)
-                            </button>
-                            <button @click="exportBackupData()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg font-semibold cursor-pointer shadow">
-                                📥 สำรองข้อมูล (JSON)
-                            </button>
-                            <label class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg font-semibold cursor-pointer shadow inline-block">
-                                📤 นำเข้าข้อมูล
-                                <input type="file" @change="importExcelOrJsonData($event)" accept=".json,.csv" class="hidden">
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-3">
-                        <div class="flex flex-col sm:flex-row flex-wrap items-center gap-3 w-full md:w-auto">
-                            <div class="flex items-center gap-1.5 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-lg text-xs w-full sm:w-auto justify-between">
-                                <span class="font-bold text-indigo-900">🎯 ปีงบ:</span>
-                                <select x-model.number="selectedBudgetYear" class="bg-white border rounded px-2 py-1 font-bold text-indigo-900 text-xs">
-                                    <template x-for="by in [2568, 2569, 2570, 2571, 2572]" :key="by">
-                                        <option :value="by" x-text="'พ.ศ. ' + by"></option>
-                                    </template>
-                                </select>
-                            </div>
-
-                            <div class="flex bg-slate-100 p-1 rounded-lg text-xs font-semibold w-full sm:w-auto justify-center">
-                                <button @click="taskStatusTab = 'ongoing'" :class="taskStatusTab === 'ongoing' ? 'bg-white text-indigo-700 shadow' : 'text-slate-600'" class="flex-1 sm:flex-none px-2.5 py-1.5 rounded-md cursor-pointer">⏳ กำลังทำ (<span x-text="getTasksByStatus('ongoing').length"></span>)</button>
-                                <button @click="taskStatusTab = 'completed'" :class="taskStatusTab === 'completed' ? 'bg-white text-emerald-700 shadow' : 'text-slate-600'" class="flex-1 sm:flex-none px-2.5 py-1.5 rounded-md cursor-pointer">✅ เสร็จ (<span x-text="getTasksByStatus('completed').length"></span>)</button>
-                                <!-- กระพริบเฉพาะเมื่อมีงานเลยกำหนดจริง -->
-                                <button @click="taskStatusTab = 'overdue'" :class="[taskStatusTab === 'overdue' ? 'bg-rose-600 text-white shadow' : 'text-rose-600 bg-rose-50 border border-rose-200', getTasksByStatus('overdue').length > 0 ? 'blink-alert' : '']" class="flex-1 sm:flex-none px-2.5 py-1.5 rounded-md cursor-pointer font-bold">⚠️ เลยกำหนด (<span x-text="getTasksByStatus('overdue').length"></span>)</button>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
-                            <select x-model="filterCategory" class="border rounded-lg px-2.5 py-1.5 text-xs bg-white flex-1 md:flex-none">
-                                <option value="">ทุกกลุ่มงานหลัก</option>
-                                <template x-for="cat in categories" :key="cat.id">
-                                    <option :value="cat.name" x-text="cat.name"></option>
-                                </template>
-                            </select>
-                            <button x-show="canCreateTask" @click="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer whitespace-nowrap">+ เพิ่มงาน</button>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
-                        <div class="flex justify-between items-center mb-4 pb-2 border-b">
-                            <h2 class="font-bold text-xs sm:text-sm text-slate-700" x-text="(taskStatusTab === 'ongoing' ? 'รายการกำลังทำ' : (taskStatusTab === 'completed' ? 'รายการเสร็จสิ้น' : 'รายการเลยกำหนด (วางแผน / ปฏิบัติ / สรุปผลในหน้าเดียว)')) + ' (' + selectedBudgetYear + ')'"></h2>
-                            <span class="text-xs bg-indigo-100 text-indigo-800 font-semibold px-2 py-0.5 rounded-full" x-text="filteredTasksByStatus.length + ' รายการ'"></span>
-                        </div>
-                        <p x-show="filteredTasksByStatus.length === 0" class="text-xs sm:text-sm text-slate-400 py-6 text-center">ไม่พบรายการงานในปีงบประมาณนี้</p>
-                        <div class="divide-y divide-slate-200">
-                            <template x-for="task in filteredTasksByStatus" :key="task.id">
-                                <div class="py-3 sm:py-4 space-y-2 flex items-start gap-2 sm:gap-3">
-                                    <div x-show="isEditor" class="pt-1">
-                                        <input type="checkbox" :value="task.id" x-model="selectedTaskIds" class="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer">
-                                    </div>
-                                    <div class="flex-1 space-y-2 overflow-hidden">
-                                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                                            <div class="flex flex-wrap items-center gap-1.5">
-                                                <span class="text-[10px] sm:text-xs bg-slate-200 px-2 py-0.5 rounded" x-text="task.category"></span>
-                                                <span x-show="task.subcategory" class="text-[10px] sm:text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded" x-text="task.subcategory"></span>
-                                                
-                                                <!-- ป้ายประเภทเลยกำหนด 3 แบบ -->
-                                                <template x-if="taskStatusTab === 'overdue'">
-                                                    <span class="text-[10px] px-2 py-0.5 rounded font-bold" 
-                                                          :class="task.overdueType === 'plan' ? 'bg-purple-100 text-purple-800 border border-purple-300' : (task.overdueType === 'do' ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-amber-100 text-amber-800 border border-amber-300')"
-                                                          x-text="task.overdueType === 'plan' ? '⚠️ เลยกำหนดวางแผน' : (task.overdueType === 'do' ? '⚠️ เลยกำหนดปฏิบัติ' : '⚠️ เลยกำหนดสรุปผล')"></span>
-                                                </template>
-
-                                                <span x-show="task.countWorkload === false" class="text-[10px] sm:text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">ไม่นับภาระ</span>
-                                                <h3 class="text-sm sm:text-base font-bold block sm:inline" x-text="task.title"></h3>
-                                            </div>
-                                            <div class="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
-                                                <template x-if="task.docLink">
-                                                    <a :href="task.docLink" target="_blank" class="text-[11px] px-2 py-1 rounded bg-teal-50 border border-teal-300 text-teal-700 hover:bg-teal-100 font-semibold flex items-center gap-1">
-                                                        📎 เอกสาร
-                                                    </a>
-                                                </template>
-
-                                                <!-- ปุ่มด่วน "งานเสร็จสิ้นแล้ว" -->
-                                                <button x-show="taskStatusTab === 'overdue' && canEditTask(task)" @click="forceCompleteTask(task)" class="text-[11px] px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold cursor-pointer shadow-xs">
-                                                    ✓ งานเสร็จสิ้นแล้ว
-                                                </button>
-
-                                                <!-- ปุ่มติ๊กสถานะเสร็จแล้ว (ควบคุมด้วย manualDone อย่างอิสระ ไม่เด้งอัตโนมัติ) -->
-                                                <button x-show="canEditTask(task)" @click="toggleTaskManualDone(task)" 
-                                                        class="text-[11px] px-2 py-1 rounded border font-semibold cursor-pointer"
-                                                        :class="task.manualDone ? 'bg-emerald-100 border-emerald-300 text-emerald-800' : 'bg-slate-100 border-slate-300 text-slate-700'"
-                                                        x-text="task.manualDone ? '✓ เสร็จแล้ว (คลิกเพื่อยกเลิก)' : '○ ยังไม่เสร็จ'">
-                                                </button>
-
-                                                <button @click="editTask(task)" class="text-[11px] px-2.5 py-1 rounded border border-indigo-200 text-indigo-600 hover:bg-indigo-50 cursor-pointer" x-text="canEditTask(task) ? 'แก้ไข' : 'ดู'"></button>
-                                                <button x-show="canEditTask(task)" @click="deleteTask(task)" class="text-[11px] px-2.5 py-1 rounded border border-rose-200 text-rose-600 hover:bg-rose-50 cursor-pointer">ลบ</button>
-                                            </div>
-                                        </div>
-                                        <p class="text-[11px] sm:text-xs text-slate-500">
-                                            ผู้รับผิดชอบ: <span class="font-medium text-slate-700" x-text="task.owner || '-'"></span> 
-                                            | ปฏิบัติ: <span x-text="task.doStart || '-'"></span> ถึง <span x-text="task.doEnd || '-'"></span>
-                                        </p>
-
-                                        <!-- เช็คลิสต์วางแผนย่อ -->
-                                        <template x-if="task.usePlanChecklist && task.planChecklist && task.planChecklist.length > 0">
-                                            <div class="bg-purple-50 border border-purple-200 p-2.5 rounded-lg text-xs space-y-1.5">
-                                                <div class="font-bold text-purple-900 flex justify-between text-[11px]">
-                                                    <span>📋 เช็คลิสต์ช่วงวางแผน:</span>
-                                                    <span x-text="task.planChecklist.filter(c => c.done).length + '/' + task.planChecklist.length + ' เสร็จ'"></span>
-                                                </div>
-                                                <div class="space-y-1">
-                                                    <template x-for="chk in getSortedChecklist(task.planChecklist)">
-                                                        <label class="flex items-center gap-2 bg-white border border-purple-100 px-2 py-1 rounded text-[11px] cursor-pointer shadow-xs">
-                                                            <input type="checkbox" x-model="chk.done" :disabled="!canEditTask(task)" @change="canEditTask(task) && saveTaskSilent(task)" class="w-3 h-3 text-purple-600 rounded">
-                                                            <span class="font-bold text-purple-800" x-text="'[' + chk.date + ']'"></span>
-                                                            <span :class="chk.done ? 'line-through text-slate-400' : 'text-slate-700'" x-text="chk.text"></span>
-                                                        </label>
-                                                    </template>
-                                                </div>
-                                            </div>
-                                        </template>
-
-                                        <!-- เช็คลิสต์ปฏิบัติงานย่อ -->
-                                        <template x-if="task.useChecklist && task.checklist && task.checklist.length > 0">
-                                            <div class="bg-blue-50 border border-blue-200 p-2.5 rounded-lg text-xs space-y-1.5">
-                                                <div class="font-bold text-blue-900 flex justify-between text-[11px]">
-                                                    <span>📌 เช็คลิสต์ช่วงปฏิบัติงาน:</span>
-                                                    <span x-text="task.checklist.filter(c => c.done).length + '/' + task.checklist.length + ' เสร็จ'"></span>
-                                                </div>
-                                                <div class="space-y-1">
-                                                    <template x-for="chk in getSortedChecklist(task.checklist)">
-                                                        <label class="flex items-center gap-2 bg-white border border-blue-100 px-2 py-1 rounded text-[11px] cursor-pointer shadow-xs">
-                                                            <input type="checkbox" x-model="chk.done" :disabled="!canEditTask(task)" @change="canEditTask(task) && saveTaskSilent(task)" class="w-3 h-3 text-blue-600 rounded">
-                                                            <span class="font-bold text-blue-800" x-text="'[' + chk.date + ']'"></span>
-                                                            <span :class="chk.done ? 'line-through text-slate-400' : 'text-slate-700'" x-text="chk.text"></span>
-                                                        </label>
-                                                    </template>
-                                                </div>
-                                            </div>
-                                        </template>
-
-                                        <!-- เช็คลิสต์สรุปผลย่อ -->
-                                        <template x-if="task.useSummaryChecklist && task.summaryChecklist && task.summaryChecklist.length > 0">
-                                            <div class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg text-xs space-y-1.5">
-                                                <div class="font-bold text-emerald-900 flex justify-between text-[11px]">
-                                                    <span>📝 เช็คลิสต์ช่วงสรุปผล:</span>
-                                                    <span x-text="task.summaryChecklist.filter(c => c.done).length + '/' + task.summaryChecklist.length + ' เสร็จ'"></span>
-                                                </div>
-                                                <div class="space-y-1">
-                                                    <template x-for="chk in getSortedChecklist(task.summaryChecklist)">
-                                                        <label class="flex items-center gap-2 bg-white border border-emerald-100 px-2 py-1 rounded text-[11px] cursor-pointer shadow-xs">
-                                                            <input type="checkbox" x-model="chk.done" :disabled="!canEditTask(task)" @change="canEditTask(task) && saveTaskSilent(task)" class="w-3 h-3 text-emerald-600 rounded">
-                                                            <span class="font-bold text-emerald-800" x-text="'[' + chk.date + ']'"></span>
-                                                            <span :class="chk.done ? 'line-through text-slate-400' : 'text-slate-700'" x-text="chk.text"></span>
-                                                        </label>
-                                                    </template>
-                                                </div>
-                                            </div>
-                                        </template>
-                                    </div>
+                    <div class="divide-y">
+                        <template x-for="task in tasks" :key="task.id">
+                            <div class="py-3 flex justify-between items-center">
+                                <div>
+                                    <span class="text-[10px] px-2 py-0.5 rounded text-white" :style="'background-color: ' + getCategoryColor(task.category)" x-text="task.category"></span>
+                                    <h3 class="font-bold text-sm" x-text="task.title"></h3>
+                                    <p class="text-xs text-slate-500" x-text="'วันที่: ' + (task.doStart || '-') + ' ถึง ' + (task.doEnd || '-')"></p>
                                 </div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 3: REPORTS & WORKLOAD -->
-                <div x-show="activeTab === 'reports'" class="space-y-6">
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
-                        <div>
-                            <h2 class="text-base sm:text-lg font-bold text-indigo-900">ออกรายงานสรุปผลงานทั่วไป (PDF)</h2>
-                            <p class="text-xs text-slate-500 mt-1">เลือกช่วงวันที่และกลุ่มงานที่ต้องการออกรายงาน</p>
-                        </div>
-
-                        <div class="bg-slate-50 border p-3 sm:p-4 rounded-xl space-y-2">
-                            <label class="block text-xs font-bold text-slate-700">📌 เลือกกลุ่มงานที่ต้องการออกรายงาน:</label>
-                            <div class="flex flex-wrap gap-2">
-                                <button @click="reportFilterCats = []" class="px-2 py-1 bg-slate-200 rounded text-xs font-semibold cursor-pointer">ทุกกลุ่มงาน</button>
-                                <template x-for="cat in categories" :key="cat.id">
-                                    <label class="flex items-center gap-1.5 cursor-pointer bg-white border px-2.5 py-1 rounded-lg text-xs shadow-xs">
-                                        <input type="checkbox" :value="cat.name" x-model="reportFilterCats" class="rounded border-slate-300 text-indigo-600 w-3.5 h-3.5">
-                                        <span x-text="cat.name" class="font-medium text-slate-700"></span>
-                                    </label>
-                                </template>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 sm:p-4 rounded-xl border">
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">ตั้งแต่วันที่</label>
-                                <input type="date" x-model="reportStart" class="w-full border rounded-lg p-2 text-xs sm:text-sm bg-white">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">ถึงวันที่</label>
-                                <input type="date" x-model="reportEnd" class="w-full border rounded-lg p-2 text-xs sm:text-sm bg-white">
-                            </div>
-                            <div class="flex items-end gap-2">
-                                <button @click="generatePDFReport()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-xs sm:text-sm font-semibold cursor-pointer shadow">
-                                    🖨️ พิมพ์ PDF
-                                </button>
-                                <button @click="reportStart = ''; reportEnd = ''; reportFilterCats = [];" class="bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold cursor-pointer">ล้าง</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-xl shadow-sm border border-indigo-200 p-4 sm:p-6 space-y-4">
-                        <div>
-                            <h2 class="text-base sm:text-lg font-bold text-indigo-900">📊 ออกรายงานภาระงานรายบุคคล</h2>
-                            <p class="text-xs text-slate-500 mt-1">นับเฉพาะงานที่เปิดให้ "นับภาระงาน" และอยู่ในช่วงเวลาปฏิบัติงาน</p>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-indigo-50/50 p-3 sm:p-4 rounded-xl border border-indigo-100">
-                            <div>
-                                <label class="block text-xs font-semibold mb-1 text-indigo-900">เลือกบุคลากร</label>
-                                <select x-model="workloadPerson" class="w-full border rounded-lg p-2 text-xs sm:text-sm bg-white">
-                                    <option value="">-- เลือกชื่อบุคคล --</option>
-                                    <template x-for="o in owners" :key="o.id">
-                                        <option :value="o.name" x-text="o.name"></option>
-                                    </template>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1 text-indigo-900">ปี พ.ศ.</label>
-                                <select x-model.number="workloadYear" class="w-full border rounded-lg p-2 text-xs sm:text-sm bg-white font-bold">
-                                    <template x-for="y in [currentYearNum - 1, currentYearNum, currentYearNum + 1, currentYearNum + 2]" :key="y">
-                                        <option :value="y" x-text="'พ.ศ. ' + (y + 543)"></option>
-                                    </template>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1 text-indigo-900">รอบประเมิน</label>
-                                <select x-model="workloadTerm" class="w-full border rounded-lg p-2 text-xs sm:text-sm bg-white font-bold">
-                                    <option value="1">รอบ 1 (1 ม.ค. - 30 มิ.ย.)</option>
-                                    <option value="2">รอบ 2 (1 ก.ค. - 31 ธ.ค.)</option>
-                                </select>
-                            </div>
-                            <div class="flex items-end">
-                                <button @click="generateWorkloadPDFReport()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-xs sm:text-sm font-semibold cursor-pointer shadow">
-                                    📈 พิมพ์รายงานภาระงาน
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 3.5: TEMPLATES -->
-                <div x-show="isEditor && activeTab === 'templates'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
-                    <div>
-                        <h2 class="text-base sm:text-lg font-bold text-slate-800">จัดการเทมเพลตเช็คลิสต์</h2>
-                        <p class="text-xs text-slate-500 mt-1">สร้าง แก้ไข และลากวางสลับตำแหน่งชุดเช็คลิสต์หรือรายการย่อยได้อย่างอิสระ</p>
-                    </div>
-
-                    <div class="bg-slate-50 border p-3 sm:p-4 rounded-xl space-y-3">
-                        <h3 class="text-sm font-bold text-indigo-900" x-text="editingTemplateId ? '✏️ แก้ไขเทมเพลต' : '+ สร้างเทมเพลตใหม่'"></h3>
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">ชื่อเทมเพลต</label>
-                                <input type="text" x-model="newTemplateName" placeholder="ชื่อเทมเพลต..." class="w-full border rounded-lg px-3 py-2 text-xs sm:text-sm bg-white">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">หมวดหมู่</label>
-                                <select x-model="newTemplateType" class="w-full border rounded-lg px-3 py-2 text-xs sm:text-sm bg-white font-bold text-indigo-900">
-                                    <option value="plan">📋 ช่วงวางแผนงาน</option>
-                                    <option value="do">📌 ช่วงปฏิบัติงาน</option>
-                                    <option value="summary">📝 ช่วงสรุปผลงาน</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">ไอคอน</label>
-                                <select x-model="newTemplateIcon" class="w-full border rounded-lg px-3 py-2 text-xs sm:text-sm bg-white">
-                                    <option value="📋">📋 รายงาน</option>
-                                    <option value="🚀">🚀 โครงการ</option>
-                                    <option value="🛒">🛒 จัดซื้อ</option>
-                                    <option value="📅">📅 ประชุม</option>
-                                    <option value="🎓">🎓 อบรม</option>
-                                    <option value="📊">📊 สรุปผล</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="block text-xs font-semibold">รายการขั้นตอนย่อย (จับลากวางสลับตำแหน่ง หรือลบ/แก้ไขได้อิสระ)</label>
-                            <div class="space-y-1.5" x-sort x-sort:item="newTemplateItems">
-                                <template x-for="(item, idx) in newTemplateItems" :key="idx">
-                                    <div class="flex gap-2 items-center bg-white border p-1.5 rounded cursor-move" x-sort:item="idx">
-                                        <span class="font-bold text-xs w-5 text-center text-slate-400">⠿</span>
-                                        <input type="text" x-model="newTemplateItems[idx]" placeholder="รายละเอียด..." class="flex-1 border rounded px-2 py-1 text-xs bg-white">
-                                        <button @click="newTemplateItems.splice(idx, 1)" type="button" class="text-rose-500 font-bold px-2 cursor-pointer">&times;</button>
-                                    </div>
-                                </template>
-                            </div>
-                            <button @click="newTemplateItems.push('')" type="button" class="bg-slate-200 text-slate-700 px-3 py-1 rounded text-xs font-semibold cursor-pointer mt-2">+ เพิ่มข้อขั้นตอนย่อย</button>
-                        </div>
-                        <div class="flex gap-2 pt-2">
-                            <button @click="saveNewTemplate()" type="button" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold cursor-pointer shadow" x-text="editingTemplateId ? 'บันทึกการแก้ไข' : '💾 บันทึก'"></button>
-                            <button x-show="editingTemplateId" @click="cancelEditTemplate()" type="button" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold cursor-pointer">ยกเลิก</button>
-                        </div>
-                    </div>
-
-                    <div class="space-y-3">
-                        <h3 class="text-sm font-bold text-slate-800">เทมเพลตทั้งหมด (ลากวางสลับตำแหน่งได้)</h3>
-                        <div class="space-y-2" x-sort="onSortTemplates">
-                            <template x-for="(tpl, index) in allTemplates" :key="tpl.id">
-                                <div class="border rounded-lg p-3 sm:p-4 bg-white space-y-2 shadow-xs flex items-center gap-3 cursor-move" :x-sort:item="tpl.id">
-                                    <span class="text-slate-400 font-bold">⠿</span>
-                                    <div class="flex-1 space-y-1 overflow-hidden">
-                                        <div class="flex justify-between items-center flex-wrap gap-2">
-                                            <h4 class="font-bold text-indigo-900 text-xs sm:text-sm flex items-center gap-2">
-                                                <span x-text="tpl.icon"></span>
-                                                <span x-text="tpl.name"></span>
-                                                <span class="text-[10px] px-1.5 py-0.5 rounded border" :class="tpl.type === 'summary' ? 'bg-emerald-50 text-emerald-700' : (tpl.type === 'plan' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700')" x-text="tpl.type === 'summary' ? 'สรุปผล' : (tpl.type === 'plan' ? 'วางแผน' : 'ปฏิบัติ')"></span>
-                                                <span x-show="tpl.isDefault" class="text-[9px] bg-slate-100 text-slate-600 px-1 rounded">พื้นฐาน</span>
-                                            </h4>
-                                            <div class="flex gap-2">
-                                                <button @click="startEditTemplate(tpl)" class="text-xs text-indigo-600 border px-2 py-0.5 rounded cursor-pointer">แก้ไข</button>
-                                                <button x-show="!tpl.isDefault" @click="deleteTemplate(tpl.id)" class="text-xs text-rose-600 border px-2 py-0.5 rounded cursor-pointer">ลบ</button>
-                                            </div>
-                                        </div>
-                                        <div class="text-[11px] text-slate-600 pl-4 space-y-0.5">
-                                            <template x-for="(txt, i) in tpl.items">
-                                                <div x-text="(i + 1) + '. ' + txt"></div>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 4: CATEGORIES -->
-                <div x-show="isEditor && activeTab === 'categories'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
-                    <h2 class="text-base sm:text-lg font-bold text-slate-800">จัดการกลุ่มงานหลักและหัวข้อย่อย (ลากวางสลับตำแหน่งได้)</h2>
-                    <div class="flex gap-2 max-w-lg">
-                        <input type="text" x-model="newCategoryName" @keyup.enter="addMainCategory()" placeholder="กลุ่มงานหลักใหม่..." class="flex-1 border rounded-lg px-3 py-2 text-xs sm:text-sm">
-                        <button @click="addMainCategory()" class="bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm cursor-pointer whitespace-nowrap">+ เพิ่ม</button>
-                    </div>
-                    
-                    <div class="space-y-3" x-sort="onSortCategories">
-                        <template x-for="(cat, catIndex) in categories" :key="cat.id">
-                            <div class="border rounded-lg p-3 sm:p-4 bg-slate-50 space-y-3 flex items-start gap-3 cursor-move" :x-sort:item="cat.id">
-                                <span class="text-slate-400 font-bold pt-1">⠿</span>
-                                <div class="flex-1 space-y-2 overflow-hidden">
-                                    <div class="flex justify-between items-center gap-2 flex-wrap">
-                                        <h3 x-show="editingCatId !== cat.id" class="font-bold text-slate-700 text-sm sm:text-base" x-text="cat.name"></h3>
-                                        <div x-show="editingCatId === cat.id" class="flex gap-2 flex-1 max-w-sm">
-                                            <input type="text" x-model="editCatName" @keyup.enter="saveCategoryName(cat)" class="flex-1 border rounded px-2 py-1 text-xs">
-                                            <button @click="saveCategoryName(cat)" class="bg-indigo-600 text-white px-2.5 py-1 rounded text-xs cursor-pointer">บันทึก</button>
-                                        </div>
-                                        <div x-show="editingCatId !== cat.id" class="flex gap-1.5 shrink-0">
-                                            <button @click="startEditCategory(cat)" class="text-[11px] px-2 py-0.5 rounded border text-indigo-600 cursor-pointer">แก้ไข</button>
-                                            <button @click="deleteMainCategory(cat)" class="text-[11px] px-2 py-0.5 rounded border text-rose-600 cursor-pointer">ลบ</button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="flex flex-wrap gap-1.5" x-sort="(item, position) => onSortSubcategories(cat, position)">
-                                        <template x-for="(sub, subIdx) in cat.subcategories" :key="cat.id + '-' + subIdx">
-                                            <span class="bg-white border text-[11px] px-2.5 py-1 rounded-full flex items-center gap-1.5 cursor-move" :x-sort:item="sub">
-                                                <span class="text-slate-400 text-[9px]">⠿</span>
-                                                <span x-text="sub"></span>
-                                                <button @click="deleteSubcategory(cat, subIdx)" class="text-rose-500 font-bold cursor-pointer">&times;</button>
-                                            </span>
-                                        </template>
-                                    </div>
-
-                                    <div class="flex gap-2 max-w-sm pt-1">
-                                        <input type="text" x-model="newSubNames[cat.id]" @keyup.enter="addSubcategory(cat)" placeholder="เพิ่มหัวข้อย่อย..." class="flex-1 border rounded px-2 py-1 text-xs bg-white">
-                                        <button @click="addSubcategory(cat)" class="bg-slate-200 px-3 py-1 rounded text-xs cursor-pointer">+ เพิ่ม</button>
-                                    </div>
+                                <div class="flex gap-2">
+                                    <button @click="editTask(task)" class="text-xs px-2 py-1 border rounded text-indigo-600 hover:bg-indigo-50">แก้ไข</button>
+                                    <button @click="deleteTask(task)" class="text-xs px-2 py-1 border rounded text-rose-600 hover:bg-rose-50">ลบ</button>
                                 </div>
                             </div>
                         </template>
                     </div>
                 </div>
 
-                <!-- TAB 5: OWNERS -->
-                <div x-show="isEditor && activeTab === 'owners'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                        <div>
-                            <h2 class="text-base sm:text-lg font-bold text-slate-800">จัดการรายชื่อบุคลากร (ลากวางสลับตำแหน่งได้)</h2>
-                            <p class="text-xs text-slate-500">จัดเรียงลำดับรายชื่อผู้รับผิดชอบหลักและคณะทำงาน</p>
-                        </div>
-                        <button @click="sortOwnersAlphabetically()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer">
-                            🔤 เรียงตามตัวอักษร
-                        </button>
+                <!-- REPORTS TAB -->
+                <div x-show="activeTab === 'reports'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
+                    <h2 class="text-base font-bold text-indigo-900">ออกรายงาน (PDF / พิมพ์)</h2>
+                    <div class="flex gap-3">
+                        <button @click="window.print()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-semibold">🖨️ พิมพ์รายงาน</button>
                     </div>
+                </div>
 
-                    <div class="flex gap-2 max-w-lg">
-                        <input type="text" x-model="newOwnerName" @keyup.enter="addOwner()" placeholder="ชื่อ-นามสกุล บุคลากรใหม่..." class="flex-1 border rounded-lg px-3 py-2 text-xs sm:text-sm">
-                        <button @click="addOwner()" class="bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm cursor-pointer whitespace-nowrap">+ เพิ่ม</button>
+                <!-- CATEGORIES TAB -->
+                <div x-show="activeTab === 'categories'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
+                    <h2 class="text-base font-bold text-slate-800">จัดการกลุ่มงานหลัก</h2>
+                    <div class="flex gap-2">
+                        <input type="text" x-model="newCategoryName" placeholder="เพิ่มกลุ่มงาน..." class="border rounded px-3 py-2 text-xs">
+                        <button @click="addCategory()" class="bg-indigo-600 text-white px-4 py-2 rounded text-xs">เพิ่ม</button>
                     </div>
-
-                    <div class="space-y-2 max-w-xl" x-sort="onSortOwners">
-                        <template x-for="(o, index) in owners" :key="o.id">
-                            <div class="flex justify-between items-center gap-2 border p-2.5 sm:p-3 rounded-lg bg-slate-50 cursor-move" :x-sort:item="o.id">
-                                <div class="flex items-center gap-2 flex-1 overflow-hidden">
-                                    <span class="text-slate-400 font-bold">⠿</span>
-                                    <span x-show="editingOwnerId !== o.id" class="font-medium text-slate-700 text-xs sm:text-sm truncate" x-text="o.name"></span>
-                                    <div x-show="editingOwnerId === o.id" class="flex gap-2 flex-1">
-                                        <input type="text" x-model="editOwnerName" @keyup.enter="saveOwnerName(o)" class="flex-1 border rounded px-2 py-1 text-xs">
-                                        <button @click="saveOwnerName(o)" class="bg-indigo-600 text-white px-2.5 py-1 rounded text-xs cursor-pointer">บันทึก</button>
-                                    </div>
-                                </div>
-                                <div x-show="editingOwnerId !== o.id" class="flex gap-1.5 shrink-0">
-                                    <button @click="startEditOwner(o)" class="text-[11px] px-2.5 py-1 rounded border text-indigo-600 cursor-pointer">แก้ไข</button>
-                                    <button @click="deleteOwner(o)" class="text-[11px] px-2.5 py-0.5 rounded border text-rose-600 cursor-pointer">ลบ</button>
-                                </div>
+                    <div class="space-y-2">
+                        <template x-for="cat in categories" :key="cat.id">
+                            <div class="flex justify-between items-center border p-2 rounded">
+                                <span class="text-xs font-bold" x-text="cat.name"></span>
+                                <button @click="deleteCategory(cat.id)" class="text-xs text-rose-600">ลบ</button>
                             </div>
                         </template>
                     </div>
                 </div>
 
-                <!-- TAB 6: USERS & PASSWORDS -->
-                <div x-show="isMainAdmin && activeTab === 'users'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
-                    <div>
-                        <h2 class="text-base sm:text-lg font-bold text-slate-800">🔑 จัดการผู้ใช้งานและสิทธิ์ (User Management)</h2>
-                        <p class="text-xs text-slate-500 mt-1">เพิ่มผู้ใช้, แก้ไขชื่อ/ตำแหน่ง, เปลี่ยนรหัสผ่าน, และกำหนดสิทธิ์การแก้ไขแต่ละกลุ่มงาน</p>
+                <!-- OWNERS TAB -->
+                <div x-show="activeTab === 'owners'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
+                    <h2 class="text-base font-bold text-slate-800">จัดการบุคลากร</h2>
+                    <div class="flex gap-2">
+                        <input type="text" x-model="newOwnerName" placeholder="ชื่อบุคลากร..." class="border rounded px-3 py-2 text-xs">
+                        <button @click="addOwner()" class="bg-indigo-600 text-white px-4 py-2 rounded text-xs">เพิ่ม</button>
                     </div>
-
-                    <div class="bg-slate-50 border p-3 sm:p-4 rounded-xl space-y-3">
-                        <h3 class="text-sm font-bold text-indigo-950">+ เพิ่มผู้ใช้งานระบบใหม่</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">ชื่อผู้ใช้งาน / ตำแหน่ง</label>
-                                <input type="text" x-model="newUser.name" placeholder="ชื่อ หรือ ตำแหน่ง..." class="w-full border rounded px-3 py-2 text-xs bg-white">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">รหัสผ่าน (Password)</label>
-                                <input type="text" x-model="newUser.passcode" placeholder="รหัสผ่าน..." class="w-full border rounded px-3 py-2 text-xs bg-white">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">ประเภทสิทธิ์</label>
-                                <select x-model="newUser.role" class="w-full border rounded px-3 py-2 text-xs bg-white font-bold">
-                                    <option value="editor">เจ้าหน้าที่ (Editor)</option>
-                                    <option value="admin">แอดมินหลัก (Admin)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">สิทธิ์การแก้ไขกลุ่มงาน (ถ้ากำหนดเฉพาะกลุ่ม)</label>
-                            <div class="flex flex-wrap gap-2 bg-white border p-3 rounded-lg">
-                                <template x-for="cat in categories" :key="cat.id">
-                                    <label class="flex items-center gap-1.5 text-xs cursor-pointer border px-2.5 py-1 rounded bg-slate-50">
-                                        <input type="checkbox" :value="cat.name" x-model="newUser.allowedCats" class="rounded text-indigo-600">
-                                        <span x-text="cat.name" class="font-medium text-slate-700"></span>
-                                    </label>
-                                </template>
-                            </div>
-                        </div>
-                        <button @click="addUser()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer">บันทึกเพิ่มผู้ใช้</button>
-                    </div>
-
-                    <div class="space-y-3">
-                        <h3 class="text-sm font-bold text-slate-800">รายชื่อผู้ใช้งานทั้งหมดในระบบ</h3>
-                        <template x-for="user in appUsers" :key="user.id">
-                            <div class="border rounded-lg p-3 sm:p-4 bg-white space-y-3 shadow-xs">
-                                <div class="flex justify-between items-center flex-wrap gap-2">
-                                    <div class="space-y-1">
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-bold text-sm text-indigo-900" x-text="user.name"></span>
-                                            <span class="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200" x-text="'รหัส: ' + user.passcode"></span>
-                                            <span class="text-[10px] px-2 py-0.5 rounded font-bold" :class="user.role === 'admin' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'" x-text="user.role === 'admin' ? 'Admin หลัก' : 'เจ้าหน้าที่'"></span>
-                                        </div>
-                                        <p class="text-xs text-slate-500" x-show="user.role !== 'admin'">
-                                            สิทธิ์กลุ่มงาน: <strong class="text-slate-700" x-text="user.allowedCats && user.allowedCats.length ? user.allowedCats.join(', ') : 'ทุกกลุ่มงาน (Full Access)'"></strong>
-                                        </p>
-                                    </div>
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <button @click="startEditUserName(user)" class="text-xs bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1.5 rounded cursor-pointer font-semibold">✏️ แก้ไขชื่อ/ตำแหน่ง</button>
-                                        <button x-show="user.role !== 'admin'" @click="startEditUserPerms(user)" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded cursor-pointer font-semibold">⚙️ สิทธิ์กลุ่มงาน</button>
-                                        <button @click="startEditPassword(user)" class="text-xs bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded cursor-pointer font-semibold">🔑 เปลี่ยนรหัส</button>
-                                        <button x-show="user.id !== 'admin-1'" @click="deleteUser(user.id)" class="text-xs text-rose-600 border border-rose-200 hover:bg-rose-50 px-2.5 py-1.5 rounded cursor-pointer">ลบ</button>
-                                    </div>
-                                </div>
-
-                                <!-- ฟอร์มแก้ไขชื่อผู้ใช้ -->
-                                <div x-show="editingUserNameId === user.id" class="bg-slate-100 border p-3 rounded-lg flex items-center gap-2">
-                                    <input type="text" x-model="editingNewName" placeholder="ชื่อหรือตำแหน่งใหม่..." class="border rounded px-2 py-1 text-xs bg-white flex-1">
-                                    <button @click="saveNewUserName(user)" class="bg-indigo-600 text-white px-3 py-1 rounded text-xs cursor-pointer font-semibold">บันทึก</button>
-                                    <button @click="editingUserNameId = null" class="border px-2 py-1 rounded text-xs cursor-pointer bg-white">ยกเลิก</button>
-                                </div>
-
-                                <!-- ฟอร์มเปลี่ยนรหัสผ่าน -->
-                                <div x-show="editingUserId === user.id" class="bg-amber-50 border border-amber-200 p-3 rounded-lg flex items-center gap-2">
-                                    <input type="text" x-model="editingNewPass" placeholder="รหัสผ่านใหม่..." class="border rounded px-2 py-1 text-xs bg-white flex-1">
-                                    <button @click="saveNewPassword(user)" class="bg-indigo-600 text-white px-3 py-1 rounded text-xs cursor-pointer font-semibold">บันทึกรหัส</button>
-                                    <button @click="editingUserId = null" class="border px-2 py-1 rounded text-xs cursor-pointer bg-white">ยกเลิก</button>
-                                </div>
-
-                                <!-- ฟอร์มแก้ไขสิทธิ์กลุ่มงาน -->
-                                <div x-show="user.role !== 'admin' && editingPermsUserId === user.id" class="bg-indigo-50 border border-indigo-200 p-3 rounded-lg space-y-2">
-                                    <label class="block text-xs font-bold text-indigo-900">เลือกกลุ่มงานที่อนุญาตให้แก้ไขได้ (ไม่เลือก = ทุกกลุ่ม):</label>
-                                    <div class="flex flex-wrap gap-2 bg-white border p-2.5 rounded">
-                                        <template x-for="cat in categories" :key="cat.id">
-                                            <label class="flex items-center gap-1.5 text-xs cursor-pointer border px-2 py-1 rounded bg-slate-50">
-                                                <input type="checkbox" :value="cat.name" x-model="editingAllowedCats" class="rounded text-indigo-600">
-                                                <span x-text="cat.name" class="font-medium text-slate-700"></span>
-                                            </label>
-                                        </template>
-                                    </div>
-                                    <div class="flex gap-2 justify-end pt-1">
-                                        <button @click="saveUserPerms(user)" class="bg-indigo-600 text-white px-3 py-1 rounded text-xs cursor-pointer font-semibold">บันทึกสิทธิ์</button>
-                                        <button @click="editingPermsUserId = null" class="border px-2 py-1 rounded text-xs cursor-pointer bg-white">ยกเลิก</button>
-                                    </div>
-                                </div>
+                    <div class="space-y-2">
+                        <template x-for="o in owners" :key="o.id">
+                            <div class="flex justify-between items-center border p-2 rounded">
+                                <span class="text-xs font-bold" x-text="o.name"></span>
+                                <button @click="deleteOwner(o.id)" class="text-xs text-rose-600">ลบ</button>
                             </div>
                         </template>
                     </div>
                 </div>
+
             </div>
         </main>
-
-        <footer class="bg-white border-t border-slate-200 py-3 px-4 sm:px-6 text-right text-[10px] sm:text-[11px] text-slate-400">
-            ระบบวางแผนงานประจำปี | <span class="font-bold text-slate-600" x-text="'Version 7.2 (แก้ไขล่าสุด: ' + new Date().toLocaleDateString('th-TH', {year: 'numeric', month: 'long', day: 'numeric'}) + ' เวลา ' + new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit'}) + ' น.)'"></span>
-        </footer>
-    </div>
-
-    <!-- POPUP DAY CHECKLIST -->
-    <div x-show="dayChecklistPopup.open" x-cloak class="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-3 sm:p-4 z-50">
-        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-4 sm:p-6 space-y-4 max-h-[85vh] overflow-y-auto" @click.stop>
-            <div class="flex justify-between items-center pb-2 border-b">
-                <h3 class="text-sm sm:text-base font-bold text-indigo-900" x-text="'📌 เช็คลิสต์และงานวันที่ ' + dayChecklistPopup.dateStr"></h3>
-                <button @click="dayChecklistPopup.open = false" class="text-xl font-bold cursor-pointer">&times;</button>
-            </div>
-            
-            <div class="space-y-3">
-                <template x-for="task in dayChecklistPopup.tasks" :key="task.id">
-                    <div class="bg-slate-50 border p-3 rounded-xl space-y-2">
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-bold text-indigo-700" x-text="task.category + ': ' + task.title"></span>
-                        </div>
-                        <div class="space-y-1">
-                            <template x-for="chk in (task.planChecklist || []).filter(c => c.date === dayChecklistPopup.dateStr)">
-                                <label class="flex items-center gap-2 bg-white border px-2.5 py-1.5 rounded-lg text-xs cursor-pointer shadow-xs">
-                                    <input type="checkbox" x-model="chk.done" :disabled="!canEditTask(task)" @change="canEditTask(task) && saveTaskSilent(task)" class="w-4 h-4 text-purple-600 rounded">
-                                    <span class="text-[10px] bg-purple-50 text-purple-800 px-1 rounded font-bold">[วางแผน]</span>
-                                    <span :class="chk.done ? 'line-through text-slate-400' : 'text-slate-800'" x-text="chk.text"></span>
-                                </label>
-                            </template>
-                            <template x-for="chk in (task.checklist || []).filter(c => c.date === dayChecklistPopup.dateStr)">
-                                <label class="flex items-center gap-2 bg-white border px-2.5 py-1.5 rounded-lg text-xs cursor-pointer shadow-xs">
-                                    <input type="checkbox" x-model="chk.done" :disabled="!canEditTask(task)" @change="canEditTask(task) && saveTaskSilent(task)" class="w-4 h-4 text-blue-600 rounded">
-                                    <span class="text-[10px] bg-blue-50 text-blue-800 px-1 rounded font-bold">[ปฏิบัติ]</span>
-                                    <span :class="chk.done ? 'line-through text-slate-400' : 'text-slate-800'" x-text="chk.text"></span>
-                                </label>
-                            </template>
-                            <template x-for="chk in (task.summaryChecklist || []).filter(c => c.date === dayChecklistPopup.dateStr)">
-                                <label class="flex items-center gap-2 bg-white border px-2.5 py-1.5 rounded-lg text-xs cursor-pointer shadow-xs">
-                                    <input type="checkbox" x-model="chk.done" :disabled="!canEditTask(task)" @change="canEditTask(task) && saveTaskSilent(task)" class="w-4 h-4 text-emerald-600 rounded">
-                                    <span class="text-[10px] bg-emerald-50 text-emerald-800 px-1 rounded font-bold">[สรุปผล]</span>
-                                    <span :class="chk.done ? 'line-through text-slate-400' : 'text-slate-800'" x-text="chk.text"></span>
-                                </label>
-                            </template>
-                        </div>
-                    </div>
-                </template>
-            </div>
-            <div class="flex justify-end pt-2 border-t">
-                <button @click="dayChecklistPopup.open = false" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-xs sm:text-sm cursor-pointer">ปิด</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- POPUP YEAR CELL -->
-    <div x-show="yearPopup.open" x-cloak class="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-3 sm:p-4 z-50">
-        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-4 sm:p-6 space-y-4" @click.stop>
-            <div class="flex justify-between items-center pb-2 border-b">
-                <h3 class="text-sm sm:text-base font-bold text-indigo-900" x-text="'รายการงานวันที่ ' + yearPopup.dateStr"></h3>
-                <button @click="yearPopup.open = false" class="text-xl font-bold cursor-pointer">&times;</button>
-            </div>
-            <div class="space-y-2 max-h-60 overflow-y-auto">
-                <template x-for="t in yearPopup.tasks" :key="t.id">
-                    <div @click="yearPopup.open = false; editTask(t);" class="p-3 bg-slate-50 hover:bg-indigo-50 rounded-lg border cursor-pointer space-y-1">
-                        <div class="flex justify-between items-center text-[11px]">
-                            <span class="bg-slate-200 px-2 py-0.5 rounded font-semibold" x-text="t.category"></span>
-                            <span class="text-indigo-600 font-bold" x-text="t.owner"></span>
-                        </div>
-                        <div class="text-xs sm:text-sm font-bold text-slate-800" x-text="t.title"></div>
-                    </div>
-                </template>
-            </div>
-            <div class="flex justify-end pt-2 border-t">
-                <button @click="yearPopup.open = false" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-xs sm:text-sm cursor-pointer">ปิด</button>
-            </div>
-        </div>
     </div>
 
     <!-- TASK MODAL -->
-    <div x-show="isModalOpen" x-cloak class="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-2 sm:p-4 z-50">
-        <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-4 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto" @click.stop>
-            <div class="flex justify-between items-center pb-2 border-b">
-                <h3 class="text-base sm:text-lg font-bold" x-text="!canEditTask(currentTask) ? 'รายละเอียดงาน' : (currentTask.id ? 'แก้ไขงาน' : 'เพิ่มงานใหม่')"></h3>
-                <button @click="isModalOpen = false" class="text-xl font-bold cursor-pointer">&times;</button>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div x-show="isModalOpen" x-cloak class="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-4" @click.stop>
+            <h3 class="text-base font-bold" x-text="currentTask.id ? 'แก้ไขงาน' : 'เพิ่มงานใหม่'"></h3>
+            <div class="space-y-3">
                 <div>
-                    <label class="block text-xs font-semibold mb-1">กลุ่มงานหลัก *</label>
-                    <select x-model="currentTask.category" @change="currentTask.subcategory = ''" :disabled="!canEditTask(currentTask)" class="w-full border rounded-lg p-2 text-xs sm:text-sm bg-white disabled:bg-slate-100">
-                        <option value="">-- เลือกกลุ่มงานหลัก --</option>
-                        <template x-for="cat in allowedCategoriesForCreation" :key="cat.id"><option :value="cat.name" x-text="cat.name"></option></template>
+                    <label class="block text-xs font-semibold mb-1">กลุ่มงาน</label>
+                    <select x-model="currentTask.category" class="w-full border rounded-lg p-2 text-xs bg-white">
+                        <option value="">-- เลือกกลุ่มงาน --</option>
+                        <template x-for="cat in categories" :key="cat.id">
+                            <option :value="cat.name" x-text="cat.name"></option>
+                        </template>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold mb-1">หัวข้อย่อย *</label>
-                    <select x-model="currentTask.subcategory" :disabled="!canEditTask(currentTask)" class="w-full border rounded-lg p-2 text-xs sm:text-sm bg-white disabled:bg-slate-100">
-                        <option value="">-- เลือกหัวข้อย่อย --</option>
-                        <template x-for="sub in availableSubcategories" :key="sub"><option :value="sub" x-text="sub"></option></template>
-                    </select>
+                    <label class="block text-xs font-semibold mb-1">ชื่องาน</label>
+                    <input type="text" x-model="currentTask.title" class="w-full border rounded-lg p-2 text-xs" placeholder="ระบุชื่องาน...">
                 </div>
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold mb-1">ชื่องาน / กิจกรรม *</label>
-                <input type="text" x-model="currentTask.title" :disabled="!canEditTask(currentTask)" class="w-full border rounded-lg p-2 text-xs sm:text-sm disabled:bg-slate-100" placeholder="ชื่องาน...">
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold mb-1 text-indigo-900">📎 ลิงก์เอกสารประกอบโครงการ / คำสั่ง (URL)</label>
-                <input type="url" x-model="currentTask.docLink" :disabled="!canEditTask(currentTask)" class="w-full border rounded-lg p-2 text-xs sm:text-sm bg-white disabled:bg-slate-100" placeholder="https://drive.google.com/...">
-            </div>
-
-            <!-- การนับภาระงาน -->
-            <div class="bg-amber-50/60 p-3 rounded-xl border border-amber-200 flex items-center justify-between">
-                <span class="text-xs font-bold text-amber-900">📊 การนับภาระงาน (เพื่อนำไปคำนวณในรายงานภาระงาน)</span>
-                <label class="relative inline-flex items-center cursor-pointer" x-show="canEditTask(currentTask)">
-                    <input type="checkbox" x-model="currentTask.countWorkload" class="sr-only peer">
-                    <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-                    <span class="ml-2 text-xs font-semibold text-slate-700" x-text="currentTask.countWorkload ? 'นับภาระงาน' : 'ไม่นับภาระงาน'"></span>
-                </label>
-            </div>
-
-            <!-- วันที่วางแผน (Plan) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-purple-50 p-3 rounded-xl border border-purple-100">
-                <div><label class="block text-xs font-bold text-purple-800">วันเริ่มแผน (Plan)</label><input type="date" x-model="currentTask.planStart" :disabled="!canEditTask(currentTask)" class="w-full border rounded p-1.5 text-xs sm:text-sm bg-white"></div>
-                <div><label class="block text-xs font-bold text-purple-800">วันสิ้นสุดแผน (Plan)</label><input type="date" x-model="currentTask.planEnd" :disabled="!canEditTask(currentTask)" class="w-full border rounded p-1.5 text-xs sm:text-sm bg-white"></div>
-            </div>
-
-            <!-- วันที่ปฏิบัติงาน (Do) พร้อม Validation -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-blue-50 p-3 rounded-xl border border-blue-100">
-                <div>
-                    <label class="block text-xs font-bold text-blue-800">วันเริ่มปฏิบัติ (Do)</label>
-                    <input type="date" x-model="currentTask.doStart" @change="validateWorkDates()" :min="currentTask.planStart || ''" :disabled="!canEditTask(currentTask)" class="w-full border rounded p-1.5 text-xs sm:text-sm bg-white">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-blue-800">วันสิ้นสุดปฏิบัติ (Do)</label>
-                    <input type="date" x-model="currentTask.doEnd" @change="validateWorkDates()" :min="currentTask.planStart || ''" :disabled="!canEditTask(currentTask)" class="w-full border rounded p-1.5 text-xs sm:text-sm bg-white">
-                </div>
-            </div>
-
-            <!-- วันที่สรุปผล พร้อม Validation -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                <div>
-                    <label class="block text-xs font-bold text-emerald-800">วันเริ่มสรุปผล</label>
-                    <input type="date" x-model="currentTask.summaryStart" @change="validateSummaryDates()" :min="currentTask.doStart || currentTask.planStart || ''" :disabled="!canEditTask(currentTask)" class="w-full border rounded p-1.5 text-xs sm:text-sm bg-white">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-emerald-800">วันสิ้นสุดสรุปผล</label>
-                    <input type="date" x-model="currentTask.summaryEnd" @change="validateSummaryDates()" :min="currentTask.doStart || currentTask.planStart || ''" :disabled="!canEditTask(currentTask)" class="w-full border rounded p-1.5 text-xs sm:text-sm bg-white">
-                </div>
-            </div>
-
-            <!-- ผู้รับผิดชอบหลักและคณะทำงานย่อย -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border">
-                <div>
-                    <label class="block text-xs font-semibold mb-1 text-slate-700">ผู้รับผิดชอบหลัก</label>
-                    <select x-model="currentTask.owner" :disabled="!canEditTask(currentTask)" class="w-full border rounded-lg p-2 text-xs sm:text-sm bg-white">
-                        <option value="">-- เลือกผู้รับผิดชอบ --</option>
-                        <template x-for="o in owners" :key="o.id"><option :value="o.name" x-text="o.name"></option></template>
-                    </select>
-                </div>
-                <div class="relative" x-data="{ openSubTeam: false }">
-                    <label class="block text-xs font-semibold mb-1 text-slate-700">คณะทำงานย่อย (เลือกได้หลายคน)</label>
-                    <button @click="canEditTask(currentTask) && (openSubTeam = !openSubTeam)" type="button" class="w-full border rounded-lg p-2 text-xs sm:text-sm bg-white text-left flex justify-between items-center cursor-pointer">
-                        <span class="truncate" x-text="currentTaskSubTeams.length > 0 ? 'เลือกแล้ว (' + currentTaskSubTeams.length + ' คน)' : '-- เลือกคณะทำงานย่อย --'"></span>
-                        <span>▼</span>
-                    </button>
-                    <div x-show="openSubTeam" @click.away="openSubTeam = false" x-cloak class="absolute left-0 right-0 mt-1 bg-white border rounded-xl shadow-xl z-30 p-2 max-h-48 overflow-y-auto space-y-1">
-                        <template x-for="o in owners" :key="o.id">
-                            <label class="flex items-center gap-2 text-xs p-1.5 hover:bg-slate-50 rounded cursor-pointer">
-                                <input type="checkbox" :value="o.name" x-model="currentTaskSubTeams" class="rounded border-slate-300 text-indigo-600 w-3.5 h-3.5">
-                                <span x-text="o.name" class="font-medium text-slate-700"></span>
-                            </label>
-                        </template>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">วันที่เริ่มต้น</label>
+                        <input type="date" x-model="currentTask.doStart" class="w-full border rounded-lg p-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">วันที่สิ้นสุด</label>
+                        <input type="date" x-model="currentTask.doEnd" class="w-full border rounded-lg p-2 text-xs">
                     </div>
                 </div>
             </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-amber-50 p-3 rounded-xl border border-amber-100">
-                <div><label class="block text-xs font-bold text-amber-900">งบขออนุมัติ (บาท)</label><input type="number" x-model.number="currentTask.budgetApproved" :disabled="!canEditTask(currentTask)" placeholder="0.00" class="w-full border rounded p-1.5 text-xs sm:text-sm bg-white"></div>
-                <div><label class="block text-xs font-bold text-amber-900">งบใช้จริง (บาท)</label><input type="number" x-model.number="currentTask.budgetUsed" :disabled="!canEditTask(currentTask)" placeholder="0.00" class="w-full border rounded p-1.5 text-xs sm:text-sm bg-white"></div>
-            </div>
-
-            <!-- SDGs ครบถ้วน 17 เป้าหมายและ Targets ย่อย -->
-            <div class="bg-indigo-50/70 p-3.5 rounded-xl border-2 border-indigo-200 space-y-2 shadow-xs">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-indigo-900 flex items-center gap-1.5">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs และ Targets)</span>
-                    <label class="relative inline-flex items-center cursor-pointer" x-show="canEditTask(currentTask)">
-                        <input type="checkbox" x-model="currentTask.useSDGs" class="sr-only peer">
-                        <div class="w-8 h-4 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600"></div>
-                    </label>
-                </div>
-                <div x-show="currentTask.useSDGs" class="space-y-2 max-h-52 overflow-y-auto text-xs pt-2 border-t border-indigo-200">
-                    <template x-for="goal in sdgList" :key="goal.id">
-                        <div class="space-y-1 bg-white p-2 rounded-lg border border-indigo-100 shadow-2xs">
-                            <label class="flex items-center gap-2 cursor-pointer font-bold text-indigo-950">
-                                <input type="checkbox" :value="goal.id" x-model="currentTask.selectedSdgs" :disabled="!canEditTask(currentTask)" class="rounded text-indigo-600 w-3.5 h-3.5">
-                                <span x-text="goal.id + ': ' + goal.title"></span>
-                            </label>
-                            <div class="pl-5 space-y-1 pt-1">
-                                <template x-for="target in goal.targets" :key="target.id">
-                                    <label class="flex items-center gap-1.5 text-[11px] cursor-pointer text-slate-700 hover:text-indigo-900">
-                                        <input type="checkbox" :value="target.id" x-model="currentTask.selectedSdgTargets" :disabled="!canEditTask(currentTask)" class="rounded text-indigo-500 w-3 h-3">
-                                        <span x-text="target.id + ' ' + target.title"></span>
-                                    </label>
-                                </template>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </div>
-
-            <!-- Checklists: 1. ช่วงวางแผน -->
-            <div class="bg-purple-50/80 p-3 rounded-xl border border-purple-200 space-y-2">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-purple-900">📋 เช็คลิสต์ช่วงวางแผนงาน</span>
-                    <label class="relative inline-flex items-center cursor-pointer" x-show="canEditTask(currentTask)">
-                        <input type="checkbox" x-model="currentTask.usePlanChecklist" class="sr-only peer">
-                        <div class="w-8 h-4 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-purple-600"></div>
-                    </label>
-                </div>
-                <div x-show="currentTask.usePlanChecklist" class="space-y-2 pt-2 border-t border-purple-200">
-                    <div class="flex flex-wrap gap-1 bg-white p-2 rounded border text-xs" x-show="canEditTask(currentTask)">
-                        <span class="font-bold text-purple-900 w-full mb-1">เทมเพลต:</span>
-                        <template x-for="tpl in allTemplates.filter(t => t.type === 'plan')" :key="tpl.id">
-                            <button @click="applyTemplateObject(tpl, 'plan')" type="button" class="bg-purple-100 hover:bg-purple-200 text-purple-900 px-2 py-1 rounded text-[11px] font-medium cursor-pointer" x-text="tpl.icon + ' ' + tpl.name"></button>
-                        </template>
-                    </div>
-                    <div class="flex gap-2" x-show="canEditTask(currentTask)">
-                        <input type="date" x-model="newPlanChecklistDate" class="border rounded px-2 py-1 text-xs w-32 bg-white" :max="currentTask.planEnd || ''">
-                        <input type="text" x-model="newPlanChecklistText" @keyup.enter="addChecklistItem('plan')" placeholder="เพิ่มเช็คลิสต์วางแผน..." class="flex-1 border rounded px-2 py-1 text-xs bg-white">
-                        <button @click="addChecklistItem('plan')" type="button" class="bg-purple-600 text-white px-3 py-1 rounded text-xs">เพิ่ม</button>
-                    </div>
-                    <div class="space-y-1 max-h-32 overflow-y-auto" x-sort x-sort:item="currentTask.planChecklist">
-                        <template x-for="(chk, idx) in currentTask.planChecklist" :key="idx">
-                            <div class="flex items-center justify-between bg-white border p-1.5 rounded text-xs gap-2 cursor-move" x-sort:item="idx">
-                                <span class="font-bold text-slate-400">⠿</span>
-                                <input type="date" x-model="chk.date" :disabled="!canEditTask(currentTask)" :max="currentTask.planEnd || ''" class="border rounded px-1 py-0.5 text-[10px] w-28 font-bold">
-                                <input type="text" x-model="chk.text" :disabled="!canEditTask(currentTask)" class="flex-1 border rounded px-2 py-1 text-xs bg-white" :class="chk.done ? 'line-through text-slate-400' : ''">
-                                <input type="checkbox" x-model="chk.done" :disabled="!canEditTask(currentTask)" class="w-3.5 h-3.5 text-purple-600">
-                                <button x-show="canEditTask(currentTask)" @click="currentTask.planChecklist.splice(idx, 1)" type="button" class="text-rose-500 font-bold px-1 cursor-pointer">&times;</button>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Checklists: 2. ช่วงปฏิบัติงาน -->
-            <div class="bg-blue-50/80 p-3 rounded-xl border border-blue-200 space-y-2">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-blue-900">📌 เช็คลิสต์ช่วงปฏิบัติงาน</span>
-                    <label class="relative inline-flex items-center cursor-pointer" x-show="canEditTask(currentTask)">
-                        <input type="checkbox" x-model="currentTask.useChecklist" class="sr-only peer">
-                        <div class="w-8 h-4 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                </div>
-                <div x-show="currentTask.useChecklist" class="space-y-2 pt-2 border-t border-blue-200">
-                    <div class="flex flex-wrap gap-1 bg-white p-2 rounded border text-xs" x-show="canEditTask(currentTask)">
-                        <span class="font-bold text-blue-900 w-full mb-1">เทมเพลต:</span>
-                        <template x-for="tpl in allTemplates.filter(t => t.type === 'do')" :key="tpl.id">
-                            <button @click="applyTemplateObject(tpl, 'do')" type="button" class="bg-blue-100 hover:bg-blue-200 text-blue-900 px-2 py-1 rounded text-[11px] font-medium cursor-pointer" x-text="tpl.icon + ' ' + tpl.name"></button>
-                        </template>
-                    </div>
-                    <div class="flex gap-2" x-show="canEditTask(currentTask)">
-                        <input type="date" x-model="newChecklistDate" class="border rounded px-2 py-1 text-xs w-32 bg-white" :min="currentTask.doStart || ''" :max="currentTask.doEnd || ''">
-                        <input type="text" x-model="newChecklistText" @keyup.enter="addChecklistItem('do')" placeholder="เพิ่มเช็คลิสต์ปฏิบัติ..." class="flex-1 border rounded px-2 py-1 text-xs bg-white">
-                        <button @click="addChecklistItem('do')" type="button" class="bg-blue-600 text-white px-3 py-1 rounded text-xs">เพิ่ม</button>
-                    </div>
-                    <div class="space-y-1 max-h-32 overflow-y-auto" x-sort x-sort:item="currentTask.checklist">
-                        <template x-for="(chk, idx) in currentTask.checklist" :key="idx">
-                            <div class="flex items-center justify-between bg-white border p-1.5 rounded text-xs gap-2 cursor-move" x-sort:item="idx">
-                                <span class="font-bold text-slate-400">⠿</span>
-                                <input type="date" x-model="chk.date" :disabled="!canEditTask(currentTask)" class="border rounded px-1 py-0.5 text-[10px] w-28 font-bold">
-                                <input type="text" x-model="chk.text" :disabled="!canEditTask(currentTask)" class="flex-1 border rounded px-2 py-1 text-xs bg-white" :class="chk.done ? 'line-through text-slate-400' : ''">
-                                <input type="checkbox" x-model="chk.done" :disabled="!canEditTask(currentTask)" class="w-3.5 h-3.5 text-blue-600">
-                                <button x-show="canEditTask(currentTask)" @click="currentTask.checklist.splice(idx, 1)" type="button" class="text-rose-500 font-bold px-1 cursor-pointer">&times;</button>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Checklists: 3. ช่วงสรุปผลงาน -->
-            <div class="bg-emerald-50/80 p-3 rounded-xl border border-emerald-300 space-y-2">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-emerald-900">📝 เช็คลิสต์ช่วงสรุปผลงาน</span>
-                    <label class="relative inline-flex items-center cursor-pointer" x-show="canEditTask(currentTask)">
-                        <input type="checkbox" x-model="currentTask.useSummaryChecklist" class="sr-only peer">
-                        <div class="w-8 h-4 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600"></div>
-                    </label>
-                </div>
-                <div x-show="currentTask.useSummaryChecklist" class="space-y-2 pt-2 border-t border-emerald-200">
-                    <div class="flex flex-wrap gap-1 bg-white p-2 rounded border text-xs" x-show="canEditTask(currentTask)">
-                        <span class="font-bold text-emerald-900 w-full mb-1">เทมเพลต:</span>
-                        <template x-for="tpl in allTemplates.filter(t => t.type === 'summary')" :key="tpl.id">
-                            <button @click="applyTemplateObject(tpl, 'summary')" type="button" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-900 px-2 py-1 rounded text-[11px] font-medium cursor-pointer" x-text="tpl.icon + ' ' + tpl.name"></button>
-                        </template>
-                    </div>
-                    <div class="flex gap-2" x-show="canEditTask(currentTask)">
-                        <input type="date" x-model="newSummaryChecklistDate" class="border rounded px-2 py-1 text-xs w-32 bg-white" :min="currentTask.summaryStart || ''" :max="currentTask.summaryEnd || ''">
-                        <input type="text" x-model="newSummaryChecklistText" @keyup.enter="addChecklistItem('summary')" placeholder="เพิ่มเช็คลิสต์สรุปผล..." class="flex-1 border rounded px-2 py-1 text-xs bg-white">
-                        <button @click="addChecklistItem('summary')" type="button" class="bg-emerald-600 text-white px-3 py-1 rounded text-xs">เพิ่ม</button>
-                    </div>
-                    <div class="space-y-1 max-h-32 overflow-y-auto" x-sort x-sort:item="currentTask.summaryChecklist">
-                        <template x-for="(chk, idx) in currentTask.summaryChecklist" :key="idx">
-                            <div class="flex items-center justify-between bg-white border p-1.5 rounded text-xs gap-2 cursor-move" x-sort:item="idx">
-                                <span class="font-bold text-slate-400">⠿</span>
-                                <input type="date" x-model="chk.date" :disabled="!canEditTask(currentTask)" class="border rounded px-1 py-0.5 text-[10px] w-28 font-bold">
-                                <input type="text" x-model="chk.text" :disabled="!canEditTask(currentTask)" class="flex-1 border rounded px-2 py-1 text-xs bg-white" :class="chk.done ? 'line-through text-slate-400' : ''">
-                                <input type="checkbox" x-model="chk.done" :disabled="!canEditTask(currentTask)" class="w-3.5 h-3.5 text-emerald-600">
-                                <button x-show="canEditTask(currentTask)" @click="currentTask.summaryChecklist.splice(idx, 1)" type="button" class="text-rose-500 font-bold px-1 cursor-pointer">&times;</button>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-            </div>
-
-            <hr>
-            <h4 class="font-bold text-xs sm:text-sm text-indigo-700">PDSA</h4>
-            <textarea x-model="currentTask.pdsa.plan" :disabled="!canEditTask(currentTask)" placeholder="Plan..." class="w-full border rounded p-2 text-xs sm:text-sm" rows="2"></textarea>
-            <textarea x-model="currentTask.pdsa.do" :disabled="!canEditTask(currentTask)" placeholder="Do..." class="w-full border rounded p-2 text-xs sm:text-sm" rows="2"></textarea>
-            <textarea x-model="currentTask.pdsa.study" :disabled="!canEditTask(currentTask)" placeholder="Study..." class="w-full border rounded p-2 text-xs sm:text-sm" rows="2"></textarea>
-            <textarea x-model="currentTask.pdsa.act" :disabled="!canEditTask(currentTask)" placeholder="Act..." class="w-full border rounded p-2 text-xs sm:text-sm" rows="2"></textarea>
-
-            <div class="flex justify-between gap-2 pt-2 border-t">
-                <button x-show="canEditTask(currentTask) && currentTask.id" @click="deleteTask(currentTask)" class="px-3 py-2 border border-rose-300 text-rose-600 rounded-lg text-xs sm:text-sm">ลบ</button>
-                <div class="flex gap-2 ml-auto">
-                    <button @click="isModalOpen = false" class="px-3 py-2 border rounded-lg text-xs sm:text-sm">ปิด</button>
-                    <button x-show="canEditTask(currentTask)" @click="saveTask()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs sm:text-sm">บันทึก</button>
-                </div>
+            <div class="flex justify-end gap-2 pt-2 border-t">
+                <button @click="isModalOpen = false" class="px-3 py-2 border rounded-lg text-xs">ยกเลิก</button>
+                <button @click="saveTask()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs">บันทึก</button>
             </div>
         </div>
-    </div>
-
-    <!-- DIALOG & TOASTS -->
-    <div x-show="dialog.open" x-cloak class="fixed inset-0 z-[60] bg-slate-900/60 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-3" @click.stop>
-            <h3 class="text-base font-bold" :class="dialog.danger ? 'text-rose-600' : 'text-indigo-700'" x-text="dialog.title"></h3>
-            <p class="text-xs sm:text-sm text-slate-600" x-text="dialog.message"></p>
-            <div class="flex justify-end gap-2 pt-2">
-                <button @click="closeDialog(false)" class="px-3 py-1.5 border rounded-lg text-xs">ยกเลิก</button>
-                <button @click="closeDialog(true)" class="px-3 py-1.5 text-white rounded-lg text-xs" :class="dialog.danger ? 'bg-rose-600' : 'bg-indigo-600'" x-text="dialog.confirmText"></button>
-            </div>
-        </div>
-    </div>
-
-    <div class="fixed bottom-4 right-4 z-[70] space-y-2 max-w-xs">
-        <template x-for="t in toasts" :key="t.id">
-            <div class="px-3 py-2 rounded-lg shadow-lg text-xs text-white" :class="t.type === 'error' ? 'bg-rose-600' : 'bg-emerald-600'" x-text="t.msg"></div>
-        </template>
     </div>
 
     <script>
         function plannerApp() {
-            let dialogResolver = null;
             return {
-                apiUrl: '', // ⚠️ ใส่ลิงก์ Web App ของคุณที่นี่
                 isLoggedIn: false,
                 currentUserName: '',
                 currentUserRole: 'viewer',
-                currentUserAllowedCats: [],
                 loginPassword: '',
                 activeTab: 'calendarView',
-                calendarMode: 'monthly',
-                calendarFilterCats: [],
-                reportFilterCats: [],
-                taskStatusTab: 'ongoing',
-                selectedBudgetYear: 2570,
                 isLoading: false,
-                isSaving: false,
-                loadingMessage: 'กำลังโหลดข้อมูล...',
-                savingMessage: 'กำลังบันทึก...',
                 isModalOpen: false,
-                filterCategory: '',
                 tasks: [],
                 categories: [],
                 owners: [],
-                appUsers: [
-                    { id: 'admin-1', name: 'เจ้าหน้าที่หลัก (Admin)', passcode: '1234', role: 'admin', allowedCats: [] },
-                    { id: 'user-2', name: 'เจ้าหน้าที่ปฏิบัติงาน', passcode: '5678', role: 'editor', allowedCats: [] }
-                ],
-                newUser: { name: '', passcode: '', role: 'editor', allowedCats: [] },
-                editingUserId: null,
-                editingNewPass: '',
-                editingUserNameId: null,
-                editingNewName: '',
-                editingPermsUserId: null,
-                editingAllowedCats: [],
-                customTemplates: [],
-                editingTemplateId: null,
-                newTemplateName: '',
-                newTemplateType: 'do',
-                newTemplateIcon: '📋',
-                newTemplateItems: [''],
-                currentTaskSubTeams: [],
-                newPlanChecklistText: '',
-                newPlanChecklistDate: new Date().toISOString().split('T')[0],
-                newChecklistText: '',
-                newChecklistDate: new Date().toISOString().split('T')[0],
-                newSummaryChecklistText: '',
-                newSummaryChecklistDate: new Date().toISOString().split('T')[0],
+                newCategoryName: '',
+                newOwnerName: '',
+                currentTask: { id: null, category: '', title: '', doStart: '', doEnd: '' },
                 currentYearNum: new Date().getFullYear(),
                 currentMonthIndex: new Date().getMonth(),
                 monthNames: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'],
-                
-                sdgList: [
-                    { id: 'SDG 1', title: 'ขจัดความยากจนทุกรูปแบบในทุกพื้นที่', targets: [{ id: '1.1', title: 'ขจัดความยากจนรุนแรง' }, { id: '1.2', title: 'ลดความยากจนในทุกมิติ' }, { id: '1.3', title: 'ระบบคุ้มครองทางสังคมที่เหมาะสม' }, { id: '1.4', title: 'สิทธิเท่าเทียมในการเข้าถึงทรัพยากร' }, { id: '1.5', title: 'สร้างภูมิต้านทานผู้ยากไร้ต่อภัยพิบัติ' }, { id: '1.a', title: 'ระดมทรัพยากรยุติความยากจน' }, { id: '1.b', title: 'สร้างกรอบนโยบายระดับชาติที่สนับสนุนคนยากจน' }] },
-                    { id: 'SDG 2', title: 'ยุติความหิวโหย บรรลุความมั่นคงทางอาหาร', targets: [{ id: '2.1', title: 'ยุติความหิวโหยและเข้าถึงอาหารปลอดภัย' }, { id: '2.2', title: 'ยุติภาวะทุพโภชนาการทุกรูปแบบ' }, { id: '2.3', title: 'เพิ่มผลิตภาพเกษตรกรรายย่อย' }, { id: '2.4', title: 'ระบบการผลิตอาหารที่ยั่งยืน' }, { id: '2.5', title: 'รักษาความหลากหลายทางชีวภาพ' }, { id: '2.a', title: 'เพิ่มการลงทุนในโครงสร้างพื้นฐานเกษตร' }, { id: '2.b', title: 'แก้ไขข้อจำกัดทางการค้าเกษตร' }, { id: '2.c', title: 'มาตรการควบคุมตลาดอาหารเสถียร' }] },
-                    { id: 'SDG 3', title: 'สร้างหลักประกันการมีสุขภาพที่ดีและส่งเสริมความเป็นอยู่ที่ดี', targets: [{ id: '3.1', title: 'ลดอัตราการตายของมารดา' }, { id: '3.2', title: 'ยุติการตายที่ป้องกันได้ของเด็ก' }, { id: '3.3', title: 'ยุติโรคระบาดสำคัญ' }, { id: '3.4', title: 'ลดการตายด้วยโรคไม่ติดต่อเรื้อรัง' }, { id: '3.5', title: 'ป้องกันและรักษาการใช้สารเสพติด' }, { id: '3.6', title: 'ลดอุบัติเหตุบนท้องถนน' }, { id: '3.7', title: 'เข้าถึงบริการสุขภาพทางเพศและอนามัย' }, { id: '3.8', title: 'หลักประกันสุขภาพถ้วนหน้า' }, { id: '3.9', title: 'ลดการเจ็บป่วยจากมลพิษ' }, { id: '3.a', title: 'การดำเนินงานตามกรอบอนุสัญญาควบคุมยาสูบ' }, { id: '3.b', title: 'สนับสนุนการวิจัยและพัฒนาวัคซีนและยา' }, { id: '3.c', title: 'เพิ่มการจัดสรรงบประมาณด้านสุขภาพ' }, { id: '3.d', title: 'เสริมขีดความสามารถด้านการเตือนภัยสุขภาพล่วงหน้า' }] },
-                    { id: 'SDG 4', title: 'การศึกษาที่มีคุณภาพอย่างเท่าเทียมและทั่วถึง', targets: [{ id: '4.1', title: 'การศึกษาประถมและมัธยมที่มีคุณภาพ' }, { id: '4.2', title: 'การพัฒนาเด็กเล็กปฐมวัย' }, { id: '4.3', title: 'การศึกษาระดับอุดมศึกษาที่เท่าเทียม' }, { id: '4.4', title: 'เพิ่มทักษะเพื่อการทำงาน' }, { id: '4.5', title: 'ขจัดความเหลื่อมล้ำทางการศึกษา' }, { id: '4.6', title: 'การรู้หนังสือและการคำนวณ' }, { id: '4.7', title: 'การศึกษาเพื่อการพัฒนาที่ยั่งยืน' }, { id: '4.a', title: 'อัปเกรดสถานศึกษาให้ปลอดภัยและครอบคลุม' }, { id: '4.b', title: 'ขยายทุนการศึกษาสำหรับประเทศกำลังพัฒนา' }, { id: '4.c', title: 'เพิ่มจำนวนครูที่มีคุณสมบัติ' }] },
-                    { id: 'SDG 5', title: 'ความเท่าเทียมทางเพศและเสริมพลังสตรี', targets: [{ id: '5.1', title: 'ยุติการเลือกปฏิบัติทุกรูปแบบต่อสตรี' }, { id: '5.2', title: 'ขจัดความรุนแรงต่อสตรีและเด็กหญิง' }, { id: '5.3', title: 'ยุติการสมรสในเด็กและการปฏิบัติอันตราย' }, { id: '5.4', title: 'คุณค่าของงานดูแลที่ไม่ได้รับค่าจ้าง' }, { id: '5.5', title: 'การมีส่วนร่วมของสตรีในทุกระดับ' }, { id: '5.6', title: 'สิทธิการเจริญพันธุ์ที่เท่าเทียม' }, { id: '5.a', title: 'สิทธิเท่าเทียมในการถือครองทรัพย์สิน' }, { id: '5.b', title: 'ใช้เทคโนโลยีเสริมพลังสตรี' }, { id: '5.c', title: 'นโยบายส่งเสริมความเท่าเทียมทางเพศ' }] },
-                    { id: 'SDG 6', title: 'การจัดการน้ำและสุขาภิบาล', targets: [{ id: '6.1', title: 'เข้าถึงน้ำดื่มที่ปลอดภัยและราคาเป็นธรรม' }, { id: '6.2', title: 'เข้าถึงระบบสุขาภิบาลที่เพียงพอ' }, { id: '6.3', title: 'ปรับปรุงคุณภาพน้ำและลดมลพิษ' }, { id: '6.4', title: 'เพิ่มประสิทธิภาพการใช้น้ำ' }, { id: '6.5', title: 'การบริหารจัดการทรัพยากรน้ำแบบบูรณาการ' }, { id: '6.6', title: 'ปกป้องและฟื้นฟูระบบนิเวศน้ำ' }, { id: '6.a', title: 'ขยายความร่วมมือด้านน้ำ' }, { id: '6.b', title: 'สนับสนุนการมีส่วนร่วมของท้องถิ่น' }] },
-                    { id: 'SDG 7', title: 'พลังงานสะอาดที่เข้าถึงได้', targets: [{ id: '7.1', title: 'เข้าถึงบริการพลังงานสมัยใหม่' }, { id: '7.2', title: 'เพิ่มสัดส่วนพลังงานทดแทน' }, { id: '7.3', title: 'เพิ่มอัตราการประหยัดพลังงาน' }, { id: '7.a', title: 'ส่งเสริมการลงทุนเทคโนโลยีพลังงานสะอาด' }, { id: '7.b', title: 'ขยายโครงสร้างพื้นฐานพลังงานประเทศกำลังพัฒนา' }] },
-                    { id: 'SDG 8', title: 'การเติบโตทางเศรษฐกิจที่ยั่งยืนและการจ้างงาน', targets: [{ id: '8.1', title: 'เติบโตทางเศรษฐกิจตามบริบทประเทศ' }, { id: '8.2', title: 'เพิ่มความหลากหลายทางเศรษฐกิจ' }, { id: '8.3', title: 'สนับสนุนวิสาหกิจขนาดกลางและขนาดย่อม' }, { id: '8.4', title: 'ประสิทธิภาพการใช้ทรัพยากร' }, { id: '8.5', title: 'การจ้างงานเต็มที่และมีผลิตภาพ' }, { id: '8.6', title: 'ลดเยาวชนที่ว่างงาน' }, { id: '8.7', title: 'ขจัดแรงงานบังคับและแรงงานเด็ก' }, { id: '8.8', title: 'ปกป้องสิทธิแรงงานและสภาพปลอดภัย' }, { id: '8.9', title: 'การท่องเที่ยวที่ยั่งยืน' }, { id: '8.10', title: 'เสริมสถาบันการเงินภายในประเทศ' }, { id: '8.a', title: 'เพิ่มความช่วยเหลือ Aid for Trade' }, { id: '8.b', title: 'ยุทธศาสตร์ระดับโลกสำหรับการจ้างงานเยาวชน' }] },
-                    { id: 'SDG 9', title: 'อุตสาหกรรม นวัตกรรม โครงสร้างพื้นฐาน', targets: [{ id: '9.1', title: 'พัฒนาโครงสร้างพื้นฐานที่มีคุณภาพ' }, { id: '9.2', title: 'ส่งเสริมอุตสาหกรรมที่ยั่งยืน' }, { id: '9.3', title: 'เข้าถึงบริการทางการเงินของอุตสาหกรรมเล็ก' }, { id: '9.4', title: 'ปรับปรุงโครงสร้างพื้นฐานให้ยั่งยืน' }, { id: '9.5', title: 'เพิ่มขีดความสามารถทางวิจัย' }, { id: '9.a', title: 'สนับสนุนโครงสร้างพื้นฐานประเทศกำลังพัฒนา' }, { id: '9.b', title: 'สนับสนุนการพัฒนาเทคโนโลยีในประเทศ' }, { id: '9.c', title: 'การเข้าถึงเทคโนโลยีสารสนเทศ' }] },
-                    { id: 'SDG 10', title: 'ลดความเหลื่อมล้ำภายในและระหว่างประเทศ', targets: [{ id: '10.1', title: 'เติบโตของรายได้กลุ่มประชากรล่างสุด' }, { id: '10.2', title: 'ส่งเสริมการมีส่วนร่วมของทุกคน' }, { id: '10.3', title: 'สร้างความเท่าเทียมและลดเลือกปฏิบัติ' }, { id: '10.4', title: 'ใช้นโยบายการคลังที่สมန်း' }, { id: '10.5', title: 'กำกับดูแลตลาดการเงิน' }, { id: '10.6', title: 'เพิ่มเสียงสะท้อนประเทศกำลังพัฒนา' }, { id: '10.7', title: 'การย้ายถิ่นฐานที่ปลอดภัย' }, { id: '10.a', title: 'หลักการปฏิบัติที่แตกต่างและพิเศษ' }, { id: '10.b', title: 'ส่งเสริม ODA และการไหลของเงินทุน' }, { id: '10.c', title: 'ลดต้นทุนการทำธุรกรรมการเงินของผู้ย้ายถิ่น' }] },
-                    { id: 'SDG 11', title: 'เมืองและชุมชนยั่งยืน', targets: [{ id: '11.1', title: 'เข้าถึงที่อยู่อาศัยที่ปลอดภัย' }, { id: '11.2', title: 'ระบบคมนาคมขนส่งที่ยั่งยืน' }, { id: '11.3', title: 'การพัฒนาเมืองแบบมีส่วนร่วม' }, { id: '11.4', title: 'ปกป้องมรดกทางวัฒนธรรม' }, { id: '11.5', title: 'ลดความเสียหายจากภัยพิบัติ' }, { id: '11.6', title: 'ลดผลกระทบสิ่งแวดล้อมของเมือง' }, { id: '11.7', title: 'เข้าถึงพื้นที่สาธารณะสีเขียว' }, { id: '11.a', title: 'เชื่อมโยงภูมิภาคและผังเมือง' }, { id: '11.b', title: 'นโยบายเมืองยืดหยุ่นต่อภัยพิบัติ' }, { id: '11.c', title: 'สนับสนุนการก่อสร้างอาคารท้องถิ่นยั่งยืน' }] },
-                    { id: 'SDG 12', title: 'การผลิตและการบริโภคที่ยั่งยืน', targets: [{ id: '12.1', title: 'กรอบการดำเนินงานผลิตบริโภคยั่งยืน' }, { id: '12.2', title: 'จัดการทรัพยากรธรรมชาติยั่งยืน' }, { id: '12.3', title: 'ลดขยะอาหารระดับโลก' }, { id: '12.4', title: 'จัดการสารเคมีและของเสียปลอดภัย' }, { id: '12.5', title: 'ลดการเกิดขยะรีไซเคิล' }, { id: '12.6', title: 'บริษัทรายงานความยั่งยืน' }, { id: '12.7', title: 'การจัดซื้อจัดจ้างภาครัฐยั่งยืน' }, { id: '12.8', title: 'สร้างความตระหนักรู้พัฒนาที่ยั่งยืน' }, { id: '12.a', title: 'สนับสนุนขีดความสามารถทางวิทยาศาสตร์' }, { id: '12.b', title: 'พัฒนาเครื่องมือติดตามการท่องเที่ยว' }, { id: '12.c', title: 'ปรับปรุงเงินอุดหนุนเชื้อเพลิงฟอสซิลไม่มีประสิทธิภาพ' }] },
-                    { id: 'SDG 13', title: 'การรับมือการเปลี่ยนแปลงสภาพภูมิอากาศ', targets: [{ id: '13.1', title: 'เสริมภูมิต้านทานต่อภัยพิบัติภูมิอากาศ' }, { id: '13.2', title: 'บูรณาการมาตรการสภาพภูมิอากาศ' }, { id: '13.3', title: 'สร้างความรู้ความตระหนักลดโลกร้อน' }, { id: '13.a', title: 'ปฏิบัติตามพันธกรณีอนุสัญญาสกอตแลนด์/ปารีส' }, { id: '13.b', title: 'เสริมกลไกการวางแผนประเทศกำลังพัฒนา' }] },
-                    { id: 'SDG 14', title: 'อนุรักษ์และใช้ประโยชน์จากมหาสมุทรและทรัพยากรทางทะเล', targets: [{ id: '14.1', title: 'ลดมลพิษทางทะเล' }, { id: '14.2', title: 'ปกป้องระบบนิเวศทางทะเล' }, { id: '14.3', title: 'ลดกรดในมหาสมุทร' }, { id: '14.4', title: 'ยุติการทำประมงเกินขีดจำกัด' }, { id: '14.5', title: 'อนุรักษ์พื้นที่ชายฝั่งทะเล' }, { id: '14.6', title: 'ระงับอุดหนุนประมงเกินขีดจำกัด' }, { id: '14.7', title: 'เพิ่มผลประโยชน์เศรษฐกิจประเทศเกาะ' }, { id: '14.a', title: 'เพิ่มความรู้ทางวิทยาศาสตร์ทางทะเล' }, { id: '14.b', title: 'สนับสนุนชาวประมงพื้นบ้านรายย่อย' }, { id: '14.c', title: 'กฎหมายระหว่างประเทศ UNCLOS' }] },
-                    { id: 'SDG 15', title: 'ปกป้องและฟื้นฟูระบบนิเวศบนบก', targets: [{ id: '15.1', title: 'อนุรักษ์ระบบนิเวศบนบกและน้ำจืด' }, { id: '15.2', title: 'ยุติการตัดไม้ทำลายป่าฟื้นฟูป่า' }, { id: '15.3', title: 'ต่อสู้การกลายสภาพเป็นทะเลทราย' }, { id: '15.4', title: 'อนุรักษ์ระบบนิเวศภูเขา' }, { id: '15.5', title: 'ลดสูญเสียความหลากหลายชีวภาพ' }, { id: '15.6', title: 'แบ่งปันผลประโยชน์ทรัพยากรพันธุกรรม' }, { id: '15.7', title: 'ยุติการค้าสัตว์ป่าคุ้มครอง' }, { id: '15.8', title: 'ป้องกันชนิดพันธุ์ต่างถิ่นรุกราน' }, { id: '15.9', title: 'บูรณาการคุณค่าระบบนิเวศในนโยบาย' }, { id: '15.a', title: 'ระดมทรัพยากรเงินทุนอนุรักษ์ป่า' }, { id: '15.b', title: 'ระดมทุนสนับสนุนการจัดการป่าไม้' }] },
-                    { id: 'SDG 16', title: 'สังคมสงบสุข ยุติธรรม และสถาบันเข้มแข็ง', targets: [{ id: '16.1', title: 'ลดความรุนแรงและอัตราตาย' }, { id: '16.2', title: 'ยุติการทารุณกรรมเด็ก' }, { id: '16.3', title: 'ส่งเสริมหลักนิติธรรม' }, { id: '16.4', title: 'ลดการลักลอบค้าอาวุธ' }, { id: '16.5', title: 'ลดการทุจริตและสินบน' }, { id: '16.6', title: 'สร้างสถาบันโปร่งใส' }, { id: '16.7', title: 'การตัดสินใจแบบมีส่วนร่วม' }, { id: '16.8', title: 'เพิ่มบทบาทประเทศกำลังพัฒนา' }, { id: '16.9', title: 'อัตลักษณ์ทางกฎหมายทะเบียนราษฎร์' }, { id: '16.10', title: 'ประกันเข้าถึงข้อมูลและเสรีภาพ' }, { id: '16.a', title: 'เสริมความแข็งแกร่งสถาบันบังคับใช้กฎหมาย' }, { id: '16.b', title: 'ส่งเสริมกฎหมายไม่เลือกปฏิบัติ' }] },
-                    { id: 'SDG 17', title: 'ความร่วมมือเพื่อการพัฒนาที่ยั่งยืน', targets: [{ id: '17.1', title: 'เสริมระดมทุนในประเทศ' }, { id: '17.2', title: 'ประเทศพัฒนาแล้วบรรลุ ODA' }, { id: '17.3', title: 'ระดมทุนแหล่งอื่นเพิ่มเติม' }, { id: '17.4', title: 'ช่วยจัดการความยั่งยืนหนี้' }, { id: '17.5', title: 'ส่งเสริมการลงทุนประเทศกำลังพัฒนา' }, { id: '17.6', title: 'ความร่วมมือวิทยาศาสตร์เทคโนโลยี' }, { id: '17.7', title: 'ถ่ายทอดเทคโนโลยีเขียว' }, { id: '17.8', title: 'ธนาคารเทคโนโลยีและขีดความสามารถ' }, { id: '17.9', title: 'สนับสนุนการสร้างขีดความสามารถ' }, { id: '17.10', title: 'ระบบค้าพหุภาคี WTO' }, { id: '17.11', title: 'เพิ่มสัดส่วนส่งออกประเทศกำลังพัฒนา' }, { id: '17.12', title: 'เข้าถึงตลาดปลอดภาษี' }, { id: '17.13', title: 'เสถียรภาพเศรษฐกิจมหภาค' }, { id: '17.14', title: 'ความสอดคล้องนโยบายพัฒนาที่ยั่งยืน' }, { id: '17.15', title: 'เคารพพื้นที่นโยบายประเทศ' }, { id: '17.16', title: 'หุ้นส่วนระดับโลกเพื่อการพัฒนา' }, { id: '17.17', title: 'ส่งเสริมหุ้นส่วนภาครัฐเอกชน' }, { id: '17.18', title: 'สนับสนุนข้อมูลสถิติคุณภาพสูง' }, { id: '17.19', title: 'วัดความก้าวหน้าการพัฒนาประเทศ' }] }
-                ],
-                currentTask: { id: null, category: '', subcategory: '', title: '', docLink: '', planStart: '', planEnd: '', doStart: '', doEnd: '', summaryStart: '', summaryEnd: '', budgetApproved: 0, budgetUsed: 0, useSDGs: false, selectedSdgs: [], selectedSdgTargets: [], owner: '', subTeam: '', countWorkload: true, usePlanChecklist: false, planChecklist: [], useChecklist: false, checklist: [], useSummaryChecklist: false, summaryChecklist: [], manualDone: false, createdBy: '', updatedBy: '', updatedAt: '', pdsa: { plan: '', do: '', study: '', act: '' } },
-                yearPopup: { open: false, dateStr: '', tasks: [] },
-                dayChecklistPopup: { open: false, dateStr: '', tasks: [] },
-                reportStart: '', reportEnd: '',
-                workloadPerson: '', workloadYear: new Date().getFullYear(), workloadTerm: '1',
-                selectedTaskIds: [], rolloverFromYear: new Date().getFullYear(), rolloverToYear: new Date().getFullYear() + 1,
-                newCategoryName: '', newSubNames: {}, newOwnerName: '',
-                editingCatId: null, editCatName: '',
-                editingOwnerId: null, editOwnerName: '',
-                dialog: { open: false, title: '', message: '', danger: true, confirmText: 'ยืนยัน' },
-                toasts: [],
 
                 init() {
                     const savedUser = localStorage.getItem('planner_logged_user');
-                    const savedRole = localStorage.getItem('planner_role');
-                    const savedCats = localStorage.getItem('planner_allowed_cats');
-                    
-                    // ดึงข้อมูลดั้งเดิมจาก LocalStorage (แคชในเครื่อง) ทันที เพื่อให้ข้อมูลโครงการและรายชื่อเก่าไม่หาย
-                    const cachedTasks = localStorage.getItem('planner_cache_tasks');
-                    const cachedCats = localStorage.getItem('planner_cache_cats');
-                    const cachedOwners = localStorage.getItem('planner_cache_owners');
-                    if (cachedTasks) {
-                        try { this.tasks = JSON.parse(cachedTasks); } catch(e){}
-                    }
-                    if (cachedCats) {
-                        try { this.categories = JSON.parse(cachedCats); } catch(e){}
-                    }
-                    if (cachedOwners) {
-                        try { this.owners = JSON.parse(cachedOwners); } catch(e){}
-                    }
-
-                    if (savedUser && savedRole) {
+                    if (savedUser) {
                         this.currentUserName = savedUser;
-                        this.currentUserRole = savedRole;
-                        this.currentUserAllowedCats = savedCats ? JSON.parse(savedCats) : [];
                         this.isLoggedIn = true;
-                        
-                        if (this.tasks.length > 0 || this.categories.length > 0) {
-                            this.isLoading = false;
-                        }
-
-                        // ดึงข้อมูลใหม่ผ่าน API แบบ Asynchronous
-                        setTimeout(() => { this.loadData(); }, 100);
                     }
-                    const savedAppUsers = localStorage.getItem('planner_app_users');
-                    if (savedAppUsers) {
-                        try { this.appUsers = JSON.parse(savedAppUsers); } catch(e){}
-                    }
-                    const savedTpls = localStorage.getItem('planner_custom_templates');
-                    if (savedTpls) {
-                        try { this.customTemplates = JSON.parse(savedTpls); } catch(e){}
-                    }
-                },
-
-                get allTemplates() {
-                    const defaults = [
-                        { id: 'def-plan', name: 'เช็คลิสต์วางแผน', type: 'plan', icon: '📋', isDefault: true, items: ['กำหนดวัตถุประสงค์', 'ร่างโครงการ', 'เสนอขออนุมัติ'] },
-                        { id: 'def-meeting', name: 'เช็คลิสต์ประชุม', type: 'do', icon: '📅', isDefault: true, items: ['เตรียมวาระ', 'ออกหนังสือเชิญ', 'ห้องประชุม/อาหาร'] },
-                        { id: 'def-project', name: 'เช็คลิสต์โครงการ', type: 'do', icon: '🚀', isDefault: true, items: ['เขียนโครงการ', 'จัดทำงบประมาณ', 'คำสั่งแต่งตั้ง'] },
-                        { id: 'def-sum-report', name: 'เช็คลิสต์สรุปผล', type: 'summary', icon: '📊', isDefault: true, items: ['รวบรวมเอกสารเบิกจ่าย', 'สรุปผลเทียบตัวชี้วัด', 'จัดทำรายงานเสนอผู้บริหาร'] }
-                    ];
-                    return [...defaults, ...this.customTemplates];
+                    this.loadData();
                 },
 
                 handleLogin() {
-                    const pw = this.loginPassword.trim();
-                    if (!pw) return;
-                    const foundUser = this.appUsers.find(u => u.passcode === pw);
-                    if (foundUser) {
-                        this.currentUserName = foundUser.name;
-                        this.currentUserRole = 'editor';
-                        this.currentUserAllowedCats = foundUser.role === 'admin' ? [] : (foundUser.allowedCats || []);
+                    if (this.loginPassword.trim() !== '') {
+                        this.currentUserName = 'เจ้าหน้าที่ (Admin)';
                         this.isLoggedIn = true;
-                        localStorage.setItem('planner_logged_user', foundUser.name);
-                        localStorage.setItem('planner_role', 'editor');
-                        localStorage.setItem('planner_allowed_cats', JSON.stringify(this.currentUserAllowedCats));
-                        this.loginPassword = '';
-                        this.loadData(true);
-                        this.toast('เข้าสู่ระบบสำเร็จ (' + foundUser.name + ')');
-                        return;
+                        localStorage.setItem('planner_logged_user', this.currentUserName);
                     }
-                    this.toast('รหัสผ่านไม่ถูกต้อง!', 'error');
                 },
 
                 handleViewerLogin() {
                     this.currentUserName = 'ผู้เข้าชมทั่วไป';
-                    this.currentUserRole = 'viewer';
-                    this.currentUserAllowedCats = [];
                     this.isLoggedIn = true;
-                    localStorage.setItem('planner_logged_user', 'ผู้เข้าชมทั่วไป');
-                    localStorage.setItem('planner_role', 'viewer');
-                    localStorage.setItem('planner_allowed_cats', JSON.stringify([]));
-                    this.loadData(true);
-                    this.toast('เข้าสู่ระบบแบบชมอย่างเดียว');
+                    localStorage.setItem('planner_logged_user', this.currentUserName);
                 },
 
                 logout() {
                     this.isLoggedIn = false;
                     localStorage.removeItem('planner_logged_user');
-                    localStorage.removeItem('planner_role');
-                    localStorage.removeItem('planner_allowed_cats');
                 },
 
-                get isEditor() { return this.currentUserRole === 'editor'; },
-                get isMainAdmin() { return this.isEditor && (this.currentUserName.includes('Admin') || this.currentUserName.includes('หลัก') || this.currentUserName === 'เจ้าหน้าที่หลัก (Admin)'); },
-
-                canEditTask(task) {
-                    if (!this.isEditor) return false;
-                    if (this.isMainAdmin || !this.currentUserAllowedCats || this.currentUserAllowedCats.length === 0) return true;
-                    return this.currentUserAllowedCats.includes(task.category);
-                },
-
-                get allowedCategoriesForCreation() {
-                    if (this.isMainAdmin || !this.currentUserAllowedCats || this.currentUserAllowedCats.length === 0) {
-                        return this.categories;
-                    }
-                    return this.categories.filter(c => this.currentUserAllowedCats.includes(c.name));
-                },
-
-                get canCreateTask() { return this.isEditor; },
-
-                addUser() {
-                    const name = this.newUser.name.trim();
-                    const passcode = this.newUser.passcode.trim();
-                    if (!name || !passcode) return this.toast('กรุณากรอกชื่อและรหัสผ่าน', 'error');
-                    this.appUsers.push({ id: String(Date.now()), name, passcode, role: this.newUser.role, allowedCats: [...this.newUser.allowedCats] });
-                    localStorage.setItem('planner_app_users', JSON.stringify(this.appUsers));
-                    this.newUser = { name: '', passcode: '', role: 'editor', allowedCats: [] };
-                    this.toast('เพิ่มผู้ใช้งานสำเร็จ');
-                },
-                deleteUser(id) {
-                    this.appUsers = this.appUsers.filter(u => u.id !== id);
-                    localStorage.setItem('planner_app_users', JSON.stringify(this.appUsers));
-                    this.toast('ลบผู้ใช้แล้ว');
-                },
-                startEditPassword(user) {
-                    this.editingUserId = user.id;
-                    this.editingNewPass = user.passcode;
-                    this.editingUserNameId = null;
-                    this.editingPermsUserId = null;
-                },
-                saveNewPassword(user) {
-                    const newPass = this.editingNewPass.trim();
-                    if (!newPass) return this.toast('กรุณากรอกรหัสผ่านใหม่', 'error');
-                    user.passcode = newPass;
-                    localStorage.setItem('planner_app_users', JSON.stringify(this.appUsers));
-                    this.editingUserId = null;
-                    this.toast('เปลี่ยนรหัสผ่านสำเร็จ');
-                },
-                startEditUserName(user) {
-                    this.editingUserNameId = user.id;
-                    this.editingNewName = user.name;
-                    this.editingUserId = null;
-                    this.editingPermsUserId = null;
-                },
-                saveNewUserName(user) {
-                    const newName = this.editingNewName.trim();
-                    if (!newName) return this.toast('กรุณากรอกชื่อใหม่', 'error');
-                    user.name = newName;
-                    localStorage.setItem('planner_app_users', JSON.stringify(this.appUsers));
-                    this.editingUserNameId = null;
-                    this.toast('แก้ไขชื่อผู้ใช้งานสำเร็จ');
-                },
-                startEditUserPerms(user) {
-                    this.editingPermsUserId = user.id;
-                    this.editingAllowedCats = [...(user.allowedCats || [])];
-                    this.editingUserId = null;
-                    this.editingUserNameId = null;
-                },
-                saveUserPerms(user) {
-                    user.allowedCats = [...this.editingAllowedCats];
-                    localStorage.setItem('planner_app_users', JSON.stringify(this.appUsers));
-                    this.editingPermsUserId = null;
-                    this.toast('อัปเดตสิทธิ์กลุ่มงานสำเร็จ');
-                },
-
-                saveNewTemplate() {
-                    const name = this.newTemplateName.trim();
-                    const items = this.newTemplateItems.map(i => i.trim()).filter(Boolean);
-                    if (!name || items.length === 0) return this.toast('กรุณากรอกข้อมูลให้ครบ', 'error');
-                    
-                    if (this.editingTemplateId) {
-                        if (this.editingTemplateId.startsWith('def-')) {
-                            let found = this.allTemplates.find(t => t.id === this.editingTemplateId);
-                            if (found) {
-                                found.name = name;
-                                found.type = this.newTemplateType;
-                                found.icon = this.newTemplateIcon;
-                                found.items = items;
-                            }
-                        } else {
-                            this.customTemplates = this.customTemplates.map(t => t.id === this.editingTemplateId ? { ...t, name, type: this.newTemplateType, icon: this.newTemplateIcon, items } : t);
-                        }
-                    } else {
-                        this.customTemplates.push({ id: String(Date.now()), name, type: this.newTemplateType, icon: this.newTemplateIcon, items });
-                    }
-                    localStorage.setItem('planner_custom_templates', JSON.stringify(this.customTemplates));
-                    this.cancelEditTemplate();
-                    this.toast('บันทึกเทมเพลตสำเร็จ');
-                },
-                startEditTemplate(tpl) {
-                    this.editingTemplateId = tpl.id;
-                    this.newTemplateName = tpl.name;
-                    this.newTemplateType = tpl.type || 'do';
-                    this.newTemplateIcon = tpl.icon || '📋';
-                    this.newTemplateItems = [...tpl.items];
-                },
-                cancelEditTemplate() {
-                    this.editingTemplateId = null;
-                    this.newTemplateName = '';
-                    this.newTemplateItems = [''];
-                },
-                deleteTemplate(id) {
-                    if (id.startsWith('def-')) {
-                        return this.toast('ไม่สามารถลบเทมเพลตพื้นฐานได้ แต่สามารถแก้ไขได้', 'error');
-                    }
-                    this.customTemplates = this.customTemplates.filter(t => t.id !== id);
-                    localStorage.setItem('planner_custom_templates', JSON.stringify(this.customTemplates));
-                    this.toast('ลบเทมเพลตแล้ว');
-                },
-                onSortTemplates(newItems) {
-                    let reordered = [];
-                    newItems.forEach(id => {
-                        let found = this.allTemplates.find(t => t.id === id);
-                        if (found && !found.isDefault) reordered.push(found);
-                    });
-                    this.customTemplates = reordered;
-                    localStorage.setItem('planner_custom_templates', JSON.stringify(this.customTemplates));
-                },
-
-                onSortCategories(newItems) {
-                    let reordered = [];
-                    newItems.forEach(id => {
-                        let found = this.categories.find(c => c.id === id);
-                        if (found) reordered.push(found);
-                    });
-                    this.categories = reordered;
-                    this.syncCategories(this.categories);
-                },
-                onSortSubcategories(cat, newSubList) {
-                    cat.subcategories = newSubList;
-                    this.syncCategories(this.categories);
-                },
-                onSortOwners(newItems) {
-                    let reordered = [];
-                    newItems.forEach(id => {
-                        let found = this.owners.find(o => o.id === id);
-                        if (found) reordered.push(found);
-                    });
-                    this.owners = reordered;
-                    this.syncOwners(this.owners);
-                },
-
-                autoRolloverChecklists() {
-                    const todayStr = this.toLocalISO(new Date());
-                    let updated = false;
-                    this.tasks.forEach(task => {
-                        if (task.useChecklist && task.checklist) {
-                            task.checklist.forEach(chk => {
-                                if (!chk.done && chk.date && chk.date < todayStr) {
-                                    chk.date = todayStr;
-                                    updated = true;
-                                }
-                            });
-                        }
-                    });
-                    if (updated) {
-                        localStorage.setItem('planner_cache_tasks', JSON.stringify(this.tasks));
-                    }
-                },
-
-                isTaskCompleted(task) {
-                    if (!task) return false;
-                    return !!task.manualDone;
-                },
-
-                async toggleTaskManualDone(task) {
-                    if (!this.canEditTask(task)) return;
-                    task.manualDone = !task.manualDone;
-                    await this.saveTaskSilent(task);
-                    this.toast(task.manualDone ? 'เปลี่ยนสถานะเป็นเสร็จสิ้น' : 'ยกเลิกสถานะเสร็จสิ้น กลับสู่งานค้าง');
-                },
-
-                async forceCompleteTask(task) {
-                    if (!this.canEditTask(task)) return;
-                    task.manualDone = true;
-                    await this.saveTaskSilent(task);
-                    this.toast('ย้ายงานไปที่สถานะเสร็จสิ้นเรียบร้อย');
-                },
-
-                validateWorkDates() {
-                    const t = this.currentTask;
-                    if (t.planStart && t.doStart && t.doStart < t.planStart) {
-                        this.toast('วันที่เริ่มปฏิบัติ ต้องไม่ก่อนวันเริ่มแผน', 'error');
-                        t.doStart = t.planStart;
-                    }
-                    if (t.planEnd && t.doEnd && t.doEnd < t.planEnd) {
-                        this.toast('วันที่สิ้นสุดปฏิบัติ ต้องไม่ก่อนวันสิ้นสุดแผน', 'error');
-                        t.doEnd = t.planEnd;
-                    }
-                },
-
-                validateSummaryDates() {
-                    const t = this.currentTask;
-                    if (t.doStart && t.summaryStart && t.summaryStart < t.doStart) {
-                        this.toast('วันที่เริ่มสรุปผล ต้องไม่ก่อนวันเริ่มปฏิบัติ', 'error');
-                        t.summaryStart = t.doStart;
-                    }
-                    if (t.doEnd && t.summaryEnd && t.summaryEnd < t.doEnd) {
-                        this.toast('วันที่สิ้นสุดสรุปผล ต้องไม่ก่อนวันสิ้นสุดปฏิบัติ', 'error');
-                        t.summaryEnd = t.doEnd;
-                    }
-                },
-
-                getSortedChecklist(checklist) {
-                    if (!checklist || !Array.isArray(checklist)) return [];
-                    return [...checklist].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-                },
-                getChecklistCountForDate(dateStr) {
-                    let total = 0, pending = 0;
-                    this.tasks.forEach(t => {
-                        if (t.usePlanChecklist && Array.isArray(t.planChecklist)) t.planChecklist.forEach(c => { if(c.date === dateStr) { total++; if(!c.done) pending++; } });
-                        if (t.useChecklist && Array.isArray(t.checklist)) t.checklist.forEach(c => { if(c.date === dateStr) { total++; if(!c.done) pending++; } });
-                        if (t.useSummaryChecklist && Array.isArray(t.summaryChecklist)) t.summaryChecklist.forEach(c => { if(c.date === dateStr) { total++; if(!c.done) pending++; } });
-                    });
-                    return { total, pending };
-                },
-                openDayChecklistPopup(dateStr) {
-                    const matched = this.tasks.filter(t => 
-                        (t.usePlanChecklist && Array.isArray(t.planChecklist) && t.planChecklist.some(c => c.date === dateStr)) || 
-                        (t.useChecklist && Array.isArray(t.checklist) && t.checklist.some(c => c.date === dateStr)) || 
-                        (t.useSummaryChecklist && Array.isArray(t.summaryChecklist) && t.summaryChecklist.some(c => c.date === dateStr))
-                    );
-                    if (matched.length) this.dayChecklistPopup = { open: true, dateStr, tasks: matched };
-                },
-                applyTemplateObject(tpl, type) {
-                    if (type === 'plan') {
-                        const baseDate = this.currentTask.planStart || new Date().toISOString().split('T')[0];
-                        const items = tpl.items.map(text => ({ text, date: baseDate, done: false }));
-                        this.currentTask.planChecklist = [...(this.currentTask.planChecklist || []), ...items];
-                    } else if (type === 'summary') {
-                        const baseDate = this.currentTask.summaryStart || this.currentTask.doEnd || new Date().toISOString().split('T')[0];
-                        const items = tpl.items.map(text => ({ text, date: baseDate, done: false }));
-                        this.currentTask.summaryChecklist = [...(this.currentTask.summaryChecklist || []), ...items];
-                    } else {
-                        const baseDate = this.currentTask.doStart || this.currentTask.planEnd || new Date().toISOString().split('T')[0];
-                        const items = tpl.items.map(text => ({ text, date: baseDate, done: false }));
-                        this.currentTask.checklist = [...(this.currentTask.checklist || []), ...items];
-                    }
-                    this.toast('เพิ่มเทมเพลตสำเร็จ');
-                },
-                addChecklistItem(type) {
-                    if (type === 'plan' && this.newPlanChecklistText.trim()) {
-                        if (!this.currentTask.planChecklist) this.currentTask.planChecklist = [];
-                        this.currentTask.planChecklist.push({ date: this.newPlanChecklistDate, text: this.newPlanChecklistText.trim(), done: false });
-                        this.newPlanChecklistText = '';
-                    } else if (type === 'do' && this.newChecklistText.trim()) {
-                        if (!this.currentTask.checklist) this.currentTask.checklist = [];
-                        this.currentTask.checklist.push({ date: this.newChecklistDate, text: this.newChecklistText.trim(), done: false });
-                        this.newChecklistText = '';
-                    } else if (type === 'summary' && this.newSummaryChecklistText.trim()) {
-                        if (!this.currentTask.summaryChecklist) this.currentTask.summaryChecklist = [];
-                        this.currentTask.summaryChecklist.push({ date: this.newSummaryChecklistDate, text: this.newSummaryChecklistText.trim(), done: false });
-                        this.newSummaryChecklistText = '';
-                    }
-                },
-
-                async post(payload) {
-                    const res = await fetch(this.apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
-                    const json = JSON.parse(await res.text());
-                    if (json.status !== 'success') throw new Error(json.message);
-                    return json;
-                },
-
-                async loadData(force = false) {
-                    if (!force && this.tasks.length > 0) {
-                        this.isLoading = false;
-                        return;
-                    }
-
-                    if (this.tasks.length === 0) {
-                        this.isLoading = true;
-                    }
-
+                loadData() {
+                    this.isLoading = true;
                     try {
-                        const res = await fetch(this.apiUrl + '?action=getData');
-                        const data = await res.json();
-                        
-                        this.tasks = (data.tasks || []).map(t => ({ 
-                            ...t, 
-                            id: String(t.id), 
-                            countWorkload: t.countWorkload !== false,
-                            selectedSdgs: Array.isArray(t.selectedSdgs) ? t.selectedSdgs : [],
-                            selectedSdgTargets: Array.isArray(t.selectedSdgTargets) ? t.selectedSdgTargets : [],
-                            planChecklist: Array.isArray(t.planChecklist) ? t.planChecklist : [],
-                            checklist: Array.isArray(t.checklist) ? t.checklist : [],
-                            summaryChecklist: Array.isArray(t.summaryChecklist) ? t.summaryChecklist : [],
-                            pdsa: (t.pdsa && typeof t.pdsa === 'object') ? t.pdsa : { plan: '', do: '', study: '', act: '' }
-                        }));
-                        this.categories = (data.categories || []).map(c => ({ ...c, id: String(c.id), subcategories: c.subcategories || [] }));
-                        this.owners = (data.owners || []).map(o => ({ ...o, id: String(o.id) }));
-                        
-                        this.autoRolloverChecklists();
+                        const localTasks = localStorage.getItem('local_planner_tasks');
+                        const localCats = localStorage.getItem('local_planner_cats');
+                        const localOwners = localStorage.getItem('local_planner_owners');
 
-                        localStorage.setItem('planner_cache_tasks', JSON.stringify(this.tasks));
-                        localStorage.setItem('planner_cache_cats', JSON.stringify(this.categories));
-                        localStorage.setItem('planner_cache_owners', JSON.stringify(this.owners));
+                        this.tasks = localTasks ? JSON.parse(localTasks) : [];
+                        this.categories = localCats ? JSON.parse(localCats) : [
+                            { id: '1', name: 'กลุ่มงานบริหารทั่วไป', color: '#7c3aed' },
+                            { id: '2', name: 'กลุ่มงานยุทธศาสตร์', color: '#2563eb' }
+                        ];
+                        this.owners = localOwners ? JSON.parse(localOwners) : [
+                            { id: '1', name: 'เจ้าหน้าที่คนที่ 1' }
+                        ];
                     } catch (e) {
-                        this.toast('ไม่สามารถเชื่อมต่อ Server ได้ ใช้ข้อมูลสำรองในเครื่อง', 'error');
+                        this.tasks = [];
                     } finally {
                         this.isLoading = false;
                     }
                 },
 
-                async saveTaskSilent(task) {
-                    if (!this.canEditTask(task)) return;
-                    task.updatedBy = this.currentUserName;
-                    task.updatedAt = this.toLocalISO(new Date());
-                    localStorage.setItem('planner_cache_tasks', JSON.stringify(this.tasks));
-                    try { 
-                        await this.post({ action: 'saveTask', task: JSON.parse(JSON.stringify(task)) }); 
-                    } catch(e){}
+                saveLocalStorage() {
+                    localStorage.setItem('local_planner_tasks', JSON.stringify(this.tasks));
+                    localStorage.setItem('local_planner_cats', JSON.stringify(this.categories));
+                    localStorage.setItem('local_planner_owners', JSON.stringify(this.owners));
                 },
 
-                async saveTask() {
-                    if (!this.canEditTask(this.currentTask)) {
-                        this.toast('คุณไม่มีสิทธิ์แก้ไขกลุ่มงานนี้', 'error');
-                        return;
-                    }
-                    const t = this.currentTask;
-                    if (!t.category || !t.title) {
-                        this.toast('กรุณากรอกกลุ่มงานหลักและชื่องาน', 'error');
-                        return;
-                    }
-                    
-                    const payload = JSON.parse(JSON.stringify(t));
-                    payload.subTeam = this.currentTaskSubTeams ? this.currentTaskSubTeams.join(', ') : '';
-
-                    this.isSaving = true;
-                    this.savingMessage = 'กำลังบันทึก...';
-                    try {
-                        await this.post({ action: 'saveTask', task: payload });
-                        const idx = this.tasks.findIndex(x => String(x.id) === String(payload.id));
-                        if (idx >= 0) {
-                            this.tasks[idx] = payload;
-                        } else {
-                            if (!payload.id) payload.id = String(Date.now());
-                            this.tasks.push(payload);
-                        }
-                        localStorage.setItem('planner_cache_tasks', JSON.stringify(this.tasks));
-                        this.isModalOpen = false;
-                        this.toast('บันทึกเรียบร้อย');
-                    } catch (e) {
-                        this.toast('บันทึกไม่สำเร็จ', 'error');
-                    } finally {
-                        this.isSaving = false;
-                    }
+                getDefaultColor(index) {
+                    const colors = ['#7c3aed', '#2563eb', '#059669', '#d97706', '#dc2626', '#0d9488', '#0284c7', '#4f46e5'];
+                    return colors[index % colors.length];
                 },
 
-                downloadExcelTemplate() {
-                    const headers = ['category', 'subcategory', 'title', 'docLink', 'planStart', 'planEnd', 'doStart', 'doEnd', 'summaryStart', 'summaryEnd', 'budgetApproved', 'budgetUsed', 'owner', 'subTeam', 'countWorkload'];
-                    const sample1 = ['กลุ่มงานบริหารทั่วไป', 'งานแผนงาน', 'โครงการจัดซื้อวัสดุสำนักงาน', 'https://drive.google.com/...', '2026-01-01', '2026-01-15', '2026-01-16', '2026-01-31', '2026-02-01', '2026-02-05', '50000', '48000', 'สมชาย ใจดี', 'สมหญิง รักงาน', 'TRUE'];
-                    const sample2 = ['กลุ่มงานยุทธศาสตร์', 'งานประเมินผล', 'โครงการอบรมบุคลากร', 'https://drive.google.com/...', '2026-02-01', '2026-02-10', '2026-02-15', '2026-02-16', '2026-02-17', '2026-02-20', '100000', '95000', 'กนกวรรณ มีสุข', 'วิชัย มั่งคั่ง', 'TRUE'];
-                    
-                    const csvContent = '\uFEFF' + [headers.join(','), sample1.join(','), sample2.join(',')].join('\n');
-                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'planner-template-example.csv';
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    this.toast('ดาวน์โหลดเทมเพลตตัวอย่าง Excel สำเร็จ');
+                getCategoryColor(catName) {
+                    let found = this.categories.find(c => c.name === catName);
+                    if (found && found.color) return found.color;
+                    let idx = this.categories.findIndex(c => c.name === catName);
+                    return this.getDefaultColor(idx >= 0 ? idx : 0);
                 },
 
-                exportBackupData() {
-                    const backupObj = {
-                        tasks: this.tasks,
-                        categories: this.categories,
-                        owners: this.owners,
-                        exportDate: new Date().toLocaleString('th-TH')
-                    };
-                    const blob = new Blob([JSON.stringify(backupObj, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'planner-backup-' + new Date().toISOString().split('T')[0] + '.json';
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    this.toast('ดาวน์โหลดไฟล์สำรองข้อมูลสำเร็จ');
-                },
-
-                importExcelOrJsonData(event) {
-                    const file = event.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = async (e) => {
-                        const content = e.target.result;
-                        this.isSaving = true;
-                        this.savingMessage = 'กำลังนำเข้าข้อมูลเข้าฐานข้อมูล...';
-                        try {
-                            if (file.name.endsWith('.json')) {
-                                const data = JSON.parse(content);
-                                if (data.tasks && Array.isArray(data.tasks)) {
-                                    for (let task of data.tasks) {
-                                        if (!task.id) task.id = String(Date.now() + Math.random());
-                                        if (!task.pdsa) task.pdsa = { plan: '', do: '', study: '', act: '' };
-                                        await this.post({ action: 'saveTask', task: task });
-                                        this.tasks.push(task);
-                                    }
-                                }
-                            } else {
-                                const lines = content.split('\n');
-                                if (lines.length < 2) throw new Error('ไฟล์ว่างเปล่า');
-                                const headers = lines[0].split(',').map(h => h.trim().replace('\r', ''));
-                                
-                                for (let i = 1; i < lines.length; i++) {
-                                    if (!lines[i].trim()) continue;
-                                    const vals = lines[i].split(',').map(v => v.trim().replace('\r', ''));
-                                    let newTask = {
-                                        id: String(Date.now() + i),
-                                        category: vals[headers.indexOf('category')] || 'ทั่วไป',
-                                        subcategory: vals[headers.indexOf('subcategory')] || '',
-                                        title: vals[headers.indexOf('title')] || 'งานไม่มีชื่อ',
-                                        docLink: vals[headers.indexOf('docLink')] || '',
-                                        planStart: vals[headers.indexOf('planStart')] || '',
-                                        planEnd: vals[headers.indexOf('planEnd')] || '',
-                                        doStart: vals[headers.indexOf('doStart')] || '',
-                                        doEnd: vals[headers.indexOf('doEnd')] || '',
-                                        summaryStart: vals[headers.indexOf('summaryStart')] || '',
-                                        summaryEnd: vals[headers.indexOf('summaryEnd')] || '',
-                                        budgetApproved: Number(vals[headers.indexOf('budgetApproved')] || 0),
-                                        budgetUsed: Number(vals[headers.indexOf('budgetUsed')] || 0),
-                                        owner: vals[headers.indexOf('owner')] || '',
-                                        subTeam: vals[headers.indexOf('subTeam')] || '',
-                                        countWorkload: vals[headers.indexOf('countWorkload')] !== 'FALSE',
-                                        useSDGs: false, selectedSdgs: [], selectedSdgTargets: [],
-                                        usePlanChecklist: false, planChecklist: [], useChecklist: false, checklist: [], useSummaryChecklist: false, summaryChecklist: [],
-                                        manualDone: false, createdBy: this.currentUserName, updatedBy: this.currentUserName,
-                                        updatedAt: this.toLocalISO(new Date()),
-                                        pdsa: { plan: '', do: '', study: '', act: '' }
-                                    };
-                                    await this.post({ action: 'saveTask', task: newTask });
-                                    this.tasks.push(newTask);
-                                }
-                            }
-                            localStorage.setItem('planner_cache_tasks', JSON.stringify(this.tasks));
-                            this.toast('นำเข้าข้อมูลสำเร็จ');
-                        } catch (err) {
-                            this.toast('นำเข้าข้อมูลไม่สำเร็จ รูปแบบไฟล์ไม่ถูกต้อง', 'error');
-                        } finally {
-                            this.isSaving = false;
-                            event.target.value = '';
-                        }
-                    };
-                    reader.readAsText(file, 'UTF-8');
-                },
-
-                async deleteTask(task) {
-                    if (!this.canEditTask(task)) return this.toast('ไม่มีสิทธิ์ลบรายการนี้', 'error');
-                    const ok = await this.askConfirm('ยืนยันการลบ', 'ต้องการลบรายการนี้ใช่หรือไม่?', true, 'ลบ');
-                    if (!ok) return;
-                    try {
-                        await this.post({ action: 'deleteTask', id: String(task.id) });
-                        this.tasks = this.tasks.filter(t => String(t.id) !== String(task.id));
-                        localStorage.setItem('planner_cache_tasks', JSON.stringify(this.tasks));
-                        this.isModalOpen = false;
-                        this.toast('ลบเรียบร้อย');
-                    } catch (e) {
-                        this.toast('ลบไม่สำเร็จ', 'error');
-                    }
-                },
-
-                async deleteSelectedTasks() {
-                    if (!this.isEditor || this.selectedTaskIds.length === 0) return;
-                    const ok = await this.askConfirm('ลบรายการที่เลือก', `ต้องการลบ ${this.selectedTaskIds.length} รายการใช่หรือไม่?`, true, 'ลบทั้งหมด');
-                    if (!ok) return;
-                    try {
-                        for (let id of this.selectedTaskIds) {
-                            let item = this.tasks.find(t => String(t.id) === id);
-                            if (item && this.canEditTask(item)) {
-                                await this.post({ action: 'deleteTask', id });
-                            }
-                        }
-                        this.tasks = this.tasks.filter(t => !this.selectedTaskIds.includes(String(t.id)));
-                        localStorage.setItem('planner_cache_tasks', JSON.stringify(this.tasks));
-                        this.selectedTaskIds = [];
-                        this.toast('ลบสำเร็จ');
-                    } catch (e) {
-                        this.toast('ลบไม่สำเร็จ', 'error');
-                    }
-                },
-
-                toggleSelectAll() {
-                    if (this.selectedTaskIds.length === this.filteredTasksByStatus.length) this.selectedTaskIds = [];
-                    else this.selectedTaskIds = this.filteredTasksByStatus.map(t => String(t.id));
-                },
-
-                async rolloverSelectedTasks() {
-                    if (!this.isEditor || this.selectedTaskIds.length === 0) return;
-                    const diff = this.rolloverToYear - this.rolloverFromYear;
-                    if (!diff) return this.toast('ปีต้องไม่เหมือนกัน', 'error');
-                    const ok = await this.askConfirm('คัดลอกงาน', `คัดลอกไปยังปี ${this.rolloverToYear} ใช่หรือไม่?`, false, 'ยืนยัน');
-                    if (!ok) return;
-
-                    this.isSaving = true;
-                    this.savingMessage = 'กำลังคัดลอก...';
-                    try {
-                        for (let i = 0; i < this.selectedTaskIds.length; i++) {
-                            let oldT = this.tasks.find(t => String(t.id) === this.selectedTaskIds[i]);
-                            if (!oldT) continue;
-                            let newT = JSON.parse(JSON.stringify(oldT));
-                            newT.id = String(Date.now() + i);
-                            
-                            let shift = (d) => d ? (parseInt(d.split('-')[0]) + diff) + '-' + d.split('-')[1] + '-' + d.split('-')[2] : '';
-                            newT.planStart = shift(newT.planStart); 
-                            newT.planEnd = shift(newT.planEnd);
-                            newT.doStart = shift(newT.doStart); 
-                            newT.doEnd = shift(newT.doEnd);
-                            newT.summaryStart = shift(newT.summaryStart);
-                            newT.summaryEnd = shift(newT.summaryEnd);
-
-                            if (newT.planChecklist) newT.planChecklist.forEach(c => { c.date = shift(c.date); c.done = false; });
-                            if (newT.checklist) newT.checklist.forEach(c => { c.date = shift(c.date); c.done = false; });
-                            if (newT.summaryChecklist) newT.summaryChecklist.forEach(c => { c.date = shift(c.date); c.done = false; });
-
-                            await this.post({ action: 'saveTask', task: newT });
-                            this.tasks.push(newT);
-                        }
-                        localStorage.setItem('planner_cache_tasks', JSON.stringify(this.tasks));
-                        this.toast('คัดลอกสำเร็จ');
-                        this.selectedTaskIds = [];
-                    } catch (e) {
-                        this.toast('คัดลอกไม่สำเร็จ', 'error');
-                    } finally {
-                        this.isSaving = false;
-                    }
-                },
-
-                getTasksByStatus(status) {
-                    const today = this.toLocalISO(new Date());
-                    const by = this.selectedBudgetYear;
-                    const start = `${by - 543 - 1}-10-01`, end = `${by - 543}-09-30`;
-                    
-                    return this.tasks.filter(t => {
-                        if (this.filterCategory && t.category !== this.filterCategory) return false;
-                        const d = t.doStart || t.planStart || '';
-                        if (!d || d < start || d > end) return false;
-                        
-                        let comp = this.isTaskCompleted(t);
-                        
-                        let planEnd = t.planEnd ? t.planEnd.split('T')[0].split(' ')[0] : '';
-                        let doEnd = t.doEnd ? t.doEnd.split('T')[0].split(' ')[0] : '';
-                        let sumEnd = t.summaryEnd ? t.summaryEnd.split('T')[0].split(' ')[0] : '';
-
-                        let overduePlan = planEnd && planEnd < today && (!t.doStart || t.doStart > today) && !comp;
-                        let overdueDo = doEnd && doEnd < today && !comp;
-                        let overdueSum = sumEnd && sumEnd < today && !comp;
-                        
-                        let hasPendingChecklist = false;
-                        if (!comp) {
-                            let planChkPending = t.usePlanChecklist && Array.isArray(t.planChecklist) && t.planChecklist.some(c => !c.done && c.date < today);
-                            let chkPending = t.useChecklist && Array.isArray(t.checklist) && t.checklist.some(c => !c.done && c.date < today);
-                            let sumChkPending = t.useSummaryChecklist && Array.isArray(t.summaryChecklist) && t.summaryChecklist.some(c => !c.done && c.date < today);
-                            if (planChkPending || chkPending || sumChkPending) hasPendingChecklist = true;
-                        }
-
-                        let isOver = overduePlan || overdueDo || overdueSum || hasPendingChecklist;
-
-                        if (status === 'completed') return comp;
-                        if (status === 'overdue') {
-                            if (isOver && !comp) {
-                                if (overduePlan) t.overdueType = 'plan';
-                                else if (overdueDo) t.overdueType = 'do';
-                                else t.overdueType = 'summary';
-                                return true;
-                            }
-                            return false;
-                        }
-                        return !comp && !isOver;
-                    });
-                },
-                get filteredTasksByStatus() { return this.getTasksByStatus(this.taskStatusTab); },
-
-                getTasksForDate(dateStr) {
-                    let list = this.calendarFilterCats.length ? this.tasks.filter(t => this.calendarFilterCats.includes(t.category)) : this.tasks;
-                    let res = [];
-                    list.forEach(task => {
-                        let cleanPlanS = task.planStart ? task.planStart.split('T')[0].split(' ')[0] : '';
-                        let cleanPlanE = task.planEnd ? task.planEnd.split('T')[0].split(' ')[0] : cleanPlanS;
-                        let cleanDoS = task.doStart ? task.doStart.split('T')[0].split(' ')[0] : '';
-                        let cleanDoE = task.doEnd ? task.doEnd.split('T')[0].split(' ')[0] : cleanDoS;
-                        let cleanSumS = task.summaryStart ? task.summaryStart.split('T')[0].split(' ')[0] : '';
-                        let cleanSumE = task.summaryEnd ? task.summaryEnd.split('T')[0].split(' ')[0] : cleanSumS;
-
-                        if (cleanPlanS && dateStr >= cleanPlanS && dateStr <= (cleanPlanE || cleanPlanS)) {
-                            res.push({ task, type: 'Plan', isStart: dateStr === cleanPlanS, isEnd: dateStr === (cleanPlanE || cleanPlanS) });
-                        }
-                        if (cleanDoS && dateStr >= cleanDoS && dateStr <= (cleanDoE || cleanDoS)) {
-                            res.push({ task, type: 'Do', isStart: dateStr === cleanDoS, isEnd: dateStr === (cleanDoE || cleanDoS) });
-                        }
-                        if (cleanSumS && dateStr >= cleanSumS && dateStr <= (cleanSumE || cleanSumS)) {
-                            res.push({ task, type: 'Summary', isStart: dateStr === cleanSumS, isEnd: dateStr === (cleanSumE || cleanSumS) });
-                        }
-                    });
-                    return res;
-                },
-
-                getDistinctCategoryColorClass(taskId, cat, type) {
-                    const palettes = [
-                        { plan: 'bg-purple-100 text-purple-950', do: 'bg-purple-600 text-white', summary: 'bg-purple-50 text-purple-800 summary-bar-style' },
-                        { plan: 'bg-blue-100 text-blue-950', do: 'bg-blue-600 text-white', summary: 'bg-blue-50 text-blue-800 summary-bar-style' },
-                        { plan: 'bg-emerald-100 text-emerald-950', do: 'bg-emerald-600 text-white', summary: 'bg-emerald-50 text-emerald-800 summary-bar-style' },
-                        { plan: 'bg-amber-100 text-amber-950', do: 'bg-amber-600 text-white', summary: 'bg-amber-50 text-amber-800 summary-bar-style' },
-                        { plan: 'bg-rose-100 text-rose-950', do: 'bg-rose-600 text-white', summary: 'bg-rose-50 text-rose-800 summary-bar-style' },
-                        { plan: 'bg-teal-100 text-teal-950', do: 'bg-teal-600 text-white', summary: 'bg-teal-50 text-teal-800 summary-bar-style' },
-                        { plan: 'bg-cyan-100 text-cyan-950', do: 'bg-cyan-600 text-white', summary: 'bg-cyan-50 text-cyan-800 summary-bar-style' },
-                        { plan: 'bg-indigo-100 text-indigo-950', do: 'bg-indigo-600 text-white', summary: 'bg-indigo-50 text-indigo-800 summary-bar-style' }
-                    ];
-                    let hash = 0;
-                    const str = String(taskId) + cat;
-                    for (let i = 0; i < str.length; i++) {
-                        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-                    }
-                    let p = palettes[Math.abs(hash) % palettes.length];
-                    return type === 'Plan' ? p.plan : (type === 'Summary' ? p.summary : p.do);
-                },
-
-                async syncCategories(backup) {
-                    try { 
-                        await this.post({ action: 'saveCategories', categories: this.categories }); 
-                        localStorage.setItem('planner_cache_cats', JSON.stringify(this.categories));
-                        this.toast('บันทึกสำเร็จ'); 
-                    } catch(e) { this.categories = backup; this.toast('บันทึกไม่สำเร็จ', 'error'); }
-                },
-                addMainCategory() {
-                    const name = this.newCategoryName.trim();
-                    if (!name) return;
-                    let backup = JSON.parse(JSON.stringify(this.categories));
-                    this.categories.push({ id: String(Date.now()), name, subcategories: [] });
+                addCategory() {
+                    if (!this.newCategoryName.trim()) return;
+                    this.categories.push({ id: Date.now().toString(), name: this.newCategoryName.trim(), color: this.getDefaultColor(this.categories.length) });
                     this.newCategoryName = '';
-                    this.syncCategories(backup);
-                },
-                addSubcategory(cat) {
-                    let name = (this.newSubNames[cat.id] || '').trim();
-                    if (!name) return;
-                    let backup = JSON.parse(JSON.stringify(this.categories));
-                    cat.subcategories.push(name);
-                    this.newSubNames[cat.id] = '';
-                    this.syncCategories(backup);
-                },
-                deleteSubcategory(cat, idx) {
-                    let backup = JSON.parse(JSON.stringify(this.categories));
-                    cat.subcategories.splice(idx, 1);
-                    this.syncCategories(backup);
-                },
-                deleteMainCategory(cat) {
-                    let backup = JSON.parse(JSON.stringify(this.categories));
-                    this.categories = this.categories.filter(c => c.id !== cat.id);
-                    this.syncCategories(backup);
-                },
-                startEditCategory(cat) { this.editingCatId = cat.id; this.editCatName = cat.name; },
-                saveCategoryName(cat) {
-                    let name = this.editCatName.trim();
-                    if (name) { cat.name = name; let backup = JSON.parse(JSON.stringify(this.categories)); this.syncCategories(backup); }
-                    this.editingCatId = null;
+                    this.saveLocalStorage();
                 },
 
-                async syncOwners(backup) {
-                    try { 
-                        await this.post({ action: 'saveOwners', owners: this.owners }); 
-                        localStorage.setItem('planner_cache_owners', JSON.stringify(this.owners));
-                        this.toast('บันทึกสำเร็จ'); 
-                    } catch(e) { this.owners = backup; this.toast('บันทึกไม่สำเร็จ', 'error'); }
+                deleteCategory(id) {
+                    this.categories = this.categories.filter(c => c.id !== id);
+                    this.saveLocalStorage();
                 },
+
                 addOwner() {
-                    const name = this.newOwnerName.trim();
-                    if (!name) return;
-                    let backup = JSON.parse(JSON.stringify(this.owners));
-                    this.owners.push({ id: String(Date.now()), name });
+                    if (!this.newOwnerName.trim()) return;
+                    this.owners.push({ id: Date.now().toString(), name: this.newOwnerName.trim() });
                     this.newOwnerName = '';
-                    this.syncOwners(backup);
-                },
-                deleteOwner(o) {
-                    let backup = JSON.parse(JSON.stringify(this.owners));
-                    this.owners = this.owners.filter(x => x.id !== o.id);
-                    this.syncOwners(backup);
-                },
-                startEditOwner(o) { this.editingOwnerId = o.id; this.editOwnerName = o.name; },
-                saveOwnerName(o) {
-                    let name = this.editOwnerName.trim();
-                    if (name) { o.name = name; let backup = JSON.parse(JSON.stringify(this.owners)); this.syncOwners(backup); }
-                    this.editingOwnerId = null;
-                },
-                sortOwnersAlphabetically() {
-                    let backup = JSON.parse(JSON.stringify(this.owners));
-                    this.owners.sort((a,b) => a.name.localeCompare(b.name, 'th'));
-                    this.syncOwners(backup);
+                    this.saveLocalStorage();
                 },
 
-                openTaskModal() {
-                    if (!this.canCreateTask) return;
-                    let defaultCategory = this.allowedCategoriesForCreation.length > 0 ? this.allowedCategoriesForCreation[0].name : '';
-                    this.currentTask = { id: null, category: defaultCategory, subcategory: '', title: '', docLink: '', planStart: '', planEnd: '', doStart: '', doEnd: '', summaryStart: '', summaryEnd: '', budgetApproved: 0, budgetUsed: 0, useSDGs: false, selectedSdgs: [], selectedSdgTargets: [], owner: '', subTeam: '', countWorkload: true, usePlanChecklist: false, planChecklist: [], useChecklist: false, checklist: [], useSummaryChecklist: false, summaryChecklist: [], manualDone: false, createdBy: '', updatedBy: '', updatedAt: '', pdsa: { plan: '', do: '', study: '', act: '' } };
-                    this.currentTaskSubTeams = [];
-                    this.isModalOpen = true;
-                },
-                editTask(task) {
-                    this.currentTask = JSON.parse(JSON.stringify(task));
-                    this.currentTaskSubTeams = task.subTeam ? task.subTeam.split(',').map(s => s.trim()).filter(Boolean) : [];
-                    this.isModalOpen = true;
-                },
-
-                askConfirm(title, message, danger = true, confirmText = 'ยืนยัน') {
-                    return new Promise(resolve => {
-                        dialogResolver = resolve;
-                        this.dialog = { open: true, title, message, danger, confirmText };
-                    });
-                },
-                closeDialog(res) {
-                    this.dialog.open = false;
-                    if (dialogResolver) { dialogResolver(res); dialogResolver = null; }
-                },
-                toast(msg, type = 'success') {
-                    const id = Date.now() + Math.random();
-                    this.toasts.push({ id, msg, type });
-                    setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 3000);
+                deleteOwner(id) {
+                    this.owners = this.owners.filter(o => o.id !== id);
+                    this.saveLocalStorage();
                 },
 
                 toLocalISO(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); },
                 get currentMonthName() { return this.monthNames[this.currentMonthIndex] + ' ' + (this.currentYearNum + 543); },
                 prevMonth() { this.currentMonthIndex--; if (this.currentMonthIndex < 0) { this.currentMonthIndex = 11; this.currentYearNum--; } },
                 nextMonth() { this.currentMonthIndex++; if (this.currentMonthIndex > 11) { this.currentMonthIndex = 0; this.currentYearNum++; } },
-                buildMonth(year, month) {
+
+                buildMonthGrid(year, month) {
                     const firstDow = new Date(year, month, 1).getDay();
+                    const totalDays = new Date(year, month + 1, 0).getDate();
                     const today = this.toLocalISO(new Date());
                     const days = [];
-                    for (let i = 0; i < 42; i++) {
-                        const d = new Date(year, month, 1 - firstDow + i);
-                        const ds = this.toLocalISO(d);
-                        days.push({ dayNum: d.getDate(), dateStr: ds, isCurrentMonth: d.getMonth() === month, isToday: ds === today });
+                    for (let i = 0; i < firstDow; i++) {
+                        days.push({ dayNum: '', dateStr: '', isCurrentMonth: false, isToday: false });
+                    }
+                    for (let d = 1; d <= totalDays; d++) {
+                        const dateObj = new Date(year, month, d);
+                        const ds = this.toLocalISO(dateObj);
+                        days.push({ dayNum: d, dateStr: ds, isCurrentMonth: true, isToday: ds === today });
                     }
                     return days;
                 },
-                get calendarDays() { return this.buildMonth(this.currentYearNum, this.currentMonthIndex); },
-                get availableSubcategories() {
-                    let found = this.categories.find(c => c.name === this.currentTask.category);
-                    return found ? found.subcategories : [];
-                },
-                getTasksCountForDate(dateStr) {
-                    return this.tasks.filter(t => {
-                        let cleanDoS = t.doStart ? t.doStart.split('T')[0].split(' ')[0] : '';
-                        let cleanDoE = t.doEnd ? t.doEnd.split('T')[0].split(' ')[0] : cleanDoS;
-                        return cleanDoS && dateStr >= cleanDoS && dateStr <= (cleanDoE || cleanDoS);
-                    }).length;
-                },
-                yearCellClass(cell) {
-                    if (!cell.isCurrentMonth) return 'text-slate-300';
-                    let main = this.tasks.find(t => {
-                        let cleanDoS = t.doStart ? t.doStart.split('T')[0].split(' ')[0] : '';
-                        let cleanDoE = t.doEnd ? t.doEnd.split('T')[0].split(' ')[0] : cleanDoS;
-                        return cleanDoS && cell.dateStr >= cleanDoS && cell.dateStr <= (cleanDoE || cleanDoS);
-                    });
-                    if (!main) return 'hidden';
-                    return this.getDistinctCategoryColorClass(main.id, main.category, 'Do');
-                },
-                openYearCellPopup(cell) {
-                    if (!cell.isCurrentMonth) return;
-                    let matched = this.tasks.filter(t => {
-                        let cleanDoS = t.doStart ? t.doStart.split('T')[0].split(' ')[0] : '';
-                        let cleanDoE = t.doEnd ? t.doEnd.split('T')[0].split(' ')[0] : cleanDoS;
-                        return cleanDoS && cell.dateStr >= cleanDoS && cell.dateStr <= (cleanDoE || cleanDoS);
-                    });
-                    if (matched.length) this.yearPopup = { open: true, dateStr: cell.dateStr, tasks: matched };
+                get calendarDays() { return this.buildMonthGrid(this.currentYearNum, this.currentMonthIndex); },
+
+                getTasksForDate(dateStr) {
+                    return this.tasks.filter(task => {
+                        let s = task.doStart ? task.doStart.split('T')[0] : '';
+                        let e = task.doEnd ? task.doEnd.split('T')[0] : s;
+                        return s && dateStr >= s && dateStr <= (e || s);
+                    }).map(task => ({ task }));
                 },
 
-                generatePDFReport() {
-                    const filtered = this.tasks.filter(t => {
-                        if (this.reportFilterCats.length > 0 && !this.reportFilterCats.includes(t.category)) return false;
-                        const planS = t.planStart ? t.planStart.split('T')[0].split(' ')[0] : '', planE = t.planEnd ? t.planEnd.split('T')[0].split(' ')[0] : planS, doS = t.doStart ? t.doStart.split('T')[0].split(' ')[0] : '', doE = t.doEnd ? t.doEnd.split('T')[0].split(' ')[0] : doS;
-                        if (!this.reportStart || !this.reportEnd) return true;
-                        const matchPlan = planS && !(planE < this.reportStart || planS > this.reportEnd);
-                        const matchDo = doS && !(doE < this.reportStart || doS > this.reportEnd);
-                        return matchPlan || matchDo;
-                    });
-
-                    let titleText = (this.reportStart && this.reportEnd) ? `ช่วงวันที่ ${this.reportStart} ถึง ${this.reportEnd}` : 'รายการแผนงานทั้งหมด';
-                    let htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>รายงาน</title><style>@page { size: A4 landscape; margin: 10mm; } body{font-family:'Sarabun',sans-serif;padding:10px;font-size:11px;color:#1e293b;}h2{text-align:center;font-weight:700;color:#1e293b;font-size:16px;margin-bottom:5px;}p{text-align:center;font-weight:300;margin-bottom:15px;color:#475569;}table{width:100%;border-collapse:collapse;margin-top:10px;}th,td{padding:6px 8px;border:1px solid #cbd5e1;vertical-align:top;font-weight:300;}th{background:#f8fafc;font-weight:700;text-align:center;color:#0f172a;}.c{text-align:center;}.bold{font-weight:700;}</style></head><body><h2>รายงานสรุปผลงานตามแผนงานประจำปี</h2><p>${titleText}</p><table><thead><tr><th style="width:14%;">กลุ่มงาน / หัวข้อย่อย</th><th style="width:18%;">ชื่องาน / เอกสารแนบ</th><th style="width:14%;">ช่วงเวลา (Plan / Do / Summary)</th><th style="width:11%;">งบประมาณ</th><th style="width:11%;">ผู้รับผิดชอบ</th><th style="width:16%;">SDGs</th><th style="width:16%;">PDSA</th></tr></thead><tbody>`;
-                    
-                    filtered.forEach(t => {
-                        let linkHtml = t.docLink ? `<br><a href="${esc(t.docLink)}" target="_blank" style="color:#2563eb; font-weight:700; text-decoration:underline;">เปิดเอกสารแนบ</a>` : '';
-                        
-                        let sdgsStr = '-';
-                        if (t.useSDGs && t.selectedSdgs && t.selectedSdgs.length > 0) {
-                            let goalMap = {};
-                            if (t.selectedSdgTargets && t.selectedSdgTargets.length > 0) {
-                                t.selectedSdgTargets.forEach(targetId => {
-                                    let parts = targetId.split('.');
-                                    let gKey = 'SDG ' + parts[0];
-                                    if (!goalMap[gKey]) goalMap[gKey] = [];
-                                    goalMap[gKey].push(targetId);
-                                });
-                            }
-                            let formattedParts = [];
-                            t.selectedSdgs.forEach(gId => {
-                                if (goalMap[gId] && goalMap[gId].length > 0) {
-                                    formattedParts.push(`${gId} (${goalMap[gId].join(', ')})`);
-                                } else {
-                                    formattedParts.push(gId);
-                                }
-                            });
-                            sdgsStr = formattedParts.join(', ');
-                        }
-
-                        let cleanDate = (d) => d ? d.split('T')[0].split(' ')[0] : '-';
-
-                        htmlContent += `<tr>
-                            <td><span class="bold">${esc(t.category)}</span><br><span style="color:#64748b;">${esc(t.subcategory || '-')}</span></td>
-                            <td><span class="bold">${esc(t.title || '(ไม่มีชื่องาน)')}</span>${linkHtml}</td>
-                            <td><span class="bold">Plan:</span> ${cleanDate(t.planStart)} ถึง ${cleanDate(t.planEnd || t.planStart)}<br><span class="bold">Do:</span> ${cleanDate(t.doStart)} ถึง ${cleanDate(t.doEnd || t.doStart)}<br><span class="bold">Sum:</span> ${cleanDate(t.summaryStart)} ถึง ${cleanDate(t.summaryEnd || t.summaryStart)}</td>
-                            <td class="c"><span class="bold">อนุมัติ:</span> ${Number(t.budgetApproved||0).toLocaleString()} ฿<br><span class="bold">ใช้จริง:</span> ${Number(t.budgetUsed||0).toLocaleString()} ฿</td>
-                            <td>${esc(t.owner || '-')}</td>
-                            <td>${esc(sdgsStr)}</td>
-                            <td><span class="bold">P:</span> ${esc(t.pdsa.plan||'-')}<br><span class="bold">D:</span> ${esc(t.pdsa.do||'-')}<br><span class="bold">S:</span> ${esc(t.pdsa.study||'-')}<br><span class="bold">A:</span> ${esc(t.pdsa.act||'-')}</td>
-                        </tr>`;
-                    });
-
-                    htmlContent += `</tbody></table></body></html>`;
-                    const w = window.open('', '_blank');
-                    if (w) {
-                        w.document.write(htmlContent);
-                        w.document.close();
-                        w.focus();
-                        setTimeout(() => { w.print(); }, 500);
-                    } else {
-                        this.toast('เบราว์เซอร์บล็อกการพิมพ์ กรุณาอนุญาต Pop-up', 'error');
+                openTaskModal() {
+                    this.currentTask = { id: null, category: this.categories[0]?.name || '', title: '', doStart: this.toLocalISO(new Date()), doEnd: this.toLocalISO(new Date()) };
+                    this.isModalOpen = true;
+                },
+                editTask(task) {
+                    this.currentTask = JSON.parse(JSON.stringify(task));
+                    this.isModalOpen = true;
+                },
+                saveTask() {
+                    if (!this.currentTask.title) {
+                        alert('กรุณากรอกชื่องาน');
+                        return;
                     }
-                },
-
-                generateWorkloadPDFReport() {
-                    if (!this.workloadPerson) return this.toast('กรุณาเลือกบุคลากร', 'error');
-                    const person = this.workloadPerson, y = Number(this.workloadYear), isTerm1 = this.workloadTerm === '1';
-                    const termStart = isTerm1 ? `${y}-01-01` : `${y}-07-01`, termEnd = isTerm1 ? `${y}-06-30` : `${y}-12-31`;
-                    const termName = isTerm1 ? 'รอบที่ 1 (1 ม.ค. - 30 มิ.ย.)' : 'รอบที่ 2 (1 ก.ค. - 31 ธ.ค.)';
-                    
-                    const thMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-                    const fmtTH = (d) => {
-                        if (!d) return '-';
-                        const cleanD = d.split('T')[0].split(' ')[0];
-                        const p = cleanD.split('-');
-                        if (p.length !== 3) return d;
-                        return `${parseInt(p[2])} ${thMonths[parseInt(p[1]) - 1]} ${parseInt(p[0]) + 543}`;
-                    };
-                    const toDate = (s) => { 
-                        const cleanS = s ? s.split('T')[0].split(' ')[0] : '';
-                        const p = cleanS.split('-').map(Number); 
-                        return (p.length === 3 && !isNaN(p[0])) ? new Date(p[0], p[1] - 1, p[2]) : new Date(); 
-                    };
-                    const dayCount = (s, e) => {
-                        let d1 = toDate(s), d2 = toDate(e || s);
-                        return Math.max(0, Math.round((d2 - d1) / 86400000) + 1);
-                    };
-
-                    const rows = this.tasks.filter(t => {
-                        if (t.countWorkload === false) return false;
-                        const isOwner = t.owner === person;
-                        const inTeam = t.subTeam && t.subTeam.split(',').map(s => s.trim()).includes(person);
-                        if (!isOwner && !inTeam) return false;
-                        if (!t.doStart) return false;
-                        const cleanDoEnd = (t.doEnd || t.doStart).split('T')[0].split(' ')[0];
-                        const cleanDoStart = t.doStart.split('T')[0].split(' ')[0];
-                        return !(cleanDoEnd < termStart || cleanDoStart > termEnd);
-                    }).map(t => {
-                        const cleanDoStart = t.doStart.split('T')[0].split(' ')[0];
-                        const cleanDoEnd = (t.doEnd || t.doStart).split('T')[0].split(' ')[0];
-                        const s = cleanDoStart > termStart ? cleanDoStart : termStart;
-                        const e = cleanDoEnd < termEnd ? cleanDoEnd : termEnd;
-                        return { t, s, e, days: dayCount(s, e), role: t.owner === person ? 'owner' : 'team' };
-                    });
-
-                    const daySet = new Set();
-                    rows.forEach(r => {
-                        let d = toDate(r.s), end = toDate(r.e || r.s);
-                        while (d <= end) { 
-                            daySet.add(this.toLocalISO(d)); 
-                            d.setDate(d.getDate() + 1); 
-                        }
-                    });
-                    const ownerCount = rows.filter(r => r.role === 'owner').length;
-                    const teamCount = rows.filter(r => r.role === 'team').length;
-                    const today = fmtTH(this.toLocalISO(new Date()));
-
-                    let bodyRows = '';
-                    rows.forEach((r, i) => {
-                        let linkHtml = r.t.docLink ? `<br><a href="${esc(r.t.docLink)}" target="_blank" style="color:#2563eb; font-weight:700; text-decoration:underline;">เปิดเอกสารแนบ</a>` : '';
-                        
-                        let sdgsStr = '-';
-                        if (r.t.useSDGs && r.t.selectedSdgs && r.t.selectedSdgs.length > 0) {
-                            let goalMap = {};
-                            if (r.t.selectedSdgTargets && r.t.selectedSdgTargets.length > 0) {
-                                r.t.selectedSdgTargets.forEach(targetId => {
-                                    let parts = targetId.split('.');
-                                    let gKey = 'SDG ' + parts[0];
-                                    if (!goalMap[gKey]) goalMap[gKey] = [];
-                                    goalMap[gKey].push(targetId);
-                                });
-                            }
-                            let formattedParts = [];
-                            r.t.selectedSdgs.forEach(gId => {
-                                if (goalMap[gId] && goalMap[gId].length > 0) {
-                                    formattedParts.push(`${gId} (${goalMap[gId].join(', ')})`);
-                                } else {
-                                    formattedParts.push(gId);
-                                }
-                            });
-                            sdgsStr = formattedParts.join(', ');
-                        }
-
-                        bodyRows += `<tr>
-                            <td class="c">${i+1}</td>
-                            <td><span class="bold">${esc(r.t.category)}</span> / ${esc(r.t.subcategory || '-')}<br><span class="bold">ชื่องาน: ${esc(r.t.title || '(ไม่มีชื่องาน)')}</span>${linkHtml}</td>
-                            <td class="c nw">${fmtTH(r.t.doStart)}<br>ถึง<br>${fmtTH(r.t.doEnd || r.t.doStart)}</td>
-                            <td class="c"><span class="bold">${r.days}</span> วัน</td>
-                            <td class="c">${r.role === 'owner' ? 'ผู้รับผิดชอบหลัก' : 'คณะทำงานย่อย'}</td>
-                            <td><span class="bold">SDGs:</span> ${esc(sdgsStr)}<br><span class="bold">P:</span> ${esc(r.t.pdsa.plan||'-')}<br><span class="bold">D:</span> ${esc(r.t.pdsa.do||'-')}<br><span class="bold">S:</span> ${esc(r.t.pdsa.study||'-')}<br><span class="bold">A:</span> ${esc(r.t.pdsa.act||'-')}</td>
-                        </tr>`;
-                    });
-
-                    let htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>รายงานภาระงาน</title><style>@page { size: A4 landscape; margin: 10mm; } body{font-family:'Sarabun',sans-serif;padding:10px;font-size:12px;color:#1e293b;}h1{text-align:center;font-size:18px;font-weight:700;color:#1e293b;margin-bottom:10px;}table{width:100%;border-collapse:collapse;margin-top:10px;}th,td{padding:8px;border:1px solid #cbd5e1;vertical-align:top;font-weight:300;}th{background:#f8fafc;font-weight:700;text-align:center;color:#0f172a;}.c{text-align:center;}.nw{white-space:nowrap;}.bold{font-weight:700;}.info{margin-bottom:10px;width:100%;}.info td{padding:5px;border:none;background:#f8fafc;font-weight:300;}.sign{margin-top:30px;display:flex;justify-content:space-around;page-break-inside:avoid;font-size:13px;font-weight:300;}</style></head><body>
-                    <h1>รายงานภาระงานรายบุคคล</h1>
-                    <table class="info"><tr><td><span class="bold">ชื่อบุคลากร:</span> ${esc(person)}</td><td><span class="bold">ปี พ.ศ.:</span> ${y + 543}</td><td><span class="bold">รอบประเมิน:</span> ${termName}</td></tr></table>
-                    <table style="margin-bottom:15px;"><tr><th>จำนวนงานทั้งหมด</th><th>ผู้รับผิดชอบหลัก</th><th>คณะทำงานย่อย</th><th>จำนวนวันปฏิบัติงานรวม (ไม่นับวันซ้ำ)</th></tr><tr><td class="c"><span class="bold">${rows.length}</span> งาน</td><td class="c"><span class="bold">${ownerCount}</span> งาน</td><td class="c"><span class="bold">${teamCount}</span> งาน</td><td class="c"><span class="bold">${daySet.size}</span> วัน</td></tr></table>
-                    <table><thead><tr><th style="width:5%;">ที่</th><th style="width:26%;">กลุ่มงาน / ชื่องาน / เอกสารแนบ</th><th style="width:14%;">ช่วงเวลาปฏิบัติ</th><th style="width:7%;">จำนวนวัน</th><th style="width:11%;">สถานะบทบาท</th><th style="width:37%;">SDGs & PDSA</th></tr></thead><tbody>${bodyRows || '<tr><td colspan="6" align="center" style="padding:20px;">ไม่พบภาระงานในรอบเวลาที่กำหนด</td></tr>'}</tbody></table>
-                    <div class="sign"><div style="text-align:center;">ลงชื่อ ......................................................<br>(${esc(person)})<br><span class="bold">ผู้รายงาน</span></div><div style="text-align:center;">ลงชื่อ ......................................................<br>(......................................................)<br><span class="bold">ผู้รับรอง</span></div></div>
-                    <div style="text-align:right; font-size:11px; color:#64748b; margin-top:10px;">พิมพ์เมื่อวันที่ ${today}</div></body></html>`;
-
-                    const w = window.open('', '_blank');
-                    if (w) {
-                        w.document.write(htmlContent);
-                        w.document.close();
-                        w.focus();
-                        setTimeout(() => { w.print(); }, 500);
+                    if (!this.currentTask.id) {
+                        this.currentTask.id = Date.now().toString();
+                        this.tasks.push(this.currentTask);
                     } else {
-                        this.toast('เบราว์เซอร์บล็อกการพิมพ์ กรุณาอนุญาต Pop-up', 'error');
+                        let idx = this.tasks.findIndex(t => t.id === this.currentTask.id);
+                        if (idx >= 0) this.tasks[idx] = JSON.parse(JSON.stringify(this.currentTask));
                     }
+                    this.saveLocalStorage();
+                    this.isModalOpen = false;
                 },
-
-                confirmClearOldData() { this.toast('ฟังก์ชันเคลียร์ข้อมูล'); }
+                deleteTask(task) {
+                    if (confirm('ต้องการลบงานนี้ใช่หรือไม่?')) {
+                        this.tasks = this.tasks.filter(t => t.id !== task.id);
+                        this.saveLocalStorage();
+                    }
+                }
             };
         }
-        function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
     </script>
 </body>
 </html>
