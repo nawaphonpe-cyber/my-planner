@@ -103,7 +103,7 @@
                     <button x-show="currentUserRole !== 'viewer'" @click="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-xs cursor-pointer">+ เพิ่มงาน</button>
                 </div>
 
-                <!-- Monthly View -->
+                <!-- Monthly View (With Checklist Count Badges) -->
                 <div x-show="calendarMode === 'monthly'" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col">
                     <div class="grid grid-cols-7 bg-slate-100 border-b text-center text-xs font-bold text-slate-600 py-2">
                         <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
@@ -113,6 +113,14 @@
                             <div class="min-h-[120px] p-1 flex flex-col bg-white justify-between relative" :class="day.isCurrentMonth ? '' : 'bg-slate-50 text-slate-300'">
                                 <div class="flex justify-between items-center">
                                     <span class="text-xs font-semibold px-1 rounded" :class="day.isToday ? (currentUserRole === 'viewer' ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white') : ''" x-text="day.dayNum"></span>
+                                    <!-- ป้ายสัญลักษณ์จำนวนเช็คลิสต์ -->
+                                    <template x-if="day.dateStr && getDayChecklistSummary(day.dateStr).total > 0">
+                                        <span @click="openDayDetails(day.dateStr)" 
+                                              class="text-[9px] px-1.5 py-0.5 rounded-full font-bold text-white cursor-pointer shadow-xs"
+                                              :class="getDayChecklistSummary(day.dateStr).pending > 0 ? 'bg-amber-500' : 'bg-emerald-600'"
+                                              x-text="getDayChecklistSummary(day.dateStr).pending > 0 ? '📌 ' + getDayChecklistSummary(day.dateStr).pending : '✓'">
+                                        </span>
+                                    </template>
                                 </div>
                                 <div class="space-y-0 my-1 flex-1 overflow-hidden">
                                     <template x-for="item in getContinuousTasksForDate(day.dateStr)" :key="item.task.id + '-' + item.phase">
@@ -126,7 +134,7 @@
                     </div>
                 </div>
 
-                <!-- Yearly View (Selectable Year) -->
+                <!-- Yearly View -->
                 <div x-show="calendarMode === 'yearly'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <template x-for="(mName, mIdx) in monthNames" :key="mIdx">
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 space-y-2">
@@ -149,7 +157,7 @@
                 </div>
             </div>
 
-            <!-- TAB 2: TASKS (Flexible Status Tabs & Batch Duplicate) -->
+            <!-- TAB 2: TASKS (Sorted by Overdue first, then Current, then Future) -->
             <div x-show="activeTab === 'tasks'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
                 <div class="flex justify-between items-center border-b pb-3 flex-wrap gap-2">
                     <div class="flex items-center gap-3 flex-wrap">
@@ -170,10 +178,10 @@
                 <!-- Status Filter Sub-Tabs -->
                 <div class="flex gap-2 border-b pb-2 text-xs font-semibold">
                     <button @click="taskStatusTab = 'all'" :class="taskStatusTab === 'all' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">ทั้งหมด (<span x-text="tasks.length"></span>)</button>
-                    <button @click="taskStatusTab = 'pending'" :class="taskStatusTab === 'pending' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">รอดำเนินการ</button>
-                    <button @click="taskStatusTab = 'doing'" :class="taskStatusTab === 'doing' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">กำลังทำ</button>
-                    <button @click="taskStatusTab = 'completed'" :class="taskStatusTab === 'completed' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">เสร็จสิ้นแล้ว</button>
-                    <button @click="taskStatusTab = 'overdue'" :class="taskStatusTab === 'overdue' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">เลยกำหนด</button>
+                    <button @click="taskStatusTab = 'overdue'" :class="taskStatusTab === 'overdue' ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">⚠️ เลยกำหนด</button>
+                    <button @click="taskStatusTab = 'doing'" :class="taskStatusTab === 'doing' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">⚡ กำลังทำ</button>
+                    <button @click="taskStatusTab = 'pending'" :class="taskStatusTab === 'pending' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">🕒 รอดำเนินการ</button>
+                    <button @click="taskStatusTab = 'completed'" :class="taskStatusTab === 'completed' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'" class="px-3 py-1.5 rounded-lg cursor-pointer">✓ เสร็จสิ้นแล้ว</button>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -190,7 +198,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            <template x-for="task in filteredTasksByStatus" :key="task.id">
+                            <template x-for="task in sortedTasksByPriority" :key="task.id">
                                 <tr class="hover:bg-slate-50">
                                     <td class="p-3 text-center">
                                         <input type="checkbox" :value="task.id" x-model="selectedTaskIds" class="rounded text-indigo-600">
@@ -221,7 +229,7 @@
                 </div>
             </div>
 
-            <!-- TAB 3: REPORTS (Detailed General Summary with Budget, SDGs, PDSA) -->
+            <!-- TAB 3: REPORTS -->
             <div x-show="activeTab === 'reports'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
                 <div>
                     <h2 class="text-base font-bold text-indigo-900">🖨️ ระบบออกรายงานทางการ (แนวนอน / พิมพ์)</h2>
@@ -256,7 +264,7 @@
                         <button @click="generateGeneralReport()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded text-xs font-semibold cursor-pointer">ออกรายงานสรุปภาพรวมโครงการ</button>
                     </div>
 
-                    <!-- Report 2: Individual Workload -->
+                    <!-- Report 2: Individual Workload with Owner Name -->
                     <div class="bg-indigo-50/60 border border-indigo-200 p-4 rounded-xl space-y-3">
                         <h3 class="font-bold text-sm text-indigo-900">2. รายงานภาระงานรายบุคคล</h3>
                         <div class="space-y-2 text-xs">
@@ -572,7 +580,7 @@
     <!-- DAY DETAILS MODAL -->
     <div x-show="dayDetailModal.open" x-cloak class="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-3 z-50">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4" @click.stop>
-            <h3 class="text-base font-bold text-indigo-900 border-b pb-2" x-text="'งานในวันที่: ' + dayDetailModal.dateStr"></h3>
+            <h3 class="text-base font-bold text-indigo-900 border-b pb-2" x-text="'รายละเอียดในวันที่: ' + dayDetailModal.dateStr"></h3>
             <div class="space-y-3 max-h-60 overflow-y-auto">
                 <template x-for="task in dayDetailModal.tasks" :key="task.id">
                     <div class="p-3 bg-slate-50 border rounded-lg space-y-1">
@@ -581,6 +589,16 @@
                         <p class="text-xs text-slate-500" x-text="'ผู้รับผิดชอบ: ' + (task.owner || '-')"></p>
                     </div>
                 </template>
+                <!-- เช็คลิสต์ประจำวัน -->
+                <div class="pt-2 border-t" x-show="dayDetailModal.checklists && dayDetailModal.checklists.length > 0">
+                    <h4 class="font-bold text-xs text-indigo-900 mb-1">📌 เช็คลิสต์ประจำวันนี้:</h4>
+                    <template x-for="chk in dayDetailModal.checklists" :key="chk.text">
+                        <div class="text-xs flex items-center gap-2 py-0.5">
+                            <input type="checkbox" :checked="chk.done" disabled class="rounded text-indigo-600">
+                            <span :class="chk.done ? 'line-through text-slate-400' : 'text-slate-800'" x-text="chk.text"></span>
+                        </div>
+                    </template>
+                </div>
             </div>
             <div class="flex justify-end pt-2 border-t">
                 <button @click="dayDetailModal.open = false" class="px-4 py-2 bg-slate-200 rounded-lg text-xs cursor-pointer">ปิด</button>
@@ -664,7 +682,7 @@
                 workloadYear: new Date().getFullYear(),
                 workloadTerm: '1',
                 printModal: { open: false, title: '', subtitle: '', htmlContent: '', reporterName: '' },
-                dayDetailModal: { open: false, dateStr: '', tasks: [] },
+                dayDetailModal: { open: false, dateStr: '', tasks: [], checklists: [] },
                 currentYearNum: new Date().getFullYear(),
                 currentMonthIndex: new Date().getMonth(),
                 yearlyViewYear: new Date().getFullYear(),
@@ -931,6 +949,21 @@
                     return `background-color: ${baseColor}; font-weight: 500; ` + shapeClass;
                 },
 
+                getDayChecklistSummary(dateStr) {
+                    let total = 0, pending = 0;
+                    this.tasks.forEach(t => {
+                        if (t.checklist) {
+                            t.checklist.forEach(chk => {
+                                if (chk.date === dateStr) {
+                                    total++;
+                                    if (!chk.done) pending++;
+                                }
+                            });
+                        }
+                    });
+                    return { total, pending };
+                },
+
                 buildYearlyMonthGridCorrect(year, month) {
                     let firstDow = new Date(year, month, 1).getDay();
                     let totalDays = new Date(year, month + 1, 0).getDate();
@@ -963,12 +996,20 @@
                 },
 
                 openDayDetails(dateStr) {
-                    let matched = this.tasks.filter(t => {
+                    let matchedTasks = this.tasks.filter(t => {
                         let start = t.doStart || '';
                         let end = t.doEnd || start;
                         return start && dateStr >= start && dateStr <= (end || start);
                     });
-                    this.dayDetailModal = { open: true, dateStr, tasks: matched };
+                    let matchedChecklists = [];
+                    this.tasks.forEach(t => {
+                        if (t.checklist) {
+                            t.checklist.forEach(chk => {
+                                if (chk.date === dateStr) matchedChecklists.push(chk);
+                            });
+                        }
+                    });
+                    this.dayDetailModal = { open: true, dateStr, tasks: matchedTasks, checklists: matchedChecklists };
                 },
 
                 get filteredTasks() {
@@ -986,19 +1027,28 @@
                     return { text: '🕒 รอดำเนินการ', class: 'bg-slate-100 text-slate-700' };
                 },
 
-                get filteredTasksByStatus() {
+                // จัดเรียงรายการงาน: เลยกำหนดมาด้านบนสุด ตามด้วยปัจจุบัน และงานในอนาคต
+                get sortedTasksByPriority() {
                     let list = this.filteredTasks;
                     let today = new Date().toISOString().split('T')[0];
-                    if (this.taskStatusTab === 'pending') {
-                        return list.filter(t => !t.isCompleted && today < (t.doStart || t.planStart));
-                    } else if (this.taskStatusTab === 'doing') {
-                        return list.filter(t => !t.isCompleted && today >= (t.doStart || t.planStart) && today <= (t.doEnd || t.planEnd));
-                    } else if (this.taskStatusTab === 'completed') {
-                        return list.filter(t => t.isCompleted);
-                    } else if (this.taskStatusTab === 'overdue') {
-                        return list.filter(t => !t.isCompleted && today > (t.doEnd || t.planEnd));
+
+                    if (this.taskStatusTab !== 'all') {
+                        if (this.taskStatusTab === 'overdue') list = list.filter(t => !t.isCompleted && today > (t.doEnd || t.planEnd));
+                        else if (this.taskStatusTab === 'doing') list = list.filter(t => !t.isCompleted && today >= (t.doStart || t.planStart) && today <= (t.doEnd || t.planEnd));
+                        else if (this.taskStatusTab === 'pending') list = list.filter(t => !t.isCompleted && today < (t.doStart || t.planStart));
+                        else if (this.taskStatusTab === 'completed') list = list.filter(t => t.isCompleted);
                     }
-                    return list;
+
+                    return [...list].sort((a, b) => {
+                        let aEnd = a.doEnd || a.planEnd || '9999-12-31';
+                        let bEnd = b.doEnd || b.planEnd || '9999-12-31';
+                        let aOver = !a.isCompleted && today > aEnd;
+                        let bOver = !b.isCompleted && today > bEnd;
+
+                        if (aOver && !bOver) return -1;
+                        if (!aOver && bOver) return 1;
+                        return aEnd.localeCompare(bEnd);
+                    });
                 },
 
                 toggleTaskCompleted(task) {
@@ -1008,7 +1058,7 @@
 
                 toggleSelectAllTasks(event) {
                     if (event.target.checked) {
-                        this.selectedTaskIds = this.filteredTasksByStatus.map(t => t.id);
+                        this.selectedTaskIds = this.sortedTasksByPriority.map(t => t.id);
                     } else {
                         this.selectedTaskIds = [];
                     }
@@ -1119,7 +1169,7 @@
                         <thead>
                             <tr class="bg-slate-100 text-slate-700">
                                 <th class="border border-slate-300 p-2">ที่</th>
-                                <th class="border border-slate-300 p-2">กลุ่มงาน / ชื่องาน</th>
+                                <th class="border border-slate-300 p-2">กลุ่มงาน / ชื่องาน / ผู้รับผิดชอบ</th>
                                 <th class="border border-slate-300 p-2">งบประมาณ (อนุมัติ / ใช้จริง)</th>
                                 <th class="border border-slate-300 p-2">SDGs ที่เกี่ยวข้อง</th>
                                 <th class="border border-slate-300 p-2">วงจร PDSA</th>
