@@ -300,7 +300,7 @@
                 </div>
             </div>
 
-            <!-- TAB: MANAGE TASK TITLES (เทมเพลตชื่องาน / โครงการ) -->
+            <!-- TAB: MANAGE TASK TITLES -->
             <div x-show="currentUserRole !== 'viewer' && activeTab === 'title_templates'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
                 <h2 class="text-base font-bold text-slate-800">จัดการคลังชื่องาน / โครงการ (เรียงตามตัวอักษร)</h2>
                 <div class="flex gap-2">
@@ -408,22 +408,29 @@
                 </div>
             </div>
 
-            <!-- TAB: BACKUP & EXCEL IMPORT/EXPORT -->
+            <!-- TAB: BACKUP & EXCEL / CSV TEMPLATE DOWNLOAD -->
             <div x-show="currentUserRole === 'admin' && activeTab === 'backup'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
-                <h2 class="text-base font-bold text-indigo-950">📦 ระบบสำรองข้อมูล นำเข้า และส่งออกข้อมูล (Excel / JSON)</h2>
+                <h2 class="text-base font-bold text-indigo-950">📦 ระบบสำรองข้อมูล นำเข้า และดาวน์โหลดเทมเพลต Excel (CSV)</h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Export / Template -->
-                    <div class="bg-slate-50 border p-4 rounded-xl space-y-3 text-xs">
-                        <h3 class="font-bold text-indigo-900 text-sm">📥 ดาวน์โหลดข้อมูลและเทมเพลต</h3>
-                        <p class="text-slate-500">ดาวน์โหลดข้อมูลงานทั้งหมดในรูปแบบไฟล์ JSON สำหรับสำรองข้อมูลเก็บไว้</p>
-                        <button @click="exportJSONData()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded font-semibold cursor-pointer">ดาวน์โหลดสำรองข้อมูล (JSON Backup)</button>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- 1. Download Template -->
+                    <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl space-y-3 text-xs">
+                        <h3 class="font-bold text-emerald-900 text-sm">📊 ดาวน์โหลดเทมเพลต Excel (CSV)</h3>
+                        <p class="text-slate-600">ดาวน์โหลดไฟล์ตัวอย่างฟอร์ม Excel (CSV) เพื่อนำไปกรอกข้อมูลภาระงานและอัปโหลดเข้าสู่ระบบได้ทันที</p>
+                        <button @click="downloadCSVTemplate()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded font-semibold cursor-pointer">ดาวน์โหลดเทมเพลต Excel ตัวอย่าง</button>
                     </div>
 
-                    <!-- Import -->
+                    <!-- 2. Export Backup -->
+                    <div class="bg-slate-50 border p-4 rounded-xl space-y-3 text-xs">
+                        <h3 class="font-bold text-indigo-900 text-sm">📥 สำรองข้อมูลทั้งหมด (Backup)</h3>
+                        <p class="text-slate-600">ดาวน์โหลดข้อมูลทั้งหมดในระบบ (งาน, บุคลากร, กลุ่มงาน, เช็คลิสต์) เก็บไว้ในเครื่องคอมพิวเตอร์</p>
+                        <button @click="exportJSONData()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded font-semibold cursor-pointer">ดาวน์โหลดไฟล์สำรองข้อมูล (.json)</button>
+                    </div>
+
+                    <!-- 3. Import Restore -->
                     <div class="bg-indigo-50/50 border border-indigo-200 p-4 rounded-xl space-y-3 text-xs">
-                        <h3 class="font-bold text-indigo-900 text-sm">📤 กู้คืนข้อมูล (Restoreจากไฟล์ JSON)</h3>
-                        <p class="text-slate-500">อัปโหลดไฟล์ JSON ที่เคยสำรองไว้เพื่อกู้คืนข้อมูลทั้งหมดกลับเข้าสู่ระบบ</p>
+                        <h3 class="font-bold text-indigo-900 text-sm">📤 กู้คืนข้อมูล (Restore)</h3>
+                        <p class="text-slate-600">อัปโหลดไฟล์สำรองข้อมูล (.json) เพื่อกู้คืนข้อมูลทั้งหมดกลับเข้าสู่ระบบ</p>
                         <input type="file" @change="importJSONData($event)" accept=".json" class="w-full border rounded p-2 bg-white text-xs cursor-pointer">
                     </div>
                 </div>
@@ -501,7 +508,7 @@
 
         <!-- FOOTER VERSION & LAST MODIFIED -->
         <footer class="mt-auto py-3 px-6 text-right text-[11px] text-slate-400 border-t bg-white no-print">
-            <span>ระบบวางแผนงาน v2.6 Pro | แก้ไขล่าสุด: 23 ต.ค. 2569, 11:40 น.</span>
+            <span>ระบบวางแผนงาน v2.7 Pro | แก้ไขล่าสุด: 23 ต.ค. 2569, 11:47 น.</span>
         </footer>
     </div>
 
@@ -947,6 +954,21 @@
                     if (this.manualTitles) {
                         localStorage.setItem('app_manual_titles', JSON.stringify(this.manualTitles));
                     }
+                },
+
+                downloadCSVTemplate() {
+                    let csvContent = "\uFEFFcategory,title,owner,doStart,doEnd,budgetApproved,budgetUsed,evidenceUrl\n" +
+                        "กลุ่มงานบริหารทั่วไป,ตัวอย่างโครงการจัดอบรมประจำปี,เจ้าหน้าที่ ก,2026-11-01,2026-11-03,50000,45000,https://drive.google.com\n" +
+                        "กลุ่มงานยุทธศาสตร์,ตัวอย่างการประชุมแผนยุทธศาสตร์,เจ้าหน้าที่ ข,2026-11-10,2026-11-10,10000,8500,https://pdfobject.com/pdf/sample.pdf";
+                    
+                    let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    let url = URL.createObjectURL(blob);
+                    let downloadAnchor = document.createElement('a');
+                    downloadAnchor.setAttribute("href", url);
+                    downloadAnchor.setAttribute("download", "planner_template_import.csv");
+                    document.body.appendChild(downloadAnchor);
+                    downloadAnchor.click();
+                    downloadAnchor.remove();
                 },
 
                 exportJSONData() {
