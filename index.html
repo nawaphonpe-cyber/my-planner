@@ -31,7 +31,7 @@
         }
     </style>
 </head>
-<body class="min-h-full flex flex-col" :class="currentUserRole === 'viewer' ? 'bg-emerald-50/40 text-slate-900' : 'bg-slate-50 text-slate-800'" x-data="plannerApp()">
+<body class="min-h-full flex flex-col pb-8" :class="currentUserRole === 'viewer' ? 'bg-emerald-50/40 text-slate-900' : 'bg-slate-50 text-slate-800'" x-data="plannerApp()">
 
     <!-- LOGIN SCREEN -->
     <div x-show="!isLoggedIn" x-cloak class="fixed inset-0 z-50 bg-slate-900/80 flex items-center justify-center p-4">
@@ -67,7 +67,8 @@
                 <button @click="activeTab = 'calendar'" :class="activeTab === 'calendar' ? (currentUserRole === 'viewer' ? 'border-emerald-600 text-emerald-700' : 'border-indigo-600 text-indigo-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">ปฏิทินงาน</button>
                 <button @click="activeTab = 'tasks'" :class="activeTab === 'tasks' ? (currentUserRole === 'viewer' ? 'border-emerald-600 text-emerald-700' : 'border-indigo-600 text-indigo-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">รายการงาน</button>
                 <button @click="activeTab = 'reports'" :class="activeTab === 'reports' ? (currentUserRole === 'viewer' ? 'border-emerald-600 text-emerald-700' : 'border-indigo-600 text-indigo-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">ออกรายงาน PDF</button>
-                <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'templates'" :class="activeTab === 'templates' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการเทมเพลตเช็คลิสต์</button>
+                <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'title_templates'" :class="activeTab === 'title_templates' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการชื่องาน</button>
+                <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'templates'" :class="activeTab === 'templates' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการเช็คลิสต์</button>
                 <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'categories'" :class="activeTab === 'categories' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการกลุ่มงาน</button>
                 <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'owners'" :class="activeTab === 'owners' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการบุคลากร</button>
                 <button x-show="currentUserRole === 'admin'" @click="activeTab = 'users'" :class="activeTab === 'users' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการสิทธิ์</button>
@@ -172,25 +173,13 @@
                     </div>
                 </div>
 
-                <!-- Status Filter Sub-Tabs (แยกสีตามประเภทชัดเจน พร้อมกระพริบเตือนถ้ามีเลยกำหนด) -->
+                <!-- Status Filter Sub-Tabs -->
                 <div class="flex gap-2 border-b pb-2 text-xs font-semibold flex-wrap">
                     <button @click="taskStatusTab = 'all'" :class="taskStatusTab === 'all' ? 'bg-slate-800 text-white shadow' : 'bg-slate-100 text-slate-700'" class="px-3 py-1.5 rounded-lg cursor-pointer transition-colors">ทั้งหมด (<span x-text="filteredTasks.length"></span>)</button>
-                    
-                    <button @click="taskStatusTab = 'overdue'" :class="taskStatusTab === 'overdue' ? 'bg-rose-700 text-white shadow' : 'bg-rose-100 text-rose-800 border border-rose-300'" class="px-3 py-1.5 rounded-lg cursor-pointer transition-colors" :class="taskCounts.overdue > 0 ? 'blink-alert' : ''">
-                        ⚠️ เลยกำหนด (<span x-text="taskCounts.overdue"></span>)
-                    </button>
-                    
-                    <button @click="taskStatusTab = 'doing'" :class="taskStatusTab === 'doing' ? 'bg-amber-600 text-white shadow' : 'bg-amber-100 text-amber-800 border border-amber-300'" class="px-3 py-1.5 rounded-lg cursor-pointer transition-colors">
-                        ⚡ กำลังทำ (<span x-text="taskCounts.doing"></span>)
-                    </button>
-                    
-                    <button @click="taskStatusTab = 'pending'" :class="taskStatusTab === 'pending' ? 'bg-blue-600 text-white shadow' : 'bg-blue-100 text-blue-800 border border-blue-300'" class="px-3 py-1.5 rounded-lg cursor-pointer transition-colors">
-                        🕒 รอดำเนินการ (<span x-text="taskCounts.pending"></span>)
-                    </button>
-                    
-                    <button @click="taskStatusTab = 'completed'" :class="taskStatusTab === 'completed' ? 'bg-emerald-600 text-white shadow' : 'bg-emerald-100 text-emerald-800 border border-emerald-300'" class="px-3 py-1.5 rounded-lg cursor-pointer transition-colors">
-                        ✓ เสร็จสิ้นแล้ว (<span x-text="taskCounts.completed"></span>)
-                    </button>
+                    <button @click="taskStatusTab = 'overdue'" :class="taskStatusTab === 'overdue' ? 'bg-rose-700 text-white shadow' : 'bg-rose-100 text-rose-800 border border-rose-300'" class="px-3 py-1.5 rounded-lg cursor-pointer transition-colors" :class="taskCounts.overdue > 0 ? 'blink-alert' : ''">⚠️ เลยกำหนด (<span x-text="taskCounts.overdue"></span>)</button>
+                    <button @click="taskStatusTab = 'doing'" :class="taskStatusTab === 'doing' ? 'bg-amber-600 text-white shadow' : 'bg-amber-100 text-amber-800 border border-amber-300'" class="px-3 py-1.5 rounded-lg cursor-pointer transition-colors">⚡ กำลังทำ (<span x-text="taskCounts.doing"></span>)</button>
+                    <button @click="taskStatusTab = 'pending'" :class="taskStatusTab === 'pending' ? 'bg-blue-600 text-white shadow' : 'bg-blue-100 text-blue-800 border border-blue-300'" class="px-3 py-1.5 rounded-lg cursor-pointer transition-colors">🕒 รอดำเนินการ (<span x-text="taskCounts.pending"></span>)</button>
+                    <button @click="taskStatusTab = 'completed'" :class="taskStatusTab === 'completed' ? 'bg-emerald-600 text-white shadow' : 'bg-emerald-100 text-emerald-800 border border-emerald-300'" class="px-3 py-1.5 rounded-lg cursor-pointer transition-colors">✓ เสร็จสิ้นแล้ว (<span x-text="taskCounts.completed"></span>)</button>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -307,6 +296,26 @@
                         </div>
                         <button @click="generateWorkloadReport()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded text-xs font-semibold cursor-pointer">ออกรายงานภาระงานรายบุคคล</button>
                     </div>
+                </div>
+            </div>
+
+            <!-- TAB: MANAGE TASK TITLES (เทมเพลตชื่องาน / โครงการ) -->
+            <div x-show="currentUserRole !== 'viewer' && activeTab === 'title_templates'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
+                <h2 class="text-base font-bold text-slate-800">จัดการคลังชื่องาน / โครงการ (เรียงตามตัวอักษร)</h2>
+                <div class="flex gap-2">
+                    <input type="text" x-model="newManualTitle" placeholder="เพิ่มชื่องานใหม่ลงในคลังเทมเพลต..." class="border rounded px-3 py-2 text-xs flex-1 bg-white">
+                    <button @click="addManualTaskTitle()" class="bg-indigo-600 text-white px-4 py-2 rounded text-xs cursor-pointer">+ เพิ่มชื่องาน</button>
+                </div>
+                <div class="space-y-2">
+                    <template x-for="(tTitle, idx) in sortedTaskTitles" :key="tTitle">
+                        <div class="border rounded p-3 bg-slate-50 flex items-center justify-between gap-3">
+                            <span class="text-xs font-bold text-indigo-900" x-text="(idx + 1) + '. ' + tTitle"></span>
+                            <div class="space-x-2">
+                                <button @click="renameTaskTitle(tTitle)" class="text-indigo-600 text-xs font-bold cursor-pointer">แก้ไขชื่อ</button>
+                                <button @click="deleteTaskTitle(tTitle)" class="text-rose-600 text-xs font-bold cursor-pointer">ลบออกจากคลัง</button>
+                            </div>
+                        </div>
+                    </template>
                 </div>
             </div>
 
@@ -467,6 +476,11 @@
                 </div>
             </div>
         </main>
+
+        <!-- FOOTER VERSION & LAST MODIFIED -->
+        <footer class="mt-auto py-3 px-6 text-right text-[11px] text-slate-400 border-t bg-white no-print">
+            <span>ระบบวางแผนงาน v2.5 Pro | แก้ไขล่าสุด: 23 ต.ค. 2569, 11:29 น.</span>
+        </footer>
     </div>
 
     <!-- TASK MODAL -->
@@ -787,6 +801,7 @@
                 adminNewPass: '',
                 newCategoryName: '',
                 newOwnerName: '',
+                newManualTitle: '',
                 newTemplateName: '',
                 newTemplateIcon: '📋',
                 newTemplateItems: [{ phase: 'do', text: '' }],
@@ -834,7 +849,20 @@
                     evidenceUrl: '', useSdgs: false, selectedSdgs: [], isCompleted: false, pdsa: { plan: '', do: '', study: '', act: '' }
                 },
 
-                init() { this.loadLocalStorage(); },
+                init() { 
+                    this.loadLocalStorage(); 
+                    // ตรวจสอบและดึงข้อมูลชื่องานสำรองเผื่อกรณีคีย์ข้อมูลเดิมถูกรีเซ็ต
+                    this.migrateOldDataIfNeeded();
+                },
+
+                migrateOldDataIfNeeded() {
+                    let oldTasks = localStorage.getItem('app_tasks');
+                    if (oldTasks) {
+                        try {
+                            this.tasks = JSON.parse(oldTasks);
+                        } catch(e) {}
+                    }
+                },
 
                 handleLogin() {
                     if (this.loginPassword === '1234') {
@@ -887,11 +915,14 @@
                         let o = localStorage.getItem('app_owners');
                         let tp = localStorage.getItem('app_templates');
                         let us = localStorage.getItem('app_users');
+                        let mt = localStorage.getItem('app_manual_titles');
                         if (t) this.tasks = JSON.parse(t);
                         if (c) this.categories = JSON.parse(c);
                         if (o) this.owners = JSON.parse(o);
                         if (tp) this.allTemplates = JSON.parse(tp);
                         if (us) this.appUsers = JSON.parse(us);
+                        if (mt) this.manualTitles = JSON.parse(mt);
+                        else this.manualTitles = [];
                     } catch(e) {}
                 },
 
@@ -901,6 +932,45 @@
                     localStorage.setItem('app_owners', JSON.stringify(this.owners));
                     localStorage.setItem('app_templates', JSON.stringify(this.allTemplates));
                     localStorage.setItem('app_users', JSON.stringify(this.appUsers));
+                    if (this.manualTitles) {
+                        localStorage.setItem('app_manual_titles', JSON.stringify(this.manualTitles));
+                    }
+                },
+
+                manualTitles: [],
+
+                addManualTaskTitle() {
+                    if (!this.newManualTitle.trim()) return;
+                    let val = this.newManualTitle.trim();
+                    if (!this.manualTitles.includes(val)) {
+                        this.manualTitles.push(val);
+                        this.saveLocalStorage();
+                    }
+                    this.newManualTitle = '';
+                },
+
+                deleteTaskTitle(tTitle) {
+                    if (confirm(`คุณต้องการลบชื่องาน "${tTitle}"ออกจากคลังเทมเพลตใช่หรือไม่?`)) {
+                        this.manualTitles = this.manualTitles.filter(t => t !== tTitle);
+                        this.saveLocalStorage();
+                    }
+                },
+
+                renameTaskTitle(oldTitle) {
+                    let newTitle = prompt('แก้ไขชื่องานในคลังเทมเพลต:', oldTitle);
+                    if (newTitle && newTitle.trim() && newTitle.trim() !== oldTitle) {
+                        let nt = newTitle.trim();
+                        // อัปเดตใน manualTitles
+                        let idx = this.manualTitles.indexOf(oldTitle);
+                        if (idx >= 0) this.manualTitles[idx] = nt;
+                        else this.manualTitles.push(nt);
+                        
+                        // อัปเดตใน tasks ที่ใช้ชื่องานนี้ด้วย
+                        this.tasks.forEach(t => {
+                            if (t.title === oldTitle) t.title = nt;
+                        });
+                        this.saveLocalStorage();
+                    }
                 },
 
                 get sortedOwners() {
@@ -927,8 +997,9 @@
                     return this.sortedOwners.filter(o => o.name.toLowerCase().includes(this.ownerSearchQuery.toLowerCase()));
                 },
 
+                // คลังชื่องานรวม (จากงานจริง + ที่เพิ่มไว้ใน manualTitles) เรียงตามตัวอักษร
                 get sortedTaskTitles() {
-                    let titlesSet = new Set();
+                    let titlesSet = new Set(this.manualTitles || []);
                     this.tasks.forEach(t => { if (t.title) titlesSet.add(t.title.trim()); });
                     return Array.from(titlesSet).sort((a, b) => a.localeCompare(b, 'th'));
                 },
@@ -1386,6 +1457,12 @@
                         alert('กรุณากรอกชื่องานและเลือกกลุ่มงานหลัก');
                         return;
                     }
+                    // บันทึกชื่องานลงคลังเทมเพลตอัตโนมัติหากยังไม่มี
+                    let tName = this.currentTask.title.trim();
+                    if (!this.manualTitles.includes(tName)) {
+                        this.manualTitles.push(tName);
+                    }
+
                     if (!this.currentTask.useSdgs) {
                         this.currentTask.selectedSdgs = [];
                     }
