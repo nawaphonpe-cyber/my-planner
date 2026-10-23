@@ -361,7 +361,7 @@
                                 <label class="block font-semibold mb-1">เลือกบุคลากร *</label>
                                 <select x-model="workloadPerson" class="w-full border rounded p-2 bg-white font-bold">
                                     <option value="">-- เลือกรายชื่อบุคลากร --</option>
-                                    <template x-for="o in sortedOwners" :key="o.id">
+                                    <template x-for="o in owners" :key="o.id">
                                         <option :value="o.name" x-text="o.name"></option>
                                     </template>
                                 </select>
@@ -503,7 +503,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl space-y-3 text-xs">
                         <h3 class="font-bold text-emerald-900 text-sm">📊 นำเข้าข้อมูลด้วยไฟล์ CSV (Excel)</h3>
-                        <p class="text-slate-600">ดาวน์โหลดเทมเพลตมาตรฐาน (ครอบคลุมวันวางแผน ปฏิบัติ และสรุปผล) แล้วอัปโหลดกลับเข้าสู่ระบบ</p>
+                        <p class="text-slate-600">ดาวน์โหลดเทมเพลตมาตรฐาน แล้วอัปโหลดกลับเข้าสู่ระบบ</p>
                         <button @click="downloadCSVTemplate()" class="w-full bg-emerald-600 text-white py-2 rounded font-semibold cursor-pointer">ดาวน์โหลดเทมเพลต CSV ตัวอย่าง</button>
                         <div>
                             <label class="block font-semibold mb-1 text-emerald-900 mt-2">อัปโหลดไฟล์ CSV:</label>
@@ -592,7 +592,7 @@
 
         <!-- FOOTER VERSION & LAST MODIFIED -->
         <footer class="mt-auto py-3 px-6 text-right text-[11px] text-slate-400 border-t bg-white no-print">
-            <span>ระบบวางแผนงาน v3.10 Full Featured & Report Fixed | แก้ไขล่าสุด: 23 ต.ค. 2569, 15:25 น.</span>
+            <span>ระบบวางแผนงาน v3.11 Report & Owner Fix | แก้ไขล่าสุด: 23 ต.ค. 2569, 15:35 น.</span>
         </footer>
     </div>
 
@@ -935,7 +935,7 @@
                     reader.readAsText(file, 'UTF-8');
                 },
 
-                // ฟังก์ชันออกรายงานสรุปภาพรวมโครงการ
+                // ฟังก์ชันออกรายงานสรุปภาพรวมโครงการ (แก้ไขให้เปิด Modal พรีวิวทันที)
                 generateGeneralReport() {
                     let filtered = this.tasks;
                     if (this.reportCategory) {
@@ -984,7 +984,7 @@
                     };
                 },
 
-                // ฟังก์ชันออกรายงานภาระงานรายบุคคล
+                // ฟังก์ชันออกรายงานภาระงานรายบุคคล (แก้ไขให้เปิด Modal พรีวิวทันที)
                 generateWorkloadReport() {
                     if (!this.workloadPerson) {
                         alert('กรุณาเลือกบุคลากรก่อนออกรายงานภาระงาน');
