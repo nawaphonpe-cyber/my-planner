@@ -64,6 +64,7 @@
         <main class="flex-1 w-full px-3 sm:px-6 py-4 flex flex-col space-y-4">
             <!-- TABS NAVIGATION -->
             <div class="flex border-b border-slate-200 overflow-x-auto gap-2 no-print">
+                <button @click="activeTab = 'dashboard'" :class="activeTab === 'dashboard' ? (currentUserRole === 'viewer' ? 'border-emerald-600 text-emerald-700' : 'border-indigo-600 text-indigo-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">📊 แดชบอร์ดสรุปผล</button>
                 <button @click="activeTab = 'calendar'" :class="activeTab === 'calendar' ? (currentUserRole === 'viewer' ? 'border-emerald-600 text-emerald-700' : 'border-indigo-600 text-indigo-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">ปฏิทินงาน</button>
                 <button @click="activeTab = 'tasks'" :class="activeTab === 'tasks' ? (currentUserRole === 'viewer' ? 'border-emerald-600 text-emerald-700' : 'border-indigo-600 text-indigo-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">รายการงาน</button>
                 <button @click="activeTab = 'reports'" :class="activeTab === 'reports' ? (currentUserRole === 'viewer' ? 'border-emerald-600 text-emerald-700' : 'border-indigo-600 text-indigo-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">ออกรายงาน PDF</button>
@@ -73,6 +74,102 @@
                 <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'owners'" :class="activeTab === 'owners' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการบุคลากร</button>
                 <button x-show="currentUserRole === 'admin'" @click="activeTab = 'backup'" :class="activeTab === 'backup' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">สำรอง/นำเข้าข้อมูล</button>
                 <button x-show="currentUserRole === 'admin'" @click="activeTab = 'users'" :class="activeTab === 'users' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการสิทธิ์</button>
+            </div>
+
+            <!-- TAB: DASHBOARD (แดชบอร์ดสรุปผล) -->
+            <div x-show="activeTab === 'dashboard'" class="space-y-4 flex-1 flex flex-col">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-3">
+                    <h2 class="font-bold text-sm text-indigo-900">📊 แดชบอร์ดสรุปผลการดำเนินงานและงบประมาณ</h2>
+                    
+                    <!-- ตัวกรองวันที่และกลุ่มงาน -->
+                    <div class="flex items-center gap-2 flex-wrap text-xs">
+                        <div>
+                            <label class="font-semibold mr-1">กลุ่มงาน:</label>
+                            <select x-model="dashCategoryFilter" class="border rounded p-1.5 bg-white font-semibold">
+                                <option value="">-- ทุกกลุ่มงาน --</option>
+                                <template x-for="cat in categories" :key="cat.id">
+                                    <option :value="cat.name" x-text="cat.name"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="font-semibold mr-1">ตั้งแต่วันที่:</label>
+                            <input type="date" x-model="dashStartDate" class="border rounded p-1 bg-white">
+                        </div>
+                        <div>
+                            <label class="font-semibold mr-1">ถึงวันที่:</label>
+                            <input type="date" x-model="dashEndDate" class="border rounded p-1 bg-white">
+                        </div>
+                        <button @click="dashCategoryFilter = ''; dashStartDate = ''; dashEndDate = '';" class="bg-slate-200 px-3 py-1.5 rounded font-semibold cursor-pointer hover:bg-slate-300">ล้างตัวกรอง</button>
+                    </div>
+                </div>
+
+                <!-- การ์ดสรุปตัวเลข (Summary Cards) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-xl border shadow-sm space-y-1">
+                        <p class="text-xs text-slate-500 font-semibold">จำนวนงานทั้งหมด (ตามเงื่อนไข)</p>
+                        <h3 class="text-2xl font-bold text-indigo-900" x-text="dashboardStats.totalTasks"></h3>
+                        <p class="text-[11px] text-indigo-600 font-medium">โครงการ / กิจกรรม</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border shadow-sm space-y-1">
+                        <p class="text-xs text-slate-500 font-semibold">งานที่เสร็จสิ้นแล้ว</p>
+                        <h3 class="text-2xl font-bold text-emerald-600" x-text="dashboardStats.completedTasks"></h3>
+                        <p class="text-[11px] text-emerald-600 font-medium" x-text="((dashboardStats.completedTasks / (dashboardStats.totalTasks || 1)) * 100).toFixed(1) + '% ของงานทั้งหมด'"></p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border shadow-sm space-y-1">
+                        <p class="text-xs text-slate-500 font-semibold">งบประมาณอนุมัติรวม</p>
+                        <h3 class="text-xl font-bold text-indigo-700" x-text="dashboardStats.totalApproved.toLocaleString() + ' ฿'"></h3>
+                        <p class="text-[11px] text-slate-400">ตามกรอบที่ได้รับอนุมัติ</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border shadow-sm space-y-1">
+                        <p class="text-xs text-slate-500 font-semibold">งบประมาณใช้จริงรวม</p>
+                        <h3 class="text-xl font-bold text-amber-600" x-text="dashboardStats.totalUsed.toLocaleString() + ' ฿'"></h3>
+                        <p class="text-[11px] text-amber-600 font-medium" x-text="'คงเหลือ ' + (dashboardStats.totalApproved - dashboardStats.totalUsed).toLocaleString() + ' ฿'"></p>
+                    </div>
+                </div>
+
+                <!-- กราฟสัดส่วนสถานะงาน & สรุปตามกลุ่มงาน -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white p-5 rounded-xl border shadow-sm space-y-3">
+                        <h3 class="font-bold text-sm text-slate-800 border-b pb-2">📈 สรุปสัดส่วนสถานะงาน</h3>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex justify-between items-center p-2 bg-emerald-50 rounded border border-emerald-200">
+                                <span class="font-semibold text-emerald-900">✓ เสร็จสิ้นแล้ว</span>
+                                <span class="font-bold text-emerald-700" x-text="dashboardStats.completedTasks + ' งาน'"></span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 bg-amber-50 rounded border border-amber-200">
+                                <span class="font-semibold text-amber-900">⚡ กำลังทำ</span>
+                                <span class="font-bold text-amber-700" x-text="dashboardStats.doingTasks + ' งาน'"></span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 bg-blue-50 rounded border border-blue-200">
+                                <span class="font-semibold text-blue-900">🕒 รอดำเนินการ</span>
+                                <span class="font-bold text-blue-700" x-text="dashboardStats.pendingTasks + ' งาน'"></span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 bg-rose-50 rounded border border-rose-200">
+                                <span class="font-semibold text-rose-900">⚠️ เลยกำหนด</span>
+                                <span class="font-bold text-rose-700" x-text="dashboardStats.overdueTasks + ' งาน'"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border shadow-sm space-y-3">
+                        <h3 class="font-bold text-sm text-slate-800 border-b pb-2">🏢 สรุปงบประมาณแยกตามกลุ่มงาน</h3>
+                        <div class="space-y-2 text-xs max-h-56 overflow-y-auto">
+                            <template x-for="catStat in dashboardCategoryStats" :key="catStat.name">
+                                <div class="p-2.5 bg-slate-50 rounded border space-y-1">
+                                    <div class="flex justify-between font-bold text-indigo-900">
+                                        <span x-text="catStat.name"></span>
+                                        <span x-text="catStat.count + ' งาน'"></span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-600 text-[11px]">
+                                        <span>อนุมัติ: <b class="text-slate-900" x-text="catStat.approved.toLocaleString() + ' ฿'"></b></span>
+                                        <span>ใช้จริง: <b class="text-indigo-600" x-text="catStat.used.toLocaleString() + ' ฿'"></b></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- TAB 1: CALENDAR -->
@@ -513,7 +610,7 @@
 
         <!-- FOOTER VERSION & LAST MODIFIED -->
         <footer class="mt-auto py-3 px-6 text-right text-[11px] text-slate-400 border-t bg-white no-print">
-            <span>ระบบวางแผนงาน v2.9 Pro | แก้ไขล่าสุด: 23 ต.ค. 2569, 12:02 น.</span>
+            <span>ระบบวางแผนงาน v3.0 Pro Dashboard | แก้ไขล่าสุด: 23 ต.ค. 2569, 12:07 น.</span>
         </footer>
     </div>
 
@@ -799,11 +896,11 @@
     <script>
         function plannerApp() {
             return {
-                isLoggedIn: localStorage.getItem('planner_logged'] === 'true',
+                isLoggedIn: localStorage.getItem('planner_logged') === 'true',
                 currentUserName: localStorage.getItem('planner_user') || '',
                 currentUserRole: localStorage.getItem('planner_role') || 'viewer',
                 loginPassword: '',
-                activeTab: 'calendar',
+                activeTab: 'dashboard',
                 calendarMode: 'monthly',
                 isModalOpen: false,
                 selectedCategoryFilter: '',
@@ -812,6 +909,9 @@
                 ownerSearchQuery: '',
                 ownerSearchInput: '',
                 showTitleSuggestions: false,
+                dashCategoryFilter: '',
+                dashStartDate: '',
+                dashEndDate: '',
                 tasks: [],
                 categories: [
                     { id: '1', name: 'กลุ่มงานบริหารทั่วไป', color: '#7c3aed' },
@@ -886,6 +986,53 @@
 
                 init() { 
                     this.loadLocalStorage(); 
+                },
+
+                get filteredTasksForDashboard() {
+                    let list = this.tasks;
+                    if (this.dashCategoryFilter) {
+                        list = list.filter(t => t.category === this.dashCategoryFilter);
+                    }
+                    if (this.dashStartDate) {
+                        list = list.filter(t => (t.doEnd || t.planEnd || '') >= this.dashStartDate);
+                    }
+                    if (this.dashEndDate) {
+                        list = list.filter(t => (t.doStart || t.planStart || '') <= this.dashEndDate);
+                    }
+                    return list;
+                },
+
+                get dashboardStats() {
+                    let list = this.filteredTasksForDashboard;
+                    let today = new Date().toLocaleDateString('en-CA');
+                    
+                    let totalTasks = list.length;
+                    let completedTasks = list.filter(t => t.isCompleted).length;
+                    let overdueTasks = list.filter(t => !t.isCompleted && today > (t.doEnd || t.planEnd || '')).length;
+                    let doingTasks = list.filter(t => !t.isCompleted && today >= (t.doStart || t.planStart || '') && today <= (t.doEnd || t.planEnd || '')).length;
+                    let pendingTasks = list.filter(t => !t.isCompleted && today < (t.doStart || t.planStart || '')).length;
+                    
+                    let totalApproved = list.reduce((sum, t) => sum + (Number(t.budgetApproved) || 0), 0);
+                    let totalUsed = list.reduce((sum, t) => sum + (Number(t.budgetUsed) || 0), 0);
+
+                    return { totalTasks, completedTasks, overdueTasks, doingTasks, pendingTasks, totalApproved, totalUsed };
+                },
+
+                get dashboardCategoryStats() {
+                    let list = this.filteredTasksForDashboard;
+                    let statsMap = {};
+                    this.categories.forEach(cat => {
+                        statsMap[cat.name] = { name: cat.name, count: 0, approved: 0, used: 0 };
+                    });
+                    list.forEach(t => {
+                        if (!statsMap[t.category]) {
+                            statsMap[t.category] = { name: t.category, count: 0, approved: 0, used: 0 };
+                        }
+                        statsMap[t.category].count++;
+                        statsMap[t.category].approved += (Number(t.budgetApproved) || 0);
+                        statsMap[t.category].used += (Number(t.budgetUsed) || 0);
+                    });
+                    return Object.values(statsMap);
                 },
 
                 handleLogin() {
@@ -988,9 +1135,7 @@
                             return;
                         }
 
-                        // อ่านส่วนหัวเพื่อจับตำแหน่งคอลัมน์ให้อัตโนมัติ
                         let headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
-                        
                         let getColIdx = (names) => {
                             for (let name of names) {
                                 let idx = headers.findIndex(h => h.includes(name));
@@ -1015,7 +1160,6 @@
                             let line = lines[i].trim();
                             if (!line) continue;
                             
-                            // แยกข้อมูล CSV แบบรองรับเครื่องหมายคำพูด
                             let cols = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(',');
                             cols = cols.map(c => c.replace(/^"|"$/g, '').trim());
 
