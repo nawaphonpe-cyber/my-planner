@@ -31,13 +31,13 @@
         }
     </style>
 </head>
-<body class="min-h-full flex flex-col pb-8" :class="currentUserRole === 'viewer' ? 'bg-emerald-50/40 text-slate-900' : 'bg-slate-50 text-slate-800'" x-data="plannerApp()" x-cloak>
+<body class="min-h-full flex flex-col pb-8" :class="currentUserRole === 'viewer' ? 'bg-emerald-50/40 text-slate-900' : 'bg-slate-50 text-slate-800'" x-data="plannerApp()">
 
     <!-- LOGIN SCREEN -->
-    <div x-show="!isLoggedIn" class="fixed inset-0 z-50 bg-slate-900/80 flex items-center justify-center p-4">
+    <div x-show="!isLoggedIn" x-cloak class="fixed inset-0 z-50 bg-slate-900/80 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 space-y-6 text-center">
             <h2 class="text-xl font-bold text-indigo-900">ระบบวางแผนการทำงานประจำปี</h2>
-            <p class="text-xs text-slate-500">กรอกรหัสผ่านเพื่อเข้าใช้งานระบบ (รหัสผ่านเริ่มต้น: 1234)</p>
+            <p class="text-xs text-slate-500">กรอกรหัสผ่านเพื่อเข้าใช้งานระบบ</p>
             <div class="space-y-4 text-left">
                 <div>
                     <label class="block text-xs font-semibold mb-1 text-slate-700">รหัสผ่าน (Password)</label>
@@ -50,7 +50,7 @@
     </div>
 
     <!-- MAIN APP -->
-    <div x-show="isLoggedIn" class="flex-1 flex flex-col w-full">
+    <div x-show="isLoggedIn" x-cloak class="flex-1 flex flex-col w-full">
         <header class="shadow-md w-full no-print transition-colors duration-300" :class="currentUserRole === 'viewer' ? 'bg-emerald-600 text-white' : 'bg-indigo-700 text-white'">
             <div class="w-full px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
                 <div>
@@ -64,7 +64,6 @@
         <main class="flex-1 w-full px-3 sm:px-6 py-4 flex flex-col space-y-4">
             <!-- TABS NAVIGATION -->
             <div class="flex border-b border-slate-200 overflow-x-auto gap-2 no-print">
-                <button @click="activeTab = 'dashboard'" :class="activeTab === 'dashboard' ? (currentUserRole === 'viewer' ? 'border-emerald-600 text-emerald-700' : 'border-indigo-600 text-indigo-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">📊 แดชบอร์ด</button>
                 <button @click="activeTab = 'calendar'" :class="activeTab === 'calendar' ? (currentUserRole === 'viewer' ? 'border-emerald-600 text-emerald-700' : 'border-indigo-600 text-indigo-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">ปฏิทินงาน</button>
                 <button @click="activeTab = 'tasks'" :class="activeTab === 'tasks' ? (currentUserRole === 'viewer' ? 'border-emerald-600 text-emerald-700' : 'border-indigo-600 text-indigo-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">รายการงาน</button>
                 <button @click="activeTab = 'reports'" :class="activeTab === 'reports' ? (currentUserRole === 'viewer' ? 'border-emerald-600 text-emerald-700' : 'border-indigo-600 text-indigo-600') : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">ออกรายงาน PDF</button>
@@ -74,94 +73,6 @@
                 <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'owners'" :class="activeTab === 'owners' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการบุคลากร</button>
                 <button x-show="currentUserRole === 'admin'" @click="activeTab = 'backup'" :class="activeTab === 'backup' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">สำรอง/นำเข้าข้อมูล</button>
                 <button x-show="currentUserRole === 'admin'" @click="activeTab = 'users'" :class="activeTab === 'users' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการสิทธิ์</button>
-            </div>
-
-            <!-- TAB: DASHBOARD -->
-            <div x-show="activeTab === 'dashboard'" class="space-y-4 flex-1 flex flex-col">
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-3">
-                    <h2 class="font-bold text-sm text-indigo-900">📊 แดชบอร์ดสรุปผลการดำเนินงานและงบประมาณ</h2>
-                    <div class="flex items-center gap-2 flex-wrap text-xs">
-                        <div>
-                            <label class="font-semibold mr-1">กลุ่มงาน:</label>
-                            <select x-model="dashCategoryFilter" class="border rounded p-1.5 bg-white font-semibold">
-                                <option value="">-- ทุกกลุ่มงาน --</option>
-                                <template x-for="cat in categories" :key="cat.id">
-                                    <option :value="cat.name" x-text="cat.name"></option>
-                                </template>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="font-semibold mr-1">ตั้งแต่วันที่:</label>
-                            <input type="date" x-model="dashStartDate" class="border rounded p-1 bg-white">
-                        </div>
-                        <div>
-                            <label class="font-semibold mr-1">ถึงวันที่:</label>
-                            <input type="date" x-model="dashEndDate" class="border rounded p-1 bg-white">
-                        </div>
-                        <button @click="dashCategoryFilter = ''; dashStartDate = ''; dashEndDate = '';" class="bg-slate-200 px-3 py-1.5 rounded font-semibold cursor-pointer">ล้างตัวกรอง</button>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-white p-4 rounded-xl border shadow-sm space-y-1">
-                        <p class="text-xs text-slate-500 font-semibold">จำนวนงานทั้งหมด</p>
-                        <h3 class="text-2xl font-bold text-indigo-900" x-text="dashboardStats.totalTasks"></h3>
-                    </div>
-                    <div class="bg-white p-4 rounded-xl border shadow-sm space-y-1">
-                        <p class="text-xs text-slate-500 font-semibold">งานที่เสร็จสิ้นแล้ว</p>
-                        <h3 class="text-2xl font-bold text-emerald-600" x-text="dashboardStats.completedTasks"></h3>
-                    </div>
-                    <div class="bg-white p-4 rounded-xl border shadow-sm space-y-1">
-                        <p class="text-xs text-slate-500 font-semibold">งบประมาณอนุมัติรวม</p>
-                        <h3 class="text-xl font-bold text-indigo-700" x-text="dashboardStats.totalApproved.toLocaleString() + ' ฿'"></h3>
-                    </div>
-                    <div class="bg-white p-4 rounded-xl border shadow-sm space-y-1">
-                        <p class="text-xs text-slate-500 font-semibold">งบประมาณใช้จริงรวม</p>
-                        <h3 class="text-xl font-bold text-amber-600" x-text="dashboardStats.totalUsed.toLocaleString() + ' ฿'"></h3>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-white p-5 rounded-xl border shadow-sm space-y-3">
-                        <h3 class="font-bold text-sm text-slate-800 border-b pb-2">📈 สรุปสัดส่วนสถานะงาน</h3>
-                        <div class="space-y-2 text-xs">
-                            <div class="flex justify-between items-center p-2 bg-emerald-50 rounded border border-emerald-200">
-                                <span class="font-semibold text-emerald-900">✓ เสร็จสิ้นแล้ว</span>
-                                <span class="font-bold text-emerald-700" x-text="dashboardStats.completedTasks + ' งาน'"></span>
-                            </div>
-                            <div class="flex justify-between items-center p-2 bg-amber-50 rounded border border-amber-200">
-                                <span class="font-semibold text-amber-900">⚡ กำลังทำ</span>
-                                <span class="font-bold text-amber-700" x-text="dashboardStats.doingTasks + ' งาน'"></span>
-                            </div>
-                            <div class="flex justify-between items-center p-2 bg-blue-50 rounded border border-blue-200">
-                                <span class="font-semibold text-blue-900">🕒 รอดำเนินการ</span>
-                                <span class="font-bold text-blue-700" x-text="dashboardStats.pendingTasks + ' งาน'"></span>
-                            </div>
-                            <div class="flex justify-between items-center p-2 bg-rose-50 rounded border border-rose-200">
-                                <span class="font-semibold text-rose-900">⚠️ เลยกำหนด</span>
-                                <span class="font-bold text-rose-700" x-text="dashboardStats.overdueTasks + ' งาน'"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-xl border shadow-sm space-y-3">
-                        <h3 class="font-bold text-sm text-slate-800 border-b pb-2">🏢 สรุปงบประมาณแยกตามกลุ่มงาน</h3>
-                        <div class="space-y-2 text-xs max-h-56 overflow-y-auto">
-                            <template x-for="catStat in dashboardCategoryStats" :key="catStat.name">
-                                <div class="p-2.5 bg-slate-50 rounded border space-y-1">
-                                    <div class="flex justify-between font-bold text-indigo-900">
-                                        <span x-text="catStat.name"></span>
-                                        <span x-text="catStat.count + ' งาน'"></span>
-                                    </div>
-                                    <div class="flex justify-between text-slate-600 text-[11px]">
-                                        <span>อนุมัติ: <b class="text-slate-900" x-text="catStat.approved.toLocaleString() + ' ฿'"></b></span>
-                                        <span>ใช้จริง: <b class="text-indigo-600" x-text="catStat.used.toLocaleString() + ' ฿'"></b></span>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- TAB 1: CALENDAR -->
@@ -499,23 +410,33 @@
 
             <!-- TAB: BACKUP & EXCEL / CSV IMPORT/EXPORT -->
             <div x-show="currentUserRole === 'admin' && activeTab === 'backup'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
-                <h2 class="text-base font-bold text-indigo-950">📦 สำรองข้อมูล และนำเข้าผ่านไฟล์ CSV</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <h2 class="text-base font-bold text-indigo-950">📦 ระบบสำรองข้อมูล นำเข้า และอัปโหลดไฟล์ Excel (CSV)</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- 1. Download Template & CSV Import -->
                     <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl space-y-3 text-xs">
-                        <h3 class="font-bold text-emerald-900 text-sm">📊 นำเข้าข้อมูลด้วยไฟล์ CSV (Excel)</h3>
-                        <p class="text-slate-600">ดาวน์โหลดเทมเพลตมาตรฐาน (รองรับ do_start / do_end) แล้วอัปโหลดกลับเข้าสู่ระบบ</p>
-                        <button @click="downloadCSVTemplate()" class="w-full bg-emerald-600 text-white py-2 rounded font-semibold cursor-pointer">ดาวน์โหลดเทมเพลต CSV ตัวอย่าง</button>
-                        <div>
-                            <label class="block font-semibold mb-1 text-emerald-900 mt-2">อัปโหลดไฟล์ CSV:</label>
+                        <h3 class="font-bold text-emerald-900 text-sm">📊 นำเข้า/ส่งออกด้วย Excel (CSV)</h3>
+                        <p class="text-slate-600">ดาวน์โหลดเทมเพลตเพื่อกรอกข้อมูล หรืออัปโหลดไฟล์ CSV เพื่อเพิ่มข้อมูลงานเข้าสู่ระบบจำนวนมาก</p>
+                        <button @click="downloadCSVTemplate()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded font-semibold cursor-pointer">ดาวน์โหลดเทมเพลต Excel ตัวอย่าง</button>
+                        
+                        <div class="pt-2 border-t border-emerald-200">
+                            <label class="block font-semibold mb-1 text-emerald-900">อัปโหลดไฟล์ Excel (CSV) เพื่อเพิ่มข้อมูล:</label>
                             <input type="file" @change="importCSVData($event)" accept=".csv" class="w-full border rounded p-1.5 bg-white text-xs cursor-pointer">
                         </div>
                     </div>
+
+                    <!-- 2. Export Backup JSON -->
                     <div class="bg-slate-50 border p-4 rounded-xl space-y-3 text-xs">
-                        <h3 class="font-bold text-indigo-900 text-sm">📥 สำรอง/กู้คืนข้อมูลทั้งหมด (JSON)</h3>
-                        <div class="flex gap-2">
-                            <button @click="exportJSONData()" class="flex-1 bg-indigo-600 text-white py-2 rounded font-semibold cursor-pointer">ดาวน์โหลดสำรอง</button>
-                            <input type="file" @change="importJSONData($event)" accept=".json" class="flex-1 border rounded p-1.5 bg-white text-xs cursor-pointer">
-                        </div>
+                        <h3 class="font-bold text-indigo-900 text-sm">📥 สำรองข้อมูลทั้งหมด (Backup JSON)</h3>
+                        <p class="text-slate-600">ดาวน์โหลดข้อมูลทั้งหมดในระบบ (งาน, บุคลากร, กลุ่มงาน, เช็คลิสต์) เก็บไว้ในเครื่อง</p>
+                        <button @click="exportJSONData()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded font-semibold cursor-pointer">ดาวน์โหลดไฟล์สำรองข้อมูล (.json)</button>
+                    </div>
+
+                    <!-- 3. Import Restore JSON -->
+                    <div class="bg-indigo-50/50 border border-indigo-200 p-4 rounded-xl space-y-3 text-xs">
+                        <h3 class="font-bold text-indigo-900 text-sm">📤 กู้คืนข้อมูล (Restore JSON)</h3>
+                        <p class="text-slate-600">อัปโหลดไฟล์สำรองข้อมูล (.json) เพื่อกู้คืนข้อมูลทั้งหมดกลับเข้าสู่ระบบ</p>
+                        <input type="file" @change="importJSONData($event)" accept=".json" class="w-full border rounded p-2 bg-white text-xs cursor-pointer">
                     </div>
                 </div>
             </div>
@@ -592,7 +513,7 @@
 
         <!-- FOOTER VERSION & LAST MODIFIED -->
         <footer class="mt-auto py-3 px-6 text-right text-[11px] text-slate-400 border-t bg-white no-print">
-            <span>ระบบวางแผนงาน v3.6 Complete Restoration | แก้ไขล่าสุด: 23 ต.ค. 2569, 14:35 น.</span>
+            <span>ระบบวางแผนงาน v2.9 Pro | แก้ไขล่าสุด: 23 ต.ค. 2569, 12:02 น.</span>
         </footer>
     </div>
 
@@ -613,7 +534,7 @@
                         </select>
                     </div>
                     <div class="sm:col-span-2 relative">
-                        <label class="block font-semibold mb-1">ชื่องาน / โครงการ *</label>
+                        <label class="block font-semibold mb-1">ชื่องาน / โครงการ * (พิมพ์ค้นหาหรือพิมพ์ชื่อใหม่ได้ระบบจะจำให้อัตโนมัติ)</label>
                         <input type="text" x-model="currentTask.title" @focus="showTitleSuggestions = true" @input="showTitleSuggestions = true" :disabled="currentUserRole === 'viewer'" placeholder="พิมพ์หรือเลือกชื่องาน..." class="w-full border rounded p-2 bg-white font-medium">
                         <div x-show="showTitleSuggestions && filteredTaskTitles.length > 0" @click.outside="showTitleSuggestions = false" class="absolute z-30 left-0 right-0 bg-white border rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto">
                             <template x-for="tTitle in filteredTaskTitles" :key="tTitle">
@@ -624,56 +545,154 @@
                 </div>
 
                 <div>
-                    <label class="block font-semibold mb-1 text-indigo-900">ลิงก์หลักฐานแนบ</label>
+                    <label class="block font-semibold mb-1 text-indigo-900">ลิงก์หลักฐานแนบ (เช่น Google Drive, ไฟล์ PDF, รูปภาพ)</label>
                     <input type="url" x-model="currentTask.evidenceUrl" :disabled="currentUserRole === 'viewer'" placeholder="https://..." class="w-full border rounded p-2 bg-white">
+                </div>
+
+                <div class="bg-amber-100 border-2 border-amber-300 p-3 rounded-xl flex items-center justify-between">
+                    <div>
+                        <span class="font-bold text-amber-900">📊 นับภาระงาน</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" x-model="currentTask.countWorkload" :disabled="currentUserRole === 'viewer'" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                    </label>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div class="bg-purple-50 p-3 rounded-xl border border-purple-200 space-y-2">
                         <label class="font-bold text-purple-900 block">📅 ระยะวางแผน (Plan)</label>
-                        <input type="date" x-model="currentTask.planStart" class="w-full border rounded p-1.5 bg-white">
-                        <input type="date" x-model="currentTask.planEnd" class="w-full border rounded p-1.5 bg-white">
+                        <input type="date" x-model="currentTask.planStart" @change="onDateChanged()" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
+                        <input type="date" x-model="currentTask.planEnd" @change="onDateChanged()" :min="currentTask.planStart" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
                     </div>
                     <div class="bg-blue-50 p-3 rounded-xl border border-blue-200 space-y-2">
                         <label class="font-bold text-blue-900 block">⚡ ระยะปฏิบัติจริง (Do)</label>
-                        <input type="date" x-model="currentTask.doStart" class="w-full border rounded p-1.5 bg-white">
-                        <input type="date" x-model="currentTask.doEnd" class="w-full border rounded p-1.5 bg-white">
+                        <input type="date" x-model="currentTask.doStart" @change="onDateChanged()" :min="currentTask.planEnd || currentTask.planStart" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
+                        <input type="date" x-model="currentTask.doEnd" @change="onDateChanged()" :min="currentTask.doStart" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
                     </div>
                     <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 space-y-2">
                         <label class="font-bold text-emerald-900 block">📝 ระยะสรุปผล (Summary)</label>
-                        <input type="date" x-model="currentTask.summaryStart" class="w-full border rounded p-1.5 bg-white">
-                        <input type="date" x-model="currentTask.summaryEnd" class="w-full border rounded p-1.5 bg-white">
+                        <input type="date" x-model="currentTask.summaryStart" @change="onDateChanged()" :min="currentTask.doEnd || currentTask.doStart" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
+                        <input type="date" x-model="currentTask.summaryEnd" @change="onDateChanged()" :min="currentTask.summaryStart" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-1.5 bg-white">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-100 p-3 rounded-xl">
                     <div>
                         <label class="block font-semibold mb-1">งบประมาณอนุมัติ (บาท)</label>
-                        <input type="number" x-model.number="currentTask.budgetApproved" class="w-full border rounded p-2 bg-white">
+                        <input type="number" x-model.number="currentTask.budgetApproved" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-2 bg-white">
                     </div>
                     <div>
                         <label class="block font-semibold mb-1">งบประมาณใช้จริง (บาท)</label>
-                        <input type="number" x-model.number="currentTask.budgetUsed" class="w-full border rounded p-2 bg-white">
+                        <input type="number" x-model.number="currentTask.budgetUsed" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-2 bg-white">
                     </div>
                 </div>
 
+                <!-- OWNERS & SEARCHABLE TEAM WITH SELECT ALL -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-indigo-50/50 p-3 rounded-xl border">
                     <div>
-                        <label class="block font-semibold mb-1 text-indigo-900">ผู้รับผิดชอบหลัก</label>
-                        <select x-model="currentTask.owner" class="w-full border rounded p-2 bg-white font-bold">
+                        <label class="block font-semibold mb-1 text-indigo-900">ผู้รับผิดชอบหลัก (ค้นหา/พิมพ์ชื่อ)</label>
+                        <input type="text" x-model="ownerSearchInput" placeholder="พิมพ์ค้นหาชื่อผู้รับผิดชอบ..." class="w-full border rounded p-2 bg-white font-bold mb-1">
+                        <select x-model="currentTask.owner" :disabled="currentUserRole === 'viewer'" class="w-full border rounded p-2 bg-white font-bold">
                             <option value="">-- เลือกผู้รับผิดชอบ --</option>
-                            <template x-for="o in owners" :key="o.id">
+                            <template x-for="o in filteredOwnersMain" :key="o.id">
                                 <option :value="o.name" x-text="o.name"></option>
                             </template>
                         </select>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="font-semibold text-indigo-900">คณะทำงาน / ผู้ร่วมงาน (เลือกได้หลายคน)</label>
+                            <button @click="toggleSelectAllTeam()" type="button" class="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded cursor-pointer">เลือกทั้งหมด / ไม่เลือก</button>
+                        </div>
+                        <div class="bg-white border rounded p-2 max-h-32 overflow-y-auto space-y-1">
+                            <input type="text" x-model="ownerSearchQuery" placeholder="🔍 ค้นหาชื่อ..." class="w-full border rounded p-1 text-[11px] mb-1">
+                            <template x-for="o in filteredOwnersForSelect" :key="o.id">
+                                <label class="flex items-center gap-2 text-xs cursor-pointer hover:bg-slate-50 p-1 rounded">
+                                    <input type="checkbox" :value="o.name" x-model="currentTask.subTeamMembers" class="rounded text-indigo-600">
+                                    <span x-text="o.name"></span>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SDGS TOGGLE & FULL LIST -->
+                <div class="bg-indigo-50 border p-3 rounded-xl space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-indigo-900">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs ครบถ้วน a, b, c, d)</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" x-model="currentTask.useSdgs" :disabled="currentUserRole === 'viewer'" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+                    <div x-show="currentTask.useSdgs" class="space-y-3 max-h-52 overflow-y-auto bg-white p-3 rounded border">
+                        <template x-for="group in sdgFullData" :key="group.goalNum">
+                            <div class="border-b pb-2 last:border-0">
+                                <label class="flex items-center gap-2 font-bold text-indigo-900 cursor-pointer">
+                                    <input type="checkbox" :value="'Goal ' + group.goalNum" x-model="currentTask.selectedSdgs" class="rounded text-indigo-600">
+                                    <span x-text="'Goal ' + group.goalNum + ': ' + group.goalTitle"></span>
+                                </label>
+                                <div class="pl-6 mt-1 space-y-1">
+                                    <template x-for="target in group.targets" :key="target.code">
+                                        <label class="flex items-start gap-2 text-[11px] text-slate-600 cursor-pointer hover:text-slate-900">
+                                            <input type="checkbox" :value="target.code" x-model="currentTask.selectedSdgs" class="mt-0.5 rounded text-indigo-600">
+                                            <div>
+                                                <span class="font-semibold text-indigo-950" x-text="target.code + ': ' + target.title"></span>
+                                            </div>
+                                        </label>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- CHECKLISTS 3 PHASES WITH TEMPLATES & DRAG DROP -->
+                <div class="bg-indigo-50 border p-3 rounded-xl space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-indigo-900">📌 เช็คลิสต์ 3 ช่วง (วางแผน, ทำงาน, สรุปผล)</span>
+                        <select @change="applyTemplate($event.target.value)" :disabled="currentUserRole === 'viewer'" class="border rounded p-1 text-xs bg-white font-semibold">
+                            <option value="">-- เลือกเทมเพลตเช็คลิสต์ --</option>
+                            <template x-for="tpl in allTemplates" :key="tpl.id">
+                                <option :value="tpl.id" x-text="(tpl.icon || '📋') + ' ' + tpl.name"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="space-y-1 max-h-40 overflow-y-auto" x-sort x-sort:item="currentTask.checklist">
+                        <template x-for="(chk, idx) in currentTask.checklist" :key="idx">
+                            <div class="flex items-center gap-2 bg-white p-1.5 rounded border cursor-move" x-sort:item="idx">
+                                <span class="text-slate-400 font-bold">⠿</span>
+                                <select x-model="chk.phase" :disabled="currentUserRole === 'viewer'" class="border rounded p-1 text-[10px] font-semibold bg-slate-50">
+                                    <option value="plan">วางแผน</option>
+                                    <option value="do">ทำงาน</option>
+                                    <option value="summary">สรุป</option>
+                                </select>
+                                <input type="date" x-model="chk.date" :disabled="currentUserRole === 'viewer'" class="border rounded p-1 text-[10px] w-28">
+                                <input type="text" x-model="chk.text" :disabled="currentUserRole === 'viewer'" class="flex-1 border rounded p-1 text-xs">
+                                <input type="checkbox" x-model="chk.done" :disabled="currentUserRole === 'viewer'" class="w-4 h-4 text-indigo-600">
+                                <button x-show="currentUserRole !== 'viewer'" @click="currentTask.checklist.splice(idx, 1)" type="button" class="text-rose-600 font-bold px-1">&times;</button>
+                            </div>
+                        </template>
+                    </div>
+                    <button x-show="currentUserRole !== 'viewer'" @click="currentTask.checklist.push({phase: 'do', date: currentTask.doStart || new Date().toLocaleDateString('en-CA'), text: '', done: false})" type="button" class="bg-white border px-3 py-1 rounded text-xs font-semibold">+ เพิ่มเช็คลิสต์ย่อย</button>
+                </div>
+
+                <div class="space-y-2 bg-slate-50 p-3 rounded-xl border">
+                    <h4 class="font-bold text-indigo-900">วงจรคุณภาพ PDSA (Plan, Do, Study [S], Act [A])</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <textarea x-model="currentTask.pdsa.plan" :disabled="currentUserRole === 'viewer'" placeholder="Plan..." class="border rounded p-2" rows="2"></textarea>
+                        <textarea x-model="currentTask.pdsa.do" :disabled="currentUserRole === 'viewer'" placeholder="Do..." class="border rounded p-2" rows="2"></textarea>
+                        <textarea x-model="currentTask.pdsa.study" :disabled="currentUserRole === 'viewer'" placeholder="Study (S)..." class="border rounded p-2 bg-amber-50/40" rows="2"></textarea>
+                        <textarea x-model="currentTask.pdsa.act" :disabled="currentUserRole === 'viewer'" placeholder="Act (A)..." class="border rounded p-2 bg-emerald-50/40" rows="2"></textarea>
                     </div>
                 </div>
             </div>
 
             <div class="flex justify-end items-center pt-3 border-t gap-2">
-                <button @click="currentTask.isCompleted = !currentTask.isCompleted" type="button" class="px-4 py-2 border rounded-lg font-semibold cursor-pointer" :class="currentTask.isCompleted ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'" x-text="currentTask.isCompleted ? '✓ เสร็จสิ้นแล้ว' : '⏳ ยังไม่เสร็จ'"></button>
+                <button x-show="currentUserRole !== 'viewer'" @click="currentTask.isCompleted = !currentTask.isCompleted" type="button" class="px-4 py-2 border rounded-lg font-semibold cursor-pointer" :class="currentTask.isCompleted ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-700'" x-text="currentTask.isCompleted ? '✓ สถานะ: เสร็จสิ้นแล้ว' : '⏳ สถานะ: ยังไม่เสร็จสิ้น'"></button>
                 <button @click="isModalOpen = false" class="px-4 py-2 border rounded-lg cursor-pointer bg-slate-100">ปิด</button>
-                <button @click="saveTask()" class="px-5 py-2 bg-indigo-600 text-white rounded-lg font-semibold cursor-pointer">บันทึกข้อมูลงาน</button>
+                <button x-show="currentUserRole !== 'viewer'" @click="saveTask()" class="px-5 py-2 bg-indigo-600 text-white rounded-lg font-semibold cursor-pointer">บันทึกข้อมูลงาน</button>
             </div>
         </div>
     </div>
@@ -684,11 +703,40 @@
             <h3 class="text-base font-bold text-indigo-900 border-b pb-2" x-text="'รายละเอียดในวันที่: ' + dayDetailModal.dateStr"></h3>
             <div class="space-y-3 max-h-60 overflow-y-auto">
                 <template x-for="task in dayDetailModal.tasks" :key="task.id">
-                    <div class="p-3 bg-slate-50 border rounded-lg space-y-1">
-                        <h4 class="font-bold text-sm text-slate-900" x-text="task.title"></h4>
-                        <p class="text-xs text-slate-500" x-text="'กลุ่มงาน: ' + task.category + ' | ผู้รับผิดชอบ: ' + (task.owner || '-')"></p>
+                    <div class="p-3 bg-slate-50 border rounded-lg space-y-1 flex justify-between items-center">
+                        <div>
+                            <span class="text-[10px] px-1.5 py-0.5 rounded text-white font-semibold inline-block" :style="'background-color: ' + getCategoryColor(task.category)" x-text="task.category"></span>
+                            <h4 class="font-bold text-sm text-slate-900" x-text="task.title"></h4>
+                            <p class="text-xs text-slate-500" x-text="'ผู้รับผิดชอบ: ' + (task.owner || '-')"></p>
+                            <template x-if="task.evidenceUrl">
+                                <a :href="task.evidenceUrl" target="_blank" class="text-[11px] text-indigo-600 underline hover:text-indigo-800 inline-block mt-0.5">🔗 ลิงก์หลักฐานแนบ</a>
+                            </template>
+                        </div>
+                        <div class="space-y-1 text-right">
+                            <button x-show="canManageTask(task)" @click="toggleTaskCompletedFromModal(task)" class="px-2.5 py-1 border rounded text-[10px] font-semibold cursor-pointer" :class="task.isCompleted ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-800'" x-text="task.isCompleted ? '✓ เสร็จแล้ว' : 'Mark เสร็จ'"></button>
+                            <br>
+                            <button @click="dayDetailModal.open = false; editTask(task);" class="text-[11px] text-indigo-600 underline cursor-pointer" x-text="canManageTask(task) ? 'จัดการงาน' : 'ดูข้อมูล'"></button>
+                        </div>
                     </div>
                 </template>
+
+                <div class="pt-2 border-t" x-show="dayDetailModal.checklists && dayDetailModal.checklists.length > 0">
+                    <h4 class="font-bold text-xs text-indigo-900 mb-2">📌 เช็คลิสต์ประจำวัน (ติ๊กทำเครื่องหมายได้ทันที):</h4>
+                    <div class="space-y-2">
+                        <template x-for="item in dayDetailModal.checklists" :key="item.chkIndex">
+                            <div class="text-xs flex items-center justify-between bg-slate-50 p-2 rounded border">
+                                <label class="flex items-center gap-2 cursor-pointer flex-1">
+                                    <input type="checkbox" x-model="item.chk.done" @change="saveLocalStorage()" :disabled="currentUserRole === 'viewer'" class="rounded text-indigo-600 w-4 h-4">
+                                    <div>
+                                        <span class="text-[10px] px-1 py-0.5 rounded font-bold mr-1" :class="item.chk.phase === 'plan' ? 'bg-purple-100 text-purple-800' : (item.chk.phase === 'do' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800')" x-text="item.chk.phase === 'plan' ? 'วางแผน' : (item.chk.phase === 'do' ? 'ทำงาน' : 'สรุป')"></span>
+                                        <span :class="item.chk.done ? 'line-through text-slate-400 font-medium' : 'text-slate-800 font-semibold'" x-text="item.chk.text"></span>
+                                    </div>
+                                </label>
+                                <span class="text-[10px] text-slate-400" x-text="'จากงาน: ' + item.taskTitle"></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
             </div>
             <div class="flex justify-end pt-2 border-t">
                 <button @click="dayDetailModal.open = false" class="px-4 py-2 bg-slate-200 rounded-lg text-xs cursor-pointer">ปิด</button>
@@ -696,22 +744,73 @@
         </div>
     </div>
 
+    <!-- DUPLICATE TARGET YEAR MODAL -->
+    <div x-show="duplicateModal.open" x-cloak class="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-3 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4" @click.stop>
+            <h3 class="text-base font-bold text-indigo-900 border-b pb-2">📋 เลือกปี พ.ศ. ปลายทางที่ต้องการคัดลอก</h3>
+            <div class="space-y-3 text-xs">
+                <label class="block font-semibold">เลือกปี พ.ศ. ใหม่:</label>
+                <select x-model.number="duplicateModal.targetYear" class="w-full border rounded p-2 bg-white font-bold">
+                    <template x-for="y in [currentYearNum, currentYearNum+1, currentYearNum+2, currentYearNum+3]" :key="y">
+                        <option :value="y" x-text="'พ.ศ. ' + (y + 543)"></option>
+                    </template>
+                </select>
+                <p class="text-[11px] text-slate-500">ระบบจะทำการเลื่อนปีศักราชของวันที่ในงานที่เลือกไปยังปี พ.ศ. ที่ท่านกำหนดให้อัตโนมัติ</p>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t">
+                <button @click="duplicateModal.open = false" class="px-4 py-2 bg-slate-200 rounded-lg text-xs cursor-pointer">ยกเลิก</button>
+                <button @click="confirmBatchDuplicate()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold cursor-pointer">ยืนยันคัดลอก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRINTABLE FORM MODAL -->
+    <div x-show="printModal.open" x-cloak class="fixed inset-0 bg-slate-900/80 flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full p-6 sm:p-8 space-y-6 max-h-[95vh] overflow-y-auto print:p-0 print:shadow-none" @click.stop>
+            <div class="flex justify-between items-center pb-3 border-b no-print">
+                <h3 class="font-bold text-lg text-indigo-900">ตัวอย่างเอกสารก่อนพิมพ์</h3>
+                <div class="flex gap-2">
+                    <button @click="window.print()" class="bg-indigo-600 text-white px-4 py-2 rounded text-xs font-semibold cursor-pointer">🖨️ สั่งพิมพ์เอกสาร (แนวนอน)</button>
+                    <button @click="printModal.open = false" class="bg-slate-200 px-4 py-2 rounded text-xs cursor-pointer">ปิด</button>
+                </div>
+            </div>
+
+            <div class="space-y-4 text-slate-900 bg-white p-4 sm:p-6" id="printableArea">
+                <div class="text-center space-y-1">
+                    <h2 class="text-lg sm:text-xl font-bold" x-text="printModal.title"></h2>
+                    <p class="text-xs sm:text-sm text-slate-600" x-text="printModal.subtitle"></p>
+                </div>
+                <div x-html="printModal.htmlContent"></div>
+                
+                <div class="grid grid-cols-2 pt-16 text-center text-xs sm:text-sm gap-8">
+                    <div class="space-y-12">
+                        <p>ลงชื่อ......................................................ผู้รายงาน</p>
+                        <p>(<span x-text="printModal.reporterName || '......................................................'"></span>)</p>
+                    </div>
+                    <div class="space-y-12">
+                        <p>ลงชื่อ......................................................ผู้รับรองรายงาน</p>
+                        <p>(......................................................)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         function plannerApp() {
             return {
-                isLoggedIn: localStorage.getItem('planner_logged') === 'true',
-                currentUserName: localStorage.getItem('planner_user') || 'ผู้ดูแลระบบหลัก (Admin)',
-                currentUserRole: localStorage.getItem('planner_role') || 'admin',
+                isLoggedIn: localStorage.getItem('planner_logged'] === 'true',
+                currentUserName: localStorage.getItem('planner_user') || '',
+                currentUserRole: localStorage.getItem('planner_role') || 'viewer',
                 loginPassword: '',
-                activeTab: 'dashboard',
+                activeTab: 'calendar',
                 calendarMode: 'monthly',
                 isModalOpen: false,
-                dashCategoryFilter: '',
-                dashStartDate: '',
-                dashEndDate: '',
                 selectedCategoryFilter: '',
                 taskStatusTab: 'all',
                 selectedTaskIds: [],
+                ownerSearchQuery: '',
+                ownerSearchInput: '',
                 showTitleSuggestions: false,
                 tasks: [],
                 categories: [
@@ -725,6 +824,7 @@
                 allTemplates: [
                     { id: 't1', icon: '🚀', name: 'เทมเพลตโครงการมาตรฐาน', items: [
                         { phase: 'plan', text: 'สำรวจความต้องการ' },
+                        { phase: 'plan', text: 'เสนออนุมัติโครงการ' },
                         { phase: 'do', text: 'ดำเนินโครงการ' },
                         { phase: 'summary', text: 'สรุปประเมินผล' }
                     ]}
@@ -733,30 +833,70 @@
                     { id: 'admin-1', name: 'ผู้ดูแลระบบหลัก', passcode: '1234', role: 'admin', allowedCategories: [] }
                 ],
                 adminNewPass: '',
+                newCategoryName: '',
+                newOwnerName: '',
                 newManualTitle: '',
-                manualTitles: [],
-                dayDetailModal: { open: false, dateStr: '', tasks: [] },
-                currentTask: { id: null, category: '', title: '', doStart: '', doEnd: '', owner: '', isCompleted: false, budgetApproved: 0, budgetUsed: 0, evidenceUrl: '', pdsa: { plan: '', do: '', study: '', act: '' }, checklist: [] },
+                newTemplateName: '',
+                newTemplateIcon: '📋',
+                newTemplateItems: [{ phase: 'do', text: '' }],
+                editingTemplateId: null,
+                newUser: { name: '', passcode: '', role: 'editor', allowedCategories: [] },
+                reportCategory: '',
+                reportStartDate: new Date().getFullYear() + '-10-01',
+                reportEndDate: (new Date().getFullYear() + 1) + '-09-30',
+                workloadPerson: '',
+                workloadYear: new Date().getFullYear(),
+                workloadTerm: '1',
+                printModal: { open: false, title: '', subtitle: '', htmlContent: '', reporterName: '' },
+                dayDetailModal: { open: false, dateStr: '', tasks: [], checklists: [] },
+                duplicateModal: { open: false, targetYear: new Date().getFullYear(), singleTask: null },
                 currentYearNum: new Date().getFullYear(),
                 currentMonthIndex: new Date().getMonth(),
                 yearlyViewYear: new Date().getFullYear(),
                 monthNames: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'],
+                lastStoredStart: '',
+                manualTitles: [],
 
-                init() {
-                    try {
-                        let t = localStorage.getItem('app_tasks');
-                        let c = localStorage.getItem('app_cats');
-                        let o = localStorage.getItem('app_owners');
-                        let mt = localStorage.getItem('app_manual_titles');
-                        if (t) this.tasks = JSON.parse(t);
-                        if (c) this.categories = JSON.parse(c);
-                        if (o) this.owners = JSON.parse(o);
-                        if (mt) this.manualTitles = JSON.parse(mt);
-                    } catch(e) {}
+                sdgFullData: [
+                    { goalNum: 1, goalTitle: 'ขจัดความยากจนทุกรูปแบบในทุกที่', targets: [{ code: '1.1', title: 'ขจัดความยากจนรุนแรงสำหรับทุกคนในทุกที่' }, { code: '1.2', title: 'ลดสัดส่วนคนจนทุกมิติลงอย่างน้อยครึ่งหนึ่ง' }, { code: '1.3', title: 'ดำเนินระบบและมาตรการคุ้มครองทางสังคมที่เหมาะสม' }, { code: '1.4', title: 'สิทธิเท่าเทียมในการเข้าถึงทรัพยากรและบริการพื้นฐาน' }, { code: '1.5', title: 'สร้างภูมิต้านทานแก่ผู้ยากไร้ต่อภัยพิบัติ' }, { code: '1.a', title: 'ระดมทรัพยากรเพื่อยุติความยากจน' }, { code: '1.b', title: 'สร้างกรอบนโยบายระดับประเทศที่สนับสนุนคนจน' }] },
+                    { goalNum: 2, goalTitle: 'ยุติความหิวโหย บรรลุความมั่นคงทางอาหาร', targets: [{ code: '2.1', title: 'ยุติความหิวโหยและเข้าถึงอาหารปลอดภัยตลอดปี' }, { code: '2.2', title: 'ยุติทุพโภชนาการทุกรูปแบบในเด็ก' }, { code: '2.3', title: 'เพิ่มผลิตภาพทางการเกษตรและรายได้ของเกษตรกรรายย่อย' }, { code: '2.4', title: 'การผลิตอาหารที่ยั่งยืนและปฏิบัติทางการเกษตรที่มีภูมิคุ้มกัน' }, { code: '2.5', title: 'รักษาความหลากหลายทางชีวภาพของพืชและสัตว์เลี้ยง' }, { code: '2.a', title: 'เพิ่มการลงทุนในโครงสร้างพื้นฐานชนบทและการวิจัยเกษตร' }, { code: '2.b', title: 'แก้ไขและป้องกันการกีดกันทางการค้าเกษตรโลก' }, { code: '2.c', title: 'ประกันกลไกตลาดอาหารที่มีเสถียรภาพ' }] },
+                    { goalNum: 3, goalTitle: 'สร้างหลักประกันการมีสุขภาวะที่ดี', targets: [{ code: '3.1', title: 'ลดอัตราการตายมารดาลงให้น้อยกว่า 70 ต่อแสนการเกิด' }, { code: '3.2', title: 'ยุติการตายของทารกและเด็กอายุต่ำกว่า 5 ขวบ' }, { code: '3.3', title: 'ยุติโรคติดต่อสำคัญ เช่น เอดส์ วัณโรค มาลาเรีย' }, { code: '3.4', title: 'ลดการตายก่อนวัยอันควรจากโรคไม่ติดต่อเรื้อรัง (NCDs)' }, { code: '3.5', title: 'ป้องกันและรักษาการใช้สารเสพติดและการดื่มแอลกอฮอล์' }, { code: '3.6', title: 'ลดจำนวนผู้เสียชีวิตและบาดเจ็บจากอุบัติเหตุทางถนน' }, { code: '3.7', title: 'เข้าถึงบริการสุขภาพทางเพศและอนามัยเจริญพันธุ์' }, { code: '3.8', title: 'บรรลุหลักประกันสุขภาพถ้วนหน้า (UHC)' }, { code: '3.9', title: 'ลดการเจ็บป่วยและเสียชีวิตจากสารเคมีอันตรายและมลพิษ' }, { code: '3.a', title: 'เสริมสร้างการดำเนินงานอนุสัญญาควบคุมยาสูบโลก' }, { code: '3.b', title: 'สนับสนุนการวิจัยและพัฒนาวัคซีนและยา' }, { code: '3.c', title: 'เพิ่มการจัดสรรงบประมาณสาธารณสุขและการพัฒนาบุคลากร' }, { code: '3.d', title: 'เสริมสมรรถนะการบริหารจัดการความเสี่ยงด้านสุขภาพ' }] },
+                    { goalNum: 4, goalTitle: 'การศึกษาที่มีคุณภาพเท่าเทียม', targets: [{ code: '4.1', title: 'การศึกษาขั้นพื้นฐานที่มีคุณภาพฟรีสำหรับเด็กทุกคน' }, { code: '4.2', title: 'เข้าถึงการพัฒนาและการดูแลเด็กปฐมวัยที่มีคุณภาพ' }, { code: '4.3', title: 'เข้าถึงการศึกษาวิชาชีพและอุดมศึกษาที่เท่าเทียม' }, { code: '4.4', title: 'เพิ่มจำนวนเยาวชนและผู้ใหญ่ที่มีทักษะประกอบอาชีพ' }, { code: '4.5', title: 'ขจัดความเหลื่อมล้ำทางเพศและการเข้าถึงการศึกษา' }, { code: '4.6', title: 'เยาวชนและผู้ใหญ่ทุกคนมีความรู้หนังสือและตัวเลข' }, { code: '4.7', title: 'การศึกษาเพื่อการพัฒนาที่ยั่งยืนและวัฒนธรรมสันติภาพ' }, { code: '4.a', title: 'สร้างและยกระดับสถานศึกษาที่ปลอดภัยและเหมาะสม' }, { code: '4.b', title: 'เพิ่มทุนการศึกษาสำหรับประเทศกำลังพัฒนา' }, { code: '4.c', title: 'เพิ่มจำนวนครูที่มีคุณสมบัติผ่านการฝึกอบรม' }] },
+                    { goalNum: 5, goalTitle: 'ความเสมอภาคระหว่างเพศ', targets: [{ code: '5.1', title: 'ยุติการเลือกปฏิบัติทุกรูปแบบต่อสตรีและเด็กหญิง' }, { code: '5.2', title: 'ขจัดความรุนแรงทั้งหมดต่อสตรีและเด็กหญิงในที่สาธารณะและส่วนตัว' }, { code: '5.3', title: 'ขจัดทางปฏิบัติที่เป็นอันตราย เช่น การสมรสในเด็ก' }, { code: '5.4', title: 'ตระหนักและให้คุณค่างานดูแลและงานบ้านที่ไม่ได้รับค่าจ้าง' }, { code: '5.5', title: 'ประกันการมีส่วนร่วมและโอกาสผู้นำที่เท่าเทียม' }, { code: '5.6', title: 'หลักประกันการเข้าถึงสุขภาพทางเพศและอนามัยเจริญพันธุ์' }, { code: '5.a', title: 'สิทธิเท่าเทียมในการถือครองที่ดินและทรัพย์สิน' }, { code: '5.b', title: 'ใช้ประโยชน์จากเทคโนโลยีเพื่อเสริมพลังสตรี' }, { code: '5.c', title: 'รับและสนับสนุนนโยบายและกฎหมายเพื่อความเสมอภาค' }] },
+                    { goalNum: 6, goalTitle: 'น้ำสะอาดและการสุขาภิบาล', targets: [{ code: '6.1', title: 'เข้าถึงน้ำดื่มที่ปลอดภัยและราคาเข้าถึงได้สำหรับทุกคน' }, { code: '6.2', title: 'เข้าถึงระบบสุขอนามัยที่เพียงพอและเหมาะสม' }, { code: '6.3', title: 'ปรับปรุงคุณภาพน้ำโดยลดมลพิษและการปล่อยน้ำเสีย' }, { code: '6.4', title: 'เพิ่มประสิทธิภาพการใช้น้ำและแก้ปัญหาการขาดแคลน' }, { code: '6.5', title: 'การบริหารจัดการทรัพยากรน้ำแบบองค์รวมทุกระดับ' }, { code: '6.6', title: 'ปกป้องและฟื้นฟูระบบนิเวศที่เกี่ยวกับน้ำ' }, { code: '6.a', title: 'ขยายความร่วมมือด้านการจัดการน้ำแก่ประเทศกำลังพัฒนา' }, { code: '6.b', title: 'สนับสนุนการมีส่วนร่วมของชุมชนท้องถิ่นจัดการน้ำ' }] },
+                    { goalNum: 7, goalTitle: 'พลังงานสะอาดที่เข้าถึงได้', targets: [{ code: '7.1', title: 'ประกันการเข้าถึงบริการพลังงานสมัยใหม่ที่เชื่อถือได้' }, { code: '7.2', title: 'เพิ่มสัดส่วนพลังงานทดแทนในโครงสร้างพลังงานโลก' }, { code: '7.3', title: 'เพิ่มอัตราการปรับปรุงประสิทธิภาพการใช้พลังงานโลก' }, { code: '7.4', title: 'ความร่วมมือระหว่างประเทศเพื่อเข้าถึงเทคโนโลยีพลังงานสะอาด' }, { code: '7.b', title: 'ขยายโครงสร้างพื้นฐานและยกระดับเทคโนโลยีพลังงาน' }] },
+                    { goalNum: 8, goalTitle: 'งานที่มีคุณค่าและการเติบโตทางเศรษฐกิจ', targets: [{ code: '8.1', title: 'เติบโตทางเศรษฐกิจต่อหัวตามบริบทประเทศ' }, { code: '8.2', title: 'ยกระดับผลิตภาพทางเศรษฐกิจผ่านนวัตกรรมเทคโนโลยี' }, { code: '8.3', title: 'นโยบายสนับสนุนกิจกรรมการผลิตและการจ้างงานงานมั่นคง' }, { code: '8.4', title: 'ปรับปรุงประสิทธิภาพการใช้ทรัพยากรโลกในการบริโภคผลิต' }, { code: '8.5', title: 'การจ้างงานเต็มที่และมีผลิตภาพสำหรับทุกคน' }, { code: '8.6', title: 'ลดสัดส่วนเยาวชนที่ไม่ได้ทำงานหรือศึกษา' }, { code: '8.7', title: 'ขจัดแรงงานบังคับ การค้ามนุษย์ และแรงงานเด็ก' }, { code: '8.8', title: 'ปกป้องสิทธิแรงงานและสร้างสภาพแวดล้อมปลอดภัย' }, { code: '8.9', title: 'นโยบายส่งเสริมการท่องเที่ยวที่ยั่งยืนสร้างงาน' }, { code: '8.10', title: 'เสริมความเข้มแข็งสถาบันการเงินเพื่อเข้าถึงบริการทั่วถึง' }] },
+                    { goalNum: 9, goalTitle: 'โครงสร้างพื้นฐาน นวัตกรรม และอุตสาหกรรม', targets: [{ code: '9.1', title: 'พัฒนาโครงสร้างพื้นฐานคุณภาพสูงที่มีความยืดหยุ่น' }, { code: '9.2', title: 'ส่งเสริมอุตสาหกรรมที่ครอบคลุมและยั่งยืนเพิ่มส่วนแบ่งจีดีพี' }, { code: '9.3', title: 'เพิ่มการเข้าถึงบริการทางการเงินของวิสาหกิจขนาดเล็ก' }, { code: '9.4', title: 'ยกระดับโครงสร้างพื้นฐานและอุตสาหกรรมให้ยั่งยืนสะอาด' }, { code: '9.5', title: 'เพิ่มวิจัยทางวิทยาศาสตร์และขีดความสามารถทางเทคโนโลยี' }] },
+                    { goalNum: 10, goalTitle: 'ลดความเหลื่อมล้ำ', targets: [{ code: '10.1', title: 'เติบโตรายได้ของประชากรกลุ่มล่างสุด 40% ให้สูงกว่าค่าเฉลี่ย' }, { code: '10.2', title: 'ส่งเสริมการมีส่วนร่วมทางสังคม เศรษฐกิจ และการเมือง' }, { code: '10.3', title: 'ประกันโอกาสที่เท่าเทียมและลดความเหลื่อมล้ำผลลัพธ์' }, { code: '10.4', title: 'ใช้นโยบายการคลัง ค่าจ้าง และการคุ้มครองสังคมที่ดี' }, { code: '10.5', title: 'ปรับปรุงกฎระเบียบตลาดการเงินโลกให้มีเสถียรภาพ' }, { code: '10.6', title: 'เพิ่มเสียงสะท้อนของประเทศกำลังพัฒนาในสถาบันโลก' }, { code: '10.7', title: 'การย้ายถิ่นฐานและ mobility ของคนอย่างเป็นระเบียบปลอดภัย' }] },
+                    { goalNum: 11, goalTitle: 'เมืองและชุมชนยั่งยืน', targets: [{ code: '11.1', title: 'เข้าถึงที่อยู่อาศัยและบริการพื้นฐานในราคาที่จ่ายไหว' }, { code: '11.2', title: 'ระบบคมนาคมขนส่งสาธารณะที่ปลอดภัยยั่งยืน' }, { code: '11.3', title: 'การพัฒนาเมืองแบบมีส่วนร่วมและยั่งยืนครอบคลุม' }, { code: '11.4', title: 'ปกป้องคุ้มครองมรดกทางวัฒนธรรมและธรรมชาติโลก' }, { code: '11.5', title: 'ลดจำนวนผู้เสียชีวิตและผลกระทบจากภัยพิบัติ' }, { code: '11.6', title: 'ลดผลกระทบด้านสิ่งแวดล้อมต่อหัวของเมือง' }, { code: '11.7', title: 'เข้าถึงพื้นที่สาธารณะสีเขียวที่ปลอดภัยครอบคลุม' }] },
+                    { goalNum: 12, goalTitle: 'การบริโภคและการผลิตที่ยั่งยืน', targets: [{ code: '12.1', title: 'กรอบการดำเนินงาน 10 ปีว่าด้วยการบริโภคผลิตยั่งยืน' }, { code: '12.2', title: 'การบริหารจัดการและการใช้ทรัพยากรธรรมชาติมีประสิทธิภาพ' }, { code: '12.3', title: 'ลดขยะอาหารระดับค้าปลีกและผู้บริโภคลงครึ่งหนึ่ง' }, { code: '12.4', title: 'การจัดการสารเคมีและของเสียตลอดวงจรชีวิตปลอดภัย' }, { code: '12.5', title: 'ลดการเกิดขยะผ่านการป้องกัน การลดซ้ำ และรีไซเคิล' }, { code: '12.6', title: 'สนับสนุนให้บริษัทเอกชนนำข้อมูลความยั่งยืนไปปฏิบัติ' }, { code: '12.7', title: 'แนวปฏิบัติด้านการจัดซื้อจัดจ้างภาครัฐที่ยั่งยืน' }] },
+                    { goalNum: 13, goalTitle: 'การรับมือการเปลี่ยนแปลงสภาพภูมิอากาศ', targets: [{ code: '13.1', title: 'เสริมสร้างภูมิต้านทานและขีดความสามารถรับมือภัยพิบัติ' }, { code: '13.2', title: 'บูรณาการมาตรการด้านการเปลี่ยนแปลงสภาพภูมิอากาศในนโยบาย' }, { code: '13.3', title: 'พัฒนาการศึกษาและการสร้างความตระหนักรู้เรื่องภูมิอากาศ' }] },
+                    { goalNum: 14, goalTitle: 'ทรัพยากรทางทะเล', targets: [{ code: '14.1', title: 'ป้องกันและลดมลพิษทางทะเลทุกประเภทอย่างมีนัยสำคัญ' }, { code: '14.2', title: 'บริหารจัดการและปกป้องระบบนิเวศทางทะเลและชายฝั่ง' }, { code: '14.3', title: 'ลดและจัดการผลกระทบจากภาวะความเป็นกรดในมหาสมุทร' }, { code: '14.4', title: 'ควบคุมการทำประมงเกินขีดจำกัดและประมงผิดกฎหมาย' }, { code: '14.5', title: 'อนุรักษ์พื้นที่ชายฝั่งและทางทะเลอย่างน้อย 10%' }] },
+                    { goalNum: 15, goalTitle: 'ระบบนิเวศบนบก', targets: [{ code: '15.1', title: 'อนุรักษ์และฟื้นฟูระบบนิเวศบนบกและน้ำจืดในแผ่นดิน' }, { code: '15.2', title: 'ส่งเสริมการจัดการป่าไม้ทุกประเภทอย่างยั่งยืน' }, { code: '15.3', title: 'ต่อสู้กับการกลายสภาพเป็นทะเลทรายและฟื้นฟูเสื่อมโทรม' }, { code: '15.4', title: 'อนุรักษ์ระบบนิเวศภูเขาเพื่อความหลากหลายทางชีวภาพ' }, { code: '15.5', title: 'ลดการเสื่อมโทรมถิ่นที่อยู่อาศัยและหยุดยั้งการสูญพันธุ์' }] },
+                    { goalNum: 16, goalTitle: 'สันติภาพ ความยุติธรรม และสถาบันเข้มแข็ง', targets: [{ code: '16.1', title: 'ลดความรุนแรงและอัตราการตายทุกรูปแบบทั่วโลก' }, { code: '16.2', title: 'ยุติการข่มเหง การแสวงประโยชน์ และความรุนแรงต่อเด็ก' }, { code: '16.3', title: 'ส่งเสริมหลักนิติธรรมและประกันการเข้าถึงความยุติธรรม' }, { code: '16.4', title: 'ลดการลักลอบค้าอาวุธและเงินผิดกฎหมายฟอกเงิน' }, { code: '16.5', title: 'ลดการทุจริตและสินบนทุกรูปแบบอย่างมีประสิทธิผล' }, { code: '16.6', title: 'พัฒนาสถาบันโปร่งใส มีประสิทธิผล และมีความรับผิดชอบ' }, { code: '16.7', title: 'ประกันกระบวนการตัดสินใจที่มีส่วนร่วมรอบด้าน' }] },
+                    { goalNum: 17, goalTitle: 'ความร่วมมือเพื่อการพัฒนาที่ยั่งยืน', targets: [{ code: '17.1', title: 'เสริมความเข้มแข็งการจัดเก็บรายได้ภายในประเทศ' }, { code: '17.2', title: 'ประเทศพัฒนาแล้วบรรลุคำมั่นสัญญา ODA ช่วยเหลือ' }, { code: '17.3', title: 'ระดมทรัพยากรการเงินเพิ่มเติมจากหลากหลายแหล่ง' }, { code: '17.5', title: 'นำและส่งเสริมการใช้กรอบนโยบายลงทุนสำหรับประเทศกำลังพัฒนา' }] }
+                ],
+
+                currentTask: {
+                    id: null, category: '', title: '', countWorkload: true,
+                    planStart: '', planEnd: '', doStart: '', doEnd: '', summaryStart: '', summaryEnd: '',
+                    budgetApproved: 0, budgetUsed: 0, owner: '', subTeamMembers: [], checklist: [],
+                    evidenceUrl: '', useSdgs: false, selectedSdgs: [], isCompleted: false, pdsa: { plan: '', do: '', study: '', act: '' }
+                },
+
+                init() { 
+                    this.loadLocalStorage(); 
                 },
 
                 handleLogin() {
                     if (this.loginPassword === '1234') {
+                        let adminObj = this.appUsers.find(u => u.id === 'admin-1');
+                        if (adminObj && adminObj.passcode) {
+                            if (this.loginPassword !== adminObj.passcode) {
+                                alert('รหัสผ่านไม่ถูกต้อง');
+                                return;
+                            }
+                        }
                         this.currentUserName = 'ผู้ดูแลระบบหลัก (Admin)';
                         this.currentUserRole = 'admin';
                         this.isLoggedIn = true;
@@ -764,12 +904,20 @@
                         localStorage.setItem('planner_user', this.currentUserName);
                         localStorage.setItem('planner_role', this.currentUserRole);
                     } else {
-                        alert('รหัสผ่านไม่ถูกต้อง (ใช้ 1234)');
+                        let found = this.appUsers.find(u => u.passcode === this.loginPassword);
+                        if (found) {
+                            this.currentUserName = found.name;
+                            this.currentUserRole = found.role;
+                            this.isLoggedIn = true;
+                            localStorage.setItem('planner_logged', 'true');
+                            localStorage.setItem('planner_user', this.currentUserName);
+                            localStorage.setItem('planner_role', this.currentUserRole);
+                        } else { alert('รหัสผ่านไม่ถูกต้อง'); }
                     }
                 },
 
                 handleViewerLogin() {
-                    this.currentUserName = 'ผู้บริหาร / ผู้ชมทั่วไป';
+                    this.currentUserName = 'ผู้บริหาร / ผู้ชมทั่วไป (Viewer)';
                     this.currentUserRole = 'viewer';
                     this.isLoggedIn = true;
                     localStorage.setItem('planner_logged', 'true');
@@ -784,25 +932,48 @@
                     localStorage.removeItem('planner_role');
                 },
 
+                loadLocalStorage() {
+                    try {
+                        let t = localStorage.getItem('app_tasks');
+                        let c = localStorage.getItem('app_cats');
+                        let o = localStorage.getItem('app_owners');
+                        let tp = localStorage.getItem('app_templates');
+                        let us = localStorage.getItem('app_users');
+                        let mt = localStorage.getItem('app_manual_titles');
+                        if (t) this.tasks = JSON.parse(t);
+                        if (c) this.categories = JSON.parse(c);
+                        if (o) this.owners = JSON.parse(o);
+                        if (tp) this.allTemplates = JSON.parse(tp);
+                        if (us) this.appUsers = JSON.parse(us);
+                        if (mt) this.manualTitles = JSON.parse(mt);
+                        else this.manualTitles = [];
+                    } catch(e) {}
+                },
+
                 saveLocalStorage() {
                     localStorage.setItem('app_tasks', JSON.stringify(this.tasks));
                     localStorage.setItem('app_cats', JSON.stringify(this.categories));
                     localStorage.setItem('app_owners', JSON.stringify(this.owners));
-                    localStorage.setItem('app_manual_titles', JSON.stringify(this.manualTitles));
+                    localStorage.setItem('app_templates', JSON.stringify(this.allTemplates));
+                    localStorage.setItem('app_users', JSON.stringify(this.appUsers));
+                    if (this.manualTitles) {
+                        localStorage.setItem('app_manual_titles', JSON.stringify(this.manualTitles));
+                    }
                 },
 
                 downloadCSVTemplate() {
-                    let csvContent = "\uFEFFcategory,title,owner,do_start,do_end,budget_approved,budget_used,evidence_url\n" +
-                        "กลุ่มงานบริหารทั่วไป,โครงการอบรมประจำปี,เจ้าหน้าที่ ก,2026-11-01,2026-11-03,50000,45000,https://drive.google.com\n" +
-                        "กลุ่มงานยุทธศาสตร์,ประชุมแผนงาน,เจ้าหน้าที่ ข,2026-11-10,2026-11-10,10000,8500,https://example.com";
+                    let csvContent = "\uFEFFcategory,title,owner,doStart,doEnd,budgetApproved,budgetUsed,evidenceUrl\n" +
+                        "กลุ่มงานบริหารทั่วไป,ตัวอย่างโครงการจัดอบรมประจำปี,เจ้าหน้าที่ ก,2026-11-01,2026-11-03,50000,45000,https://drive.google.com\n" +
+                        "กลุ่มงานยุทธศาสตร์,ตัวอย่างการประชุมแผนยุทธศาสตร์,เจ้าหน้าที่ ข,2026-11-10,2026-11-10,10000,8500,https://pdfobject.com/pdf/sample.pdf";
+                    
                     let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                     let url = URL.createObjectURL(blob);
-                    let a = document.createElement('a');
-                    a.setAttribute("href", url);
-                    a.setAttribute("download", "planner_template.csv");
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
+                    let downloadAnchor = document.createElement('a');
+                    downloadAnchor.setAttribute("href", url);
+                    downloadAnchor.setAttribute("download", "planner_template_import.csv");
+                    document.body.appendChild(downloadAnchor);
+                    downloadAnchor.click();
+                    downloadAnchor.remove();
                 },
 
                 importCSVData(event) {
@@ -817,7 +988,9 @@
                             return;
                         }
 
+                        // อ่านส่วนหัวเพื่อจับตำแหน่งคอลัมน์ให้อัตโนมัติ
                         let headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+                        
                         let getColIdx = (names) => {
                             for (let name of names) {
                                 let idx = headers.findIndex(h => h.includes(name));
@@ -829,11 +1002,11 @@
                         let catIdx = getColIdx(['category', 'กลุ่มงาน']);
                         let titleIdx = getColIdx(['title', 'ชื่องาน', 'โครงการ']);
                         let ownerIdx = getColIdx(['owner', 'ผู้รับผิดชอบ']);
-                        let startIdx = getColIdx(['dostart', 'do_start', 'start', 'วันเริ่ม']);
-                        let endIdx = getColIdx(['doend', 'do_end', 'end', 'วันสิ้นสุด']);
-                        let appBudgetIdx = getColIdx(['approved', 'budget_approved', 'อนุมัติ']);
-                        let usedBudgetIdx = getColIdx(['used', 'budget_used', 'ใช้จริง']);
-                        let urlIdx = getColIdx(['url', 'evidence', 'หลักฐาน']);
+                        let startIdx = getColIdx(['dostart', 'start', 'เริ่มต้น']);
+                        let endIdx = getColIdx(['doend', 'end', 'สิ้นสุด']);
+                        let appBudgetIdx = getColIdx(['budgetapproved', 'อนุมัติ']);
+                        let usedBudgetIdx = getColIdx(['budgetused', 'ใช้จริง']);
+                        let urlIdx = getColIdx(['evidenceurl', 'url', 'หลักฐาน', 'ลิงก์']);
 
                         let countAdded = 0;
                         let today = new Date().toLocaleDateString('en-CA');
@@ -842,6 +1015,7 @@
                             let line = lines[i].trim();
                             if (!line) continue;
                             
+                            // แยกข้อมูล CSV แบบรองรับเครื่องหมายคำพูด
                             let cols = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(',');
                             cols = cols.map(c => c.replace(/^"|"$/g, '').trim());
 
@@ -858,20 +1032,22 @@
                                 id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
                                 category: cat,
                                 title: title,
-                                doStart: doStart,
-                                doEnd: doEnd,
-                                owner: owner,
-                                budgetApproved: budgetApproved,
-                                budgetUsed: budgetUsed,
-                                evidenceUrl: evidenceUrl,
-                                isCompleted: false,
                                 countWorkload: true,
                                 planStart: doStart,
                                 planEnd: doEnd,
+                                doStart: doStart,
+                                doEnd: doEnd,
                                 summaryStart: doEnd,
                                 summaryEnd: doEnd,
+                                budgetApproved: budgetApproved,
+                                budgetUsed: budgetUsed,
+                                owner: owner,
+                                subTeamMembers: [],
                                 checklist: [],
+                                evidenceUrl: evidenceUrl,
+                                useSdgs: false,
                                 selectedSdgs: [],
+                                isCompleted: false,
                                 pdsa: { plan: '', do: '', study: '', act: '' }
                             };
                             this.tasks.push(newTask);
@@ -879,93 +1055,74 @@
                             countAdded++;
                         }
                         this.saveLocalStorage();
-                        alert(`นำเข้าข้อมูลสำเร็จ ${countAdded} รายการ!`);
+                        alert(`นำเข้าข้อมูลจากไฟล์ CSV สำเร็จทั้งหมด ${countAdded} รายการ!`);
                     };
                     reader.readAsText(file, 'UTF-8');
                 },
 
-                openTaskModal() {
-                    let today = new Date().toLocaleDateString('en-CA');
-                    this.currentTask = { id: null, category: this.categories[0]?.name || '', title: '', doStart: today, doEnd: today, owner: '', isCompleted: false, budgetApproved: 0, budgetUsed: 0, evidenceUrl: '', pdsa: { plan: '', do: '', study: '', act: '' }, checklist: [] };
-                    this.isModalOpen = true;
+                exportJSONData() {
+                    let backupObj = {
+                        tasks: this.tasks,
+                        categories: this.categories,
+                        owners: this.owners,
+                        templates: this.allTemplates,
+                        manualTitles: this.manualTitles,
+                        appUsers: this.appUsers
+                    };
+                    let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupObj, null, 2));
+                    let downloadAnchor = document.createElement('a');
+                    downloadAnchor.setAttribute("href", dataStr);
+                    downloadAnchor.setAttribute("download", "planner_backup_" + new Date().toISOString().split('T')[0] + ".json");
+                    document.body.appendChild(downloadAnchor);
+                    downloadAnchor.click();
+                    downloadAnchor.remove();
                 },
 
-                editTask(task) {
-                    this.currentTask = JSON.parse(JSON.stringify(task));
-                    if (!this.currentTask.pdsa) this.currentTask.pdsa = { plan: '', do: '', study: '', act: '' };
-                    if (!this.currentTask.checklist) this.currentTask.checklist = [];
-                    this.isModalOpen = true;
+                importJSONData(event) {
+                    let file = event.target.files[0];
+                    if (!file) return;
+                    let reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            let json = JSON.parse(e.target.result);
+                            if (json.tasks) this.tasks = json.tasks;
+                            if (json.categories) this.categories = json.categories;
+                            if (json.owners) this.owners = json.owners;
+                            if (json.templates) this.allTemplates = json.templates;
+                            if (json.manualTitles) this.manualTitles = json.manualTitles;
+                            if (json.appUsers) this.appUsers = json.appUsers;
+                            this.saveLocalStorage();
+                            alert('กู้คืนข้อมูลสำเร็จเรียบร้อยแล้ว');
+                        } catch(err) {
+                            alert('ไฟล์สำรองข้อมูลไม่ถูกต้อง');
+                        }
+                    };
+                    reader.readAsText(file);
                 },
 
-                saveTask() {
-                    if (!this.currentTask.title.trim() || !this.currentTask.category) {
-                        alert('กรุณากรอกชื่องานและเลือกกลุ่มงาน');
-                        return;
-                    }
-                    let tName = this.currentTask.title.trim();
-                    if (!this.manualTitles.includes(tName)) this.manualTitles.push(tName);
-
-                    if (!this.currentTask.id) {
-                        this.currentTask.id = Date.now().toString();
-                        this.tasks.push(this.currentTask);
-                    } else {
-                        let idx = this.tasks.findIndex(t => t.id === this.currentTask.id);
-                        if (idx >= 0) this.tasks[idx] = JSON.parse(JSON.stringify(this.currentTask));
-                    }
-                    this.saveLocalStorage();
-                    this.isModalOpen = false;
+                get sortedOwners() {
+                    return [...this.owners];
                 },
 
-                deleteTask(id) {
-                    if (confirm('คุณต้องการลบงานนี้ใช่หรือไม่?')) {
-                        this.tasks = this.tasks.filter(t => t.id !== id);
-                        this.saveLocalStorage();
-                    }
-                },
-
-                getTaskStatus(task) {
-                    let today = new Date().toLocaleDateString('en-CA');
-                    let startDo = task.doStart || '';
-                    let endDo = task.doEnd || startDo;
-                    if (task.isCompleted) return { text: '✓ เสร็จสิ้นแล้ว', class: 'bg-emerald-100 text-emerald-800 font-bold' };
-                    if (!endDo) return { text: 'รอดำเนินการ', class: 'bg-slate-100 text-slate-700' };
-                    if (today > endDo) return { text: '⚠️ เลยกำหนด', class: 'bg-rose-100 text-rose-700 blink-alert font-bold' };
-                    if (today >= startDo && today <= endDo) return { text: '⚡ กำลังทำ', class: 'bg-amber-100 text-amber-800 font-bold' };
-                    return { text: '🕒 รอดำเนินการ', class: 'bg-slate-100 text-slate-700' };
-                },
-
-                getTasksForDate(dateStr) {
-                    return this.tasks.filter(t => {
-                        let start = t.doStart || '';
-                        let end = t.doEnd || start;
-                        return start && dateStr >= start && dateStr <= end;
+                onSortOwners(itemIds) {
+                    let sorted = [];
+                    itemIds.forEach(id => {
+                        let found = this.owners.find(o => o.id === id);
+                        if (found) sorted.push(found);
                     });
+                    this.owners = sorted;
+                    this.saveLocalStorage();
                 },
 
-                getContinuousTasksForDate(dateStr) {
-                    return this.getTasksForDate(dateStr).map(task => ({ task, phase: 'do', barType: 'single', label: '' }));
+                get filteredOwnersMain() {
+                    if (!this.ownerSearchInput) return this.sortedOwners;
+                    return this.sortedOwners.filter(o => o.name.toLowerCase().includes(this.ownerSearchInput.toLowerCase()));
                 },
 
-                getPhaseStyle(item) {
-                    let baseColor = this.getCategoryColor(item.task.category);
-                    return `background-color: ${baseColor}; font-weight: 500; border-radius: 4px;`;
+                get filteredOwnersForSelect() {
+                    if (!this.ownerSearchQuery) return this.sortedOwners;
+                    return this.sortedOwners.filter(o => o.name.toLowerCase().includes(this.ownerSearchQuery.toLowerCase()));
                 },
-
-                getCategoryColor(catName) {
-                    let f = this.categories.find(c => c.name === catName);
-                    return f ? f.color : '#4f46e5';
-                },
-
-                getDayChecklistSummary(dateStr) {
-                    return { total: 0, pending: 0 };
-                },
-
-                openDayDetails(dateStr) {
-                    let matched = this.getTasksForDate(dateStr);
-                    this.dayDetailModal = { open: true, dateStr, tasks: matched };
-                },
-
-                canManageTask(task) { return true; },
 
                 get sortedTaskTitles() {
                     let titlesSet = new Set(this.manualTitles || []);
@@ -980,48 +1137,202 @@
                     return list.filter(t => t.toLowerCase().includes(query));
                 },
 
-                get filteredTasks() {
-                    let list = this.tasks;
-                    if (this.selectedCategoryFilter) list = list.filter(t => t.category === this.selectedCategoryFilter);
-                    return list;
-                },
-
-                get taskCounts() {
-                    let list = this.filteredTasks;
-                    let today = new Date().toLocaleDateString('en-CA');
-                    let overdue = list.filter(t => !t.isCompleted && today > (t.doEnd || t.planEnd || '')).length;
-                    let doing = list.filter(t => !t.isCompleted && today >= (t.doStart || t.planStart || '') && today <= (t.doEnd || t.planEnd || '')).length;
-                    let pending = list.filter(t => !t.isCompleted && today < (t.doStart || t.planStart || '')).length;
-                    let completed = list.filter(t => t.isCompleted).length;
-                    return { overdue, doing, pending, completed };
-                },
-
-                get sortedTasksByPriority() {
-                    let list = this.filteredTasks;
-                    let today = new Date().toLocaleDateString('en-CA');
-                    if (this.taskStatusTab !== 'all') {
-                        if (this.taskStatusTab === 'overdue') list = list.filter(t => !t.isCompleted && today > (t.doEnd || ''));
-                        else if (this.taskStatusTab === 'doing') list = list.filter(t => !t.isCompleted && today >= (t.doStart || '') && today <= (t.doEnd || ''));
-                        else if (this.taskStatusTab === 'pending') list = list.filter(t => !t.isCompleted && today < (t.doStart || ''));
-                        else if (this.taskStatusTab === 'completed') list = list.filter(t => t.isCompleted);
+                addManualTaskTitle() {
+                    if (!this.newManualTitle.trim()) return;
+                    let val = this.newManualTitle.trim();
+                    if (!this.manualTitles.includes(val)) {
+                        this.manualTitles.push(val);
+                        this.saveLocalStorage();
                     }
-                    return list;
+                    this.newManualTitle = '';
                 },
 
-                toggleTaskCompleted(task) {
-                    task.isCompleted = !task.isCompleted;
+                deleteTaskTitle(tTitle) {
+                    if (confirm(`คุณต้องการลบชื่องาน "${tTitle}"ออกจากคลังเทมเพลตใช่หรือไม่?`)) {
+                        this.manualTitles = this.manualTitles.filter(t => t !== tTitle);
+                        this.saveLocalStorage();
+                    }
+                },
+
+                renameTaskTitle(oldTitle) {
+                    let newTitle = prompt('แก้ไขชื่องานในคลังเทมเพลต:', oldTitle);
+                    if (newTitle && newTitle.trim() && newTitle.trim() !== oldTitle) {
+                        let nt = newTitle.trim();
+                        let idx = this.manualTitles.indexOf(oldTitle);
+                        if (idx >= 0) this.manualTitles[idx] = nt;
+                        else this.manualTitles.push(nt);
+                        
+                        this.tasks.forEach(t => {
+                            if (t.title === oldTitle) t.title = nt;
+                        });
+                        this.saveLocalStorage();
+                    }
+                },
+
+                toggleSelectAllTeam() {
+                    if (this.currentTask.subTeamMembers.length === this.sortedOwners.length) {
+                        this.currentTask.subTeamMembers = [];
+                    } else {
+                        this.currentTask.subTeamMembers = this.sortedOwners.map(o => o.name);
+                    }
+                },
+
+                getCategoryColor(catName) {
+                    let f = this.categories.find(c => c.name === catName);
+                    return f ? f.color : '#4f46e5';
+                },
+
+                get availableCategoriesForUser() {
+                    if (this.currentUserRole === 'admin') return this.categories;
+                    let uObj = this.appUsers.find(u => u.name === this.currentUserName);
+                    if (!uObj || !uObj.allowedCategories || uObj.allowedCategories.length === 0) return this.categories;
+                    return this.categories.filter(c => uObj.allowedCategories.includes(c.name));
+                },
+
+                canManageTask(task) {
+                    if (this.currentUserRole === 'admin') return true;
+                    let uObj = this.appUsers.find(u => u.name === this.currentUserName);
+                    if (!uObj) return false;
+                    if (!uObj.allowedCategories || uObj.allowedCategories.length === 0) return true;
+                    return uObj.allowedCategories.includes(task.category);
+                },
+
+                updateAdminPassword() {
+                    if (!this.adminNewPass) {
+                        alert('กรุณากรอกรหัสผ่านแอดมินใหม่');
+                        return;
+                    }
+                    let adminObj = this.appUsers.find(u => u.id === 'admin-1');
+                    if (adminObj) {
+                        adminObj.passcode = this.adminNewPass;
+                        this.saveLocalStorage();
+                        this.adminNewPass = '';
+                        alert('เปลี่ยนรหัสผ่านผู้ดูแลระบบสำเร็จเรียบร้อยแล้ว');
+                    }
+                },
+
+                addCategory() {
+                    if (!this.newCategoryName.trim()) return;
+                    this.categories.push({ id: Date.now().toString(), name: this.newCategoryName.trim(), color: '#4f46e5' });
+                    this.newCategoryName = '';
                     this.saveLocalStorage();
+                },
+                deleteCategory(id) {
+                    this.categories = this.categories.filter(c => c.id !== id);
+                    this.saveLocalStorage();
+                },
+                onSortCategories(itemIds) {
+                    let sorted = [];
+                    itemIds.forEach(id => {
+                        let found = this.categories.find(c => c.id === id);
+                        if (found) sorted.push(found);
+                    });
+                    this.categories = sorted;
+                    this.saveLocalStorage();
+                },
+
+                addOwner() {
+                    if (!this.newOwnerName.trim()) return;
+                    this.owners.push({ id: Date.now().toString(), name: this.newOwnerName.trim() });
+                    this.newOwnerName = '';
+                    this.saveLocalStorage();
+                },
+                deleteOwner(id) {
+                    this.owners = this.owners.filter(o => o.id !== id);
+                    this.saveLocalStorage();
+                },
+
+                saveTemplate() {
+                    if (!this.newTemplateName.trim()) return;
+                    let validItems = this.newTemplateItems.filter(i => i.text && i.text.trim() !== '');
+                    if (this.editingTemplateId) {
+                        let t = this.allTemplates.find(x => x.id === this.editingTemplateId);
+                        if (t) {
+                            t.name = this.newTemplateName.trim();
+                            t.icon = this.newTemplateIcon || '📋';
+                            t.items = validItems;
+                        }
+                        this.editingTemplateId = null;
+                    } else {
+                        this.allTemplates.push({ id: Date.now().toString(), icon: this.newTemplateIcon || '📋', name: this.newTemplateName.trim(), items: validItems });
+                    }
+                    this.newTemplateName = '';
+                    this.newTemplateIcon = '📋';
+                    this.newTemplateItems = [{ phase: 'do', text: '' }];
+                    this.saveLocalStorage();
+                },
+                editTemplate(tpl) {
+                    this.editingTemplateId = tpl.id;
+                    this.newTemplateName = tpl.name;
+                    this.newTemplateIcon = tpl.icon || '📋';
+                    this.newTemplateItems = JSON.parse(JSON.stringify(tpl.items || []));
+                },
+                cancelEditTemplate() {
+                    this.editingTemplateId = null;
+                    this.newTemplateName = '';
+                    this.newTemplateIcon = '📋';
+                    this.newTemplateItems = [{ phase: 'do', text: '' }];
+                },
+                deleteTemplate(id) {
+                    this.allTemplates = this.allTemplates.filter(t => t.id !== id);
+                    this.saveLocalStorage();
+                },
+
+                addUser() {
+                    if (!this.newUser.name || !this.newUser.passcode) return;
+                    this.appUsers.push({ id: Date.now().toString(), ...this.newUser, allowedCategories: this.newUser.allowedCategories || [] });
+                    this.newUser = { name: '', passcode: '', role: 'editor', allowedCategories: [] };
+                    this.saveLocalStorage();
+                    alert('เพิ่มผู้ใช้งานสำเร็จเรียบร้อยแล้ว');
+                },
+                deleteUser(id) {
+                    this.appUsers = this.appUsers.filter(u => u.id !== id);
+                    this.saveLocalStorage();
+                },
+
+                applyTemplate(tplId) {
+                    if (!tplId) return;
+                    let found = this.allTemplates.find(t => t.id === tplId);
+                    if (found && found.items) {
+                        let today = this.currentTask.doStart || new Date().toLocaleDateString('en-CA');
+                        found.items.forEach(item => {
+                            this.currentTask.checklist.push({ phase: item.phase || 'do', date: today, text: item.text, done: false });
+                        });
+                    }
+                },
+
+                onDateChanged() {
+                    let newStart = this.currentTask.doStart || this.currentTask.planStart;
+                    if (!newStart || !this.lastStoredStart) {
+                        this.lastStoredStart = newStart;
+                        return;
+                    }
+                    if (newStart !== this.lastStoredStart) {
+                        let dOld = new Date(this.lastStoredStart);
+                        let dNew = new Date(newStart);
+                        let diffTime = dNew - dOld;
+                        let diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+                        if (diffDays !== 0 && this.currentTask.checklist) {
+                            this.currentTask.checklist.forEach(chk => {
+                                if (chk.date) {
+                                    let cd = new Date(chk.date);
+                                    cd.setDate(cd.getDate() + diffDays);
+                                    chk.date = cd.toLocaleDateString('en-CA');
+                                }
+                            });
+                        }
+                        this.lastStoredStart = newStart;
+                    }
                 },
 
                 get currentMonthName() {
                     return this.monthNames[this.currentMonthIndex] + ' ' + (this.currentYearNum + 543);
                 },
-
                 prevMonth() {
                     this.currentMonthIndex--;
                     if (this.currentMonthIndex < 0) { this.currentMonthIndex = 11; this.currentYearNum--; }
                 },
-
                 nextMonth() {
                     this.currentMonthIndex++;
                     if (this.currentMonthIndex > 11) { this.currentMonthIndex = 0; this.currentYearNum++; }
@@ -1039,72 +1350,407 @@
                     }
                     return days;
                 },
-
                 get calendarDays() { return this.buildMonthGrid(this.currentYearNum, this.currentMonthIndex); },
 
-                buildYearlyMonthGridCorrect(year, month) {
-                    return this.buildMonthGrid(year, month);
-                },
-
-                get dashboardStats() {
-                    let list = this.tasks;
-                    if (this.dashCategoryFilter) list = list.filter(t => t.category === this.dashCategoryFilter);
-                    if (this.dashStartDate) list = list.filter(t => (t.doEnd || '') >= this.dashStartDate);
-                    if (this.dashEndDate) list = list.filter(t => (t.doStart || '') <= this.dashEndDate);
-
-                    let totalTasks = list.length;
-                    let completedTasks = list.filter(t => t.isCompleted).length;
-                    let overdueTasks = list.filter(t => !t.isCompleted && new Date().toLocaleDateString('en-CA') > (t.doEnd || '')).length;
-                    let doingTasks = list.filter(t => !t.isCompleted && new Date().toLocaleDateString('en-CA') >= (t.doStart || '') && new Date().toLocaleDateString('en-CA') <= (t.doEnd || '')).length;
-                    let pendingTasks = list.filter(t => !t.isCompleted && new Date().toLocaleDateString('en-CA') < (t.doStart || '')).length;
-                    let totalApproved = list.reduce((sum, t) => sum + (Number(t.budgetApproved) || 0), 0);
-                    let totalUsed = list.reduce((sum, t) => sum + (Number(t.budgetUsed) || 0), 0);
-                    return { totalTasks, completedTasks, overdueTasks, doingTasks, pendingTasks, totalApproved, totalUsed };
-                },
-
-                get dashboardCategoryStats() {
-                    let list = this.tasks;
-                    let statsMap = {};
-                    this.categories.forEach(cat => {
-                        statsMap[cat.name] = { name: cat.name, count: 0, approved: 0, used: 0 };
+                getContinuousTasksForDate(dateStr) {
+                    if (!dateStr) return [];
+                    let results = [];
+                    this.tasks.forEach(task => {
+                        let phases = [
+                            { key: 'plan', name: 'วางแผน', label: '[P] ', start: task.planStart, end: task.planEnd },
+                            { key: 'do', name: 'ปฏิบัติ', label: '', start: task.doStart, end: task.doEnd },
+                            { key: 'summary', name: 'สรุป', label: '[SA] ', start: task.summaryStart, end: task.summaryEnd }
+                        ];
+                        phases.forEach(p => {
+                            if (p.start && dateStr >= p.start && dateStr <= (p.end || p.start)) {
+                                let barType = 'middle';
+                                if (p.start === p.end || !p.end) barType = 'single';
+                                else if (dateStr === p.start) barType = 'start';
+                                else if (dateStr === p.end) barType = 'end';
+                                results.push({ task, phase: p.key, phaseName: p.name, label: p.label, barType });
+                            }
+                        });
                     });
-                    list.forEach(t => {
-                        if (!statsMap[t.category]) statsMap[t.category] = { name: t.category, count: 0, approved: 0, used: 0 };
-                        statsMap[t.category].count++;
-                        statsMap[t.category].approved += (Number(t.budgetApproved) || 0);
-                        statsMap[t.category].used += (Number(t.budgetUsed) || 0);
-                    });
-                    return Object.values(statsMap);
+                    return results;
                 },
 
-                exportJSONData() {
-                    let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ tasks: this.tasks, categories: this.categories, owners: this.owners, manualTitles: this.manualTitles }, null, 2));
-                    let a = document.createElement('a');
-                    a.setAttribute("href", dataStr);
-                    a.setAttribute("download", "planner_backup.json");
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
+                getPhaseStyle(item) {
+                    let baseColor = this.getCategoryColor(item.task.category);
+                    let shapeClass = item.barType === 'single' ? 'bar-single; ' : item.barType === 'start' ? 'bar-start; ' : item.barType === 'middle' ? 'bar-middle; ' : 'bar-end; ';
+                    if (item.phase === 'plan') return `background-color: ${baseColor}; opacity: 0.55; ` + shapeClass;
+                    if (item.phase === 'summary') return `background-color: ${baseColor}; opacity: 0.7; ` + shapeClass + 'background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.25), rgba(255,255,255,0.25) 3px, transparent 3px, transparent 6px);';
+                    return `background-color: ${baseColor}; font-weight: 500; ` + shapeClass;
                 },
 
-                importJSONData(event) {
-                    let file = event.target.files[0];
-                    if (!file) return;
-                    let reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            let json = JSON.parse(e.target.result);
-                            if (json.tasks) this.tasks = json.tasks;
-                            if (json.categories) this.categories = json.categories;
-                            if (json.owners) this.owners = json.owners;
-                            if (json.manualTitles) this.manualTitles = json.manualTitles;
-                            this.saveLocalStorage();
-                            alert('กู้คืนข้อมูลสำเร็จ!');
-                        } catch(err) {
-                            alert('ไฟล์ไม่ถูกต้อง');
+                getDayChecklistSummary(dateStr) {
+                    let total = 0, pending = 0;
+                    this.tasks.forEach(t => {
+                        if (t.checklist) {
+                            t.checklist.forEach(chk => {
+                                if (chk.date === dateStr) {
+                                    total++;
+                                    if (!chk.done) pending++;
+                                }
+                            });
                         }
+                    });
+                    return { total, pending };
+                },
+
+                buildYearlyMonthGridCorrect(year, month) {
+                    let firstDow = new Date(year, month, 1).getDay();
+                    let totalDays = new Date(year, month + 1, 0).getDate();
+                    let days = [];
+                    for (let i = 0; i < firstDow; i++) {
+                        days.push({ dayNum: '', dateStr: '', isWorkDay: false });
+                    }
+                    for (let d = 1; d <= totalDays; d++) {
+                        let ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                        let matched = this.tasks.filter(t => {
+                            let start = t.doStart || '';
+                            let end = t.doEnd || start;
+                            return start && ds >= start && ds <= (end || start);
+                        });
+                        let isWorkDay = matched.length > 0;
+                        let bgStyle = 'transparent';
+                        if (isWorkDay) {
+                            if (matched.length === 1) {
+                                bgStyle = this.getCategoryColor(matched[0].category);
+                            } else {
+                                let c1 = this.getCategoryColor(matched[0].category);
+                                let c2 = this.getCategoryColor(matched[1].category);
+                                bgStyle = `linear-gradient(135deg, ${c1} 50%, ${c2} 50%)`;
+                            }
+                        }
+                        let tooltip = matched.map(m => m.title).join(', ');
+                        days.push({ dayNum: d, dateStr: ds, isWorkDay, bgStyle, tooltip });
+                    }
+                    return days;
+                },
+
+                openDayDetails(dateStr) {
+                    let matchedTasks = this.tasks.filter(t => {
+                        let start = t.doStart || '';
+                        let end = t.doEnd || start;
+                        return start && dateStr >= start && dateStr <= (end || start);
+                    });
+                    let matchedChecklists = [];
+                    this.tasks.forEach(t => {
+                        if (t.checklist) {
+                            t.checklist.forEach((chk, idx) => {
+                                if (chk.date === dateStr) {
+                                    matchedChecklists.push({ chk, taskTitle: t.title, taskId: t.id, chkIndex: idx });
+                                }
+                            });
+                        }
+                    });
+                    this.dayDetailModal = { open: true, dateStr, tasks: matchedTasks, checklists: matchedChecklists };
+                },
+
+                get filteredTasks() {
+                    let list = this.tasks;
+                    if (this.selectedCategoryFilter) list = list.filter(t => t.category === this.selectedCategoryFilter);
+                    if (this.currentUserRole !== 'admin') {
+                        let uObj = this.appUsers.find(u => u.name === this.currentUserName);
+                        if (uObj && uObj.allowedCategories && uObj.allowedCategories.length > 0) {
+                            list = list.filter(t => uObj.allowedCategories.includes(t.category));
+                        }
+                    }
+                    return list;
+                },
+
+                getTaskStatus(task) {
+                    let today = new Date().toLocaleDateString('en-CA');
+                    let startDo = task.doStart || task.planStart || '';
+                    let endDo = task.doEnd || task.planEnd || '';
+                    if (task.isCompleted) return { text: '✓ เสร็จสิ้นแล้ว', class: 'bg-emerald-100 text-emerald-800 font-bold' };
+                    if (!endDo) return { text: 'รอดำเนินการ', class: 'bg-slate-100 text-slate-700' };
+                    if (today > endDo) return { text: '⚠️ เลยกำหนด', class: 'bg-rose-100 text-rose-700 blink-alert font-bold' };
+                    if (today >= startDo && today <= endDo) return { text: '⚡ กำลังทำ', class: 'bg-amber-100 text-amber-800 font-bold' };
+                    if (today < startDo) return { text: '🕒 รอดำเนินการ', class: 'bg-slate-100 text-slate-700' };
+                    return { text: 'รอดำเนินการ', class: 'bg-slate-100 text-slate-700' };
+                },
+
+                get taskCounts() {
+                    let list = this.filteredTasks;
+                    let today = new Date().toLocaleDateString('en-CA');
+                    let overdue = list.filter(t => !t.isCompleted && today > (t.doEnd || t.planEnd)).length;
+                    let doing = list.filter(t => !t.isCompleted && today >= (t.doStart || t.planStart) && today <= (t.doEnd || t.planEnd)).length;
+                    let pending = list.filter(t => !t.isCompleted && today < (t.doStart || t.planStart)).length;
+                    let completed = list.filter(t => t.isCompleted).length;
+                    return { overdue, doing, pending, completed };
+                },
+
+                get sortedTasksByPriority() {
+                    let list = this.filteredTasks;
+                    let today = new Date().toLocaleDateString('en-CA');
+
+                    if (this.taskStatusTab !== 'all') {
+                        if (this.taskStatusTab === 'overdue') list = list.filter(t => !t.isCompleted && today > (t.doEnd || t.planEnd));
+                        else if (this.taskStatusTab === 'doing') list = list.filter(t => !t.isCompleted && today >= (t.doStart || t.planStart) && today <= (t.doEnd || t.planEnd));
+                        else if (this.taskStatusTab === 'pending') list = list.filter(t => !t.isCompleted && today < (t.doStart || t.planStart));
+                        else if (this.taskStatusTab === 'completed') list = list.filter(t => t.isCompleted);
+                    }
+
+                    return [...list].sort((a, b) => {
+                        let aEnd = a.doEnd || a.planEnd || '9999-12-31';
+                        let bEnd = b.doEnd || b.planEnd || '9999-12-31';
+                        let aOver = !a.isCompleted && today > aEnd;
+                        let bOver = !b.isCompleted && today > bEnd;
+
+                        if (aOver && !bOver) return -1;
+                        if (!aOver && bOver) return 1;
+                        return aEnd.localeCompare(bEnd);
+                    });
+                },
+
+                toggleTaskCompleted(task) {
+                    if (!this.canManageTask(task)) return;
+                    task.isCompleted = !task.isCompleted;
+                    this.saveLocalStorage();
+                },
+
+                toggleTaskCompletedFromModal(task) {
+                    if (!this.canManageTask(task)) return;
+                    task.isCompleted = !task.isCompleted;
+                    this.saveLocalStorage();
+                    this.openDayDetails(this.dayDetailModal.dateStr);
+                },
+
+                toggleSelectAllTasks(event) {
+                    if (event.target.checked) {
+                        this.selectedTaskIds = this.sortedTasksByPriority.map(t => t.id);
+                    } else {
+                        this.selectedTaskIds = [];
+                    }
+                },
+
+                openDuplicateModal() {
+                    if (this.selectedTaskIds.length === 0) return;
+                    this.duplicateModal = { open: true, targetYear: this.currentYearNum + 1, singleTask: null };
+                },
+
+                openDuplicateSingleModal(task) {
+                    this.duplicateModal = { open: true, targetYear: this.currentYearNum + 1, singleTask: task };
+                },
+
+                confirmBatchDuplicate() {
+                    let targetY = this.duplicateModal.targetYear;
+                    let tasksToCopy = [];
+
+                    if (this.duplicateModal.singleTask) {
+                        tasksToCopy = [this.duplicateModal.singleTask];
+                    } else {
+                        tasksToCopy = this.tasks.filter(t => this.selectedTaskIds.includes(t.id));
+                    }
+
+                    tasksToCopy.forEach(original => {
+                        let copy = JSON.parse(JSON.stringify(original));
+                        copy.id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+                        copy.title = copy.title + ` (พ.ศ. ${targetY + 543})`;
+                        copy.isCompleted = false;
+
+                        ['planStart', 'planEnd', 'doStart', 'doEnd', 'summaryStart', 'summaryEnd'].forEach(field => {
+                            if (copy[field]) {
+                                let parts = copy[field].split('-');
+                                parts[0] = String(targetY);
+                                copy[field] = parts.join('-');
+                            }
+                        });
+
+                        if (copy.checklist) {
+                            copy.checklist.forEach(chk => {
+                                if (chk.date) {
+                                    let parts = chk.date.split('-');
+                                    parts[0] = String(targetY);
+                                    chk.date = parts.join('-');
+                                }
+                            });
+                        }
+
+                        this.tasks.push(copy);
+                    });
+
+                    this.saveLocalStorage();
+                    this.selectedTaskIds = [];
+                    this.duplicateModal.open = false;
+                    alert(`คัดลอกงานไปยังปี พ.ศ. ${targetY + 543} สำเร็จเรียบร้อยแล้ว`);
+                },
+
+                openTaskModal() {
+                    let today = new Date().toLocaleDateString('en-CA');
+                    this.lastStoredStart = today;
+                    this.currentTask = {
+                        id: null, category: this.availableCategoriesForUser[0]?.name || '', title: '', countWorkload: true,
+                        planStart: today, planEnd: today, doStart: today, doEnd: today, summaryStart: today, summaryEnd: today,
+                        budgetApproved: 0, budgetUsed: 0, owner: this.owners[0]?.name || '', subTeamMembers: [], checklist: [],
+                        evidenceUrl: '', useSdgs: false, selectedSdgs: [], isCompleted: false, pdsa: { plan: '', do: '', study: '', act: '' }
                     };
-                    reader.readAsText(file);
+                    this.ownerSearchQuery = '';
+                    this.ownerSearchInput = '';
+                    this.showTitleSuggestions = false;
+                    this.isModalOpen = true;
+                },
+
+                editTask(task) {
+                    if (!this.canManageTask(task) && this.currentUserRole !== 'viewer') {
+                        alert('คุณไม่มีสิทธิ์แก้ไขงานในกลุ่มงานนี้');
+                        return;
+                    }
+                    this.currentTask = JSON.parse(JSON.stringify(task));
+                    this.lastStoredStart = this.currentTask.doStart || this.currentTask.planStart || '';
+                    if (!this.currentTask.pdsa) this.currentTask.pdsa = { plan: '', do: '', study: '', act: '' };
+                    if (!this.currentTask.checklist) this.currentTask.checklist = [];
+                    if (!this.currentTask.subTeamMembers) this.currentTask.subTeamMembers = [];
+                    if (!this.currentTask.selectedSdgs) this.currentTask.selectedSdgs = [];
+                    if (this.currentTask.useSdgs === undefined) this.currentTask.useSdgs = this.currentTask.selectedSdgs.length > 0;
+                    this.ownerSearchQuery = '';
+                    this.ownerSearchInput = '';
+                    this.showTitleSuggestions = false;
+                    this.isModalOpen = true;
+                },
+
+                saveTask() {
+                    if (!this.currentTask.title.trim() || !this.currentTask.category) {
+                        alert('กรุณากรอกชื่องานและเลือกกลุ่มงานหลัก');
+                        return;
+                    }
+                    let tName = this.currentTask.title.trim();
+                    if (!this.manualTitles.includes(tName)) {
+                        this.manualTitles.push(tName);
+                    }
+
+                    if (!this.currentTask.useSdgs) {
+                        this.currentTask.selectedSdgs = [];
+                    }
+                    if (!this.currentTask.id) {
+                        this.currentTask.id = Date.now().toString();
+                        this.tasks.push(this.currentTask);
+                    } else {
+                        let idx = this.tasks.findIndex(t => t.id === this.currentTask.id);
+                        if (idx >= 0) this.tasks[idx] = JSON.parse(JSON.stringify(this.currentTask));
+                    }
+                    this.saveLocalStorage();
+                    this.isModalOpen = false;
+                },
+
+                deleteTask(id) {
+                    let t = this.tasks.find(x => x.id === id);
+                    if (t && !this.canManageTask(t)) {
+                        alert('คุณไม่มีสิทธิ์ลบงานในกลุ่มงานนี้');
+                        return;
+                    }
+                    if (confirm('คุณต้องการลบงานนี้ใช่หรือไม่?')) {
+                        this.tasks = this.tasks.filter(t => t.id !== id);
+                        this.saveLocalStorage();
+                    }
+                },
+
+                generateGeneralReport() {
+                    let filtered = this.filteredTasks.filter(t => {
+                        let s = t.doStart || t.planStart || '';
+                        let matchCat = !this.reportCategory || t.category === this.reportCategory;
+                        let matchDate = (!this.reportStartDate || s >= this.reportStartDate) && (!this.reportEndDate || s <= this.reportEndDate);
+                        return matchCat && matchDate;
+                    });
+
+                    let html = `<div class="mb-2 text-xs">ช่วงวันที่: ${this.reportStartDate} ถึง ${this.reportEndDate}</div>`;
+                    html += `<table class="w-full border-collapse border border-slate-300 text-xs mt-2">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700">
+                                <th class="border border-slate-300 p-2">ที่</th>
+                                <th class="border border-slate-300 p-2">กลุ่มงาน / ชื่องาน / ผู้รับผิดชอบ</th>
+                                <th class="border border-slate-300 p-2">งบประมาณ (อนุมัติ / ใช้จริง)</th>
+                                <th class="border border-slate-300 p-2">SDGs ที่เกี่ยวข้อง</th>
+                                <th class="border border-slate-300 p-2">วงจร PDSA & ลิงก์หลักฐาน</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                    filtered.forEach((t, i) => {
+                        let budgetStr = `${(t.budgetApproved || 0).toLocaleString()} ฿ / ${(t.budgetUsed || 0).toLocaleString()} ฿`;
+                        let sdgsStr = (t.selectedSdgs && t.selectedSdgs.length > 0) ? t.selectedSdgs.join(', ') : '-';
+                        let pdsaStr = `P: ${t.pdsa?.plan || '-'}<br>D: ${t.pdsa?.do || '-'}<br>S: ${t.pdsa?.study || '-'}<br>A: ${t.pdsa?.act || '-'}`;
+                        let linkStr = t.evidenceUrl ? `<br><a href="${t.evidenceUrl}" target="_blank" class="text-indigo-600 underline">🔗 ลิงก์หลักฐาน</a>` : '';
+
+                        html += `<tr>
+                            <td class="border border-slate-300 p-2 text-center">${i+1}</td>
+                            <td class="border border-slate-300 p-2"><b>[${t.category}]</b> ${t.title}<br><span class="text-[10px] text-slate-500">ผู้รับผิดชอบ: ${t.owner || '-'}</span></td>
+                            <td class="border border-slate-300 p-2 text-center">${budgetStr}</td>
+                            <td class="border border-slate-300 p-2">${sdgsStr}</td>
+                            <td class="border border-slate-300 p-2">${pdsaStr}${linkStr}</td>
+                        </tr>`;
+                    });
+                    html += `</tbody></table>`;
+                    this.printModal = { open: true, title: 'รายงานสรุปภาพรวมโครงการ (งบประมาณ, SDGs, PDSA, ลิงก์หลักฐาน)', subtitle: 'กลุ่มงาน: ' + (this.reportCategory || 'ทุกกลุ่มงานทั้งหมด'), htmlContent: html, reporterName: this.currentUserName };
+                },
+
+                generateWorkloadReport() {
+                    if (!this.workloadPerson) {
+                        alert('กรุณาเลือกบุคลากรก่อนออกรายงานภาระงาน');
+                        return;
+                    }
+                    let startTermDate = this.workloadTerm === '1' ? `${this.workloadYear}-01-01` : `${this.workloadYear}-07-01`;
+                    let endTermDate = this.workloadTerm === '1' ? `${this.workloadYear}-06-30` : `${this.workloadYear}-12-31`;
+
+                    let userTasks = this.filteredTasks.filter(t => {
+                        let isOwnerOrTeam = (t.owner === this.workloadPerson || (t.subTeamMembers && t.subTeamMembers.includes(this.workloadPerson)));
+                        let hasWorkload = t.countWorkload;
+                        let doStart = t.doStart || t.planStart || '';
+                        let inTerm = doStart && doStart >= startTermDate && doStart <= endTermDate;
+                        return isOwnerOrTeam && hasWorkload && inTerm;
+                    });
+
+                    let totalDays = 0;
+
+                    let html = `<div class="mb-4 text-xs space-y-1">
+                        <p><b>ชื่อ-นามสกุล:</b> ${this.workloadPerson}</p>
+                        <p><b>ปี พ.ศ.:</b> ${this.workloadYear + 543} (รอบประเมินที่ ${this.workloadTerm}: ${startTermDate} ถึง ${endTermDate})</p>
+                    </div>`;
+
+                    html += `<table class="w-full border-collapse border border-slate-300 text-xs">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700">
+                                <th class="border border-slate-300 p-2">ลำดับ</th>
+                                <th class="border border-slate-300 p-2">กลุ่มงาน / ชื่องาน</th>
+                                <th class="border border-slate-300 p-2">ช่วงเวลาปฏิบัติ (Do)</th>
+                                <th class="border border-slate-300 p-2">จำนวนวัน</th>
+                                <th class="border border-slate-300 p-2">บทบาท</th>
+                                <th class="border border-slate-300 p-2">SDGs, PDSA & ลิงก์หลักฐาน</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+                    userTasks.forEach((t, i) => {
+                        let d1 = new Date(t.doStart || Date.now());
+                        let d2 = new Date(t.doEnd || d1);
+                        let diffDays = Math.max(1, Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1);
+                        totalDays += diffDays;
+
+                        let role = t.owner === this.workloadPerson ? 'ผู้รับผิดชอบหลัก' : 'คณะทำงาน/ผู้ร่วมงาน';
+                        let sdgsStr = (t.selectedSdgs && t.selectedSdgs.length > 0) ? t.selectedSdgs.join(', ') : '-';
+                        let linkStr = t.evidenceUrl ? `<br><a href="${t.evidenceUrl}" target="_blank" class="text-indigo-600 underline">🔗 ลิงก์หลักฐาน</a>` : '';
+
+                        html += `<tr>
+                            <td class="border border-slate-300 p-2 text-center">${i+1}</td>
+                            <td class="border border-slate-300 p-2"><b>[${t.category}]</b> ${t.title}</td>
+                            <td class="border border-slate-300 p-2 text-center">${t.doStart || '-'} ถึง ${t.doEnd || '-'}</td>
+                            <td class="border border-slate-300 p-2 text-center">${diffDays} วัน</td>
+                            <td class="border border-slate-300 p-2 text-center">${role}</td>
+                            <td class="border border-slate-300 p-2">
+                                <div><b>SDGs:</b> ${sdgsStr}</div>
+                                <div><b>Study (S):</b> ${t.pdsa?.study || '-'}</div>
+                                <div><b>Act (A):</b> ${t.pdsa?.act || '-'}</div>
+                                ${linkStr}
+                            </td>
+                        </tr>`;
+                    });
+
+                    html += `</tbody></table>
+                    <div class="mt-4 p-3 bg-slate-50 border rounded text-xs space-y-1">
+                        <p><b>สรุปภาระงานรวม:</b> จำนวนงานทั้งสิ้น ${userTasks.length} งาน | จำนวนวันปฏิบัติงานรวมทั้งหมด ${totalDays} วัน</p>
+                    </div>`;
+
+                    this.printModal = { open: true, title: 'รายงานภาระงานรายบุคคลประจำปีงบประมาณ', subtitle: `รอบประเมินที่ ${this.workloadTerm} พ.ศ. ${this.workloadYear + 543}`, htmlContent: html, reporterName: this.workloadPerson };
                 }
             };
         }
