@@ -592,11 +592,11 @@
 
         <!-- FOOTER VERSION & LAST MODIFIED -->
         <footer class="mt-auto py-3 px-6 text-right text-[11px] text-slate-400 border-t bg-white no-print">
-            <span>ระบบวางแผนงาน v3.11 Report & Owner Fix | แก้ไขล่าสุด: 23 ต.ค. 2569, 15:35 น.</span>
+            <span>ระบบวางแผนงาน v3.12 Full Features Restored | แก้ไขล่าสุด: 23 ต.ค. 2569, 15:45 น.</span>
         </footer>
     </div>
 
-    <!-- TASK MODAL -->
+    <!-- TASK MODAL (ฉบับสมบูรณ์เดิม: เช็คลิสต์, SDGs ครบถ้วน, คณะทำงาน, ผู้เข้าร่วมโครงการ/ประชุม) -->
     <div x-show="isModalOpen" x-cloak class="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-3 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-5 sm:p-6 space-y-4 max-h-[95vh] overflow-y-auto" @click.stop>
             <h3 class="text-base font-bold text-indigo-900 border-b pb-2" x-text="currentTask.id ? 'แก้ไขงาน' : 'เพิ่มงานใหม่'"></h3>
@@ -657,6 +657,7 @@
                     </div>
                 </div>
 
+                <!-- ผู้รับผิดชอบหลัก และ คณะทำงาน -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-indigo-50/50 p-3 rounded-xl border">
                     <div>
                         <label class="block font-semibold mb-1 text-indigo-900">ผู้รับผิดชอบหลัก</label>
@@ -666,6 +667,102 @@
                                 <option :value="o.name" x-text="o.name"></option>
                             </template>
                         </select>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="font-semibold text-indigo-900">คณะทำงาน / ผู้ร่วมงาน</label>
+                            <button @click="toggleSelectAllTeam()" type="button" class="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded cursor-pointer">เลือกทั้งหมด</button>
+                        </div>
+                        <div class="bg-white border rounded p-2 max-h-28 overflow-y-auto space-y-1">
+                            <template x-for="o in owners" :key="o.id">
+                                <label class="flex items-center gap-2 text-xs cursor-pointer hover:bg-slate-50 p-1 rounded">
+                                    <input type="checkbox" :value="o.name" x-model="currentTask.subTeamMembers" class="rounded text-indigo-600">
+                                    <span x-text="o.name"></span>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ผู้เข้าร่วมโครงการ และ ผู้เข้าร่วมประชุม -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-100 p-3 rounded-xl border">
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-800">ผู้เข้าร่วมโครงการ (รายชื่อ / บุคคลภายนอก)</label>
+                        <input type="text" x-model="currentTask.participants" placeholder="เช่น บุคลากรในสังกัด, ประชาชนทั่วไป..." class="w-full border rounded p-2 bg-white">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-800">ผู้เข้าร่วมประชุม</label>
+                        <input type="text" x-model="currentTask.meetingAttendees" placeholder="เช่น คณะกรรมการบริหาร, หัวหน้าฝ่าย..." class="w-full border rounded p-2 bg-white">
+                    </div>
+                </div>
+
+                <!-- SDGs ครบถ้วนทุก Goal & Targets -->
+                <div class="bg-indigo-50 border p-3 rounded-xl space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-indigo-900">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs)</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" x-model="currentTask.useSdgs" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+                    <div x-show="currentTask.useSdgs" class="space-y-3 max-h-44 overflow-y-auto bg-white p-3 rounded border">
+                        <template x-for="group in sdgFullData" :key="group.goalNum">
+                            <div class="border-b pb-2 last:border-0">
+                                <label class="flex items-center gap-2 font-bold text-indigo-900 cursor-pointer">
+                                    <input type="checkbox" :value="'Goal ' + group.goalNum" x-model="currentTask.selectedSdgs" class="rounded text-indigo-600">
+                                    <span x-text="'Goal ' + group.goalNum + ': ' + group.goalTitle"></span>
+                                </label>
+                                <div class="pl-6 mt-1 space-y-1">
+                                    <template x-for="target in group.targets" :key="target.code">
+                                        <label class="flex items-start gap-2 text-[11px] text-slate-600 cursor-pointer">
+                                            <input type="checkbox" :value="target.code" x-model="currentTask.selectedSdgs" class="mt-0.5 rounded text-indigo-600">
+                                            <span x-text="target.code + ': ' + target.title"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- เช็คลิสต์ 3 ช่วง -->
+                <div class="bg-indigo-50 border p-3 rounded-xl space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-indigo-900">📌 เช็คลิสต์ 3 ช่วง (วางแผน, ทำงาน, สรุปผล)</span>
+                        <select @change="applyTemplate($event.target.value)" class="border rounded p-1 text-xs bg-white font-semibold">
+                            <option value="">-- เลือกเทมเพลตเช็คลิสต์ --</option>
+                            <template x-for="tpl in allTemplates" :key="tpl.id">
+                                <option :value="tpl.id" x-text="(tpl.icon || '📋') + ' ' + tpl.name"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="space-y-1 max-h-36 overflow-y-auto" x-sort x-sort:item="currentTask.checklist">
+                        <template x-for="(chk, idx) in currentTask.checklist" :key="idx">
+                            <div class="flex items-center gap-2 bg-white p-1.5 rounded border cursor-move" x-sort:item="idx">
+                                <span class="text-slate-400 font-bold">⠿</span>
+                                <select x-model="chk.phase" class="border rounded p-1 text-[10px] font-semibold bg-slate-50">
+                                    <option value="plan">วางแผน</option>
+                                    <option value="do">ทำงาน</option>
+                                    <option value="summary">สรุป</option>
+                                </select>
+                                <input type="date" x-model="chk.date" class="border rounded p-1 text-[10px] w-28">
+                                <input type="text" x-model="chk.text" class="flex-1 border rounded p-1 text-xs" placeholder="รายละเอียดขั้นตอน...">
+                                <input type="checkbox" x-model="chk.done" class="w-4 h-4 text-indigo-600">
+                                <button @click="currentTask.checklist.splice(idx, 1)" type="button" class="text-rose-600 font-bold px-1">&times;</button>
+                            </div>
+                        </template>
+                    </div>
+                    <button @click="currentTask.checklist.push({phase: 'do', date: currentTask.doStart || new Date().toLocaleDateString('en-CA'), text: '', done: false})" type="button" class="bg-white border px-3 py-1 rounded text-xs font-semibold">+ เพิ่มเช็คลิสต์ย่อย</button>
+                </div>
+
+                <!-- PDSA -->
+                <div class="space-y-2 bg-slate-50 p-3 rounded-xl border">
+                    <h4 class="font-bold text-indigo-900">วงจรคุณภาพ PDSA</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <textarea x-model="currentTask.pdsa.plan" placeholder="Plan..." class="border rounded p-2" rows="2"></textarea>
+                        <textarea x-model="currentTask.pdsa.do" placeholder="Do..." class="border rounded p-2" rows="2"></textarea>
+                        <textarea x-model="currentTask.pdsa.study" placeholder="Study (S)..." class="border rounded p-2 bg-amber-50/40" rows="2"></textarea>
+                        <textarea x-model="currentTask.pdsa.act" placeholder="Act (A)..." class="border rounded p-2 bg-emerald-50/40" rows="2"></textarea>
                     </div>
                 </div>
             </div>
@@ -696,7 +793,7 @@
         </div>
     </div>
 
-    <!-- PRINTABLE FORM MODAL (รายงาน PDF พรีวิว) -->
+    <!-- PRINTABLE FORM MODAL (รายงาน PDF พรีวิว พร้อม SDGs, PDSA, สถานะ และบทบาท) -->
     <div x-show="printModal.open" x-cloak class="fixed inset-0 bg-slate-900/80 flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full p-6 sm:p-8 space-y-6 max-h-[95vh] overflow-y-auto print:p-0 print:shadow-none" @click.stop>
             <div class="flex justify-between items-center pb-3 border-b no-print">
@@ -775,7 +872,19 @@
                 manualTitles: [],
                 printModal: { open: false, title: '', subtitle: '', htmlContent: '', reporterName: '' },
                 dayDetailModal: { open: false, dateStr: '', tasks: [] },
-                currentTask: { id: null, category: '', title: '', planStart: '', planEnd: '', doStart: '', doEnd: '', summaryStart: '', summaryEnd: '', owner: '', isCompleted: false, budgetApproved: 0, budgetUsed: 0, evidenceUrl: '', pdsa: { plan: '', do: '', study: '', act: '' }, checklist: [] },
+                
+                sdgFullData: [
+                    { goalNum: 1, goalTitle: 'ขจัดความยากจน', targets: [{ code: '1.1', title: 'ขจัดความยากจนรุนแรง' }, { code: '1.2', title: 'ลดสัดส่วนคนจน' }] },
+                    { goalNum: 3, goalTitle: 'สุขภาพและความเป็นอยู่ที่ดี', targets: [{ code: '3.4', title: 'ลดการตายจาก NCDs' }, { code: '3.8', title: 'หลักประกันสุขภาพถ้วนหน้า' }] },
+                    { goalNum: 4, goalTitle: 'การศึกษาที่มีคุณภาพ', targets: [{ code: '4.1', title: 'การศึกษาขั้นพื้นฐานฟรี' }, { code: '4.2', title: 'พัฒนาเด็กปฐมวัย' }] }
+                ],
+
+                currentTask: { 
+                    id: null, category: '', title: '', planStart: '', planEnd: '', doStart: '', doEnd: '', summaryStart: '', summaryEnd: '', 
+                    owner: '', subTeamMembers: [], participants: '', meetingAttendees: '', isCompleted: false, budgetApproved: 0, budgetUsed: 0, 
+                    evidenceUrl: '', useSdgs: false, selectedSdgs: [], pdsa: { plan: '', do: '', study: '', act: '' }, checklist: [] 
+                },
+                
                 currentYearNum: new Date().getFullYear(),
                 currentMonthIndex: new Date().getMonth(),
                 yearlyViewYear: new Date().getFullYear(),
@@ -830,10 +939,17 @@
                     localStorage.setItem('app_manual_titles', JSON.stringify(this.manualTitles));
                 },
 
+                toggleSelectAllTeam() {
+                    if (this.currentTask.subTeamMembers.length === this.owners.length) {
+                        this.currentTask.subTeamMembers = [];
+                    } else {
+                        this.currentTask.subTeamMembers = this.owners.map(o => o.name);
+                    }
+                },
+
                 downloadCSVTemplate() {
                     let csvContent = "\uFEFFcategory,title,owner,plan_start,plan_end,do_start,do_end,summary_start,summary_end,budget_approved,budget_used,evidence_url\n" +
-                        "กลุ่มงานบริหารทั่วไป,โครงการอบรมประจำปี,เจ้าหน้าที่ ก,2026-10-25,2026-10-30,2026-11-01,2026-11-03,2026-11-04,2026-11-05,50000,45000,https://drive.google.com\n" +
-                        "กลุ่มงานยุทธศาสตร์,ประชุมแผนงาน,เจ้าหน้าที่ ข,2026-11-01,2026-11-05,2026-11-10,2026-11-10,2026-11-11,2026-11-12,10000,8500,https://example.com";
+                        "กลุ่มงานบริหารทั่วไป,โครงการอบรมประจำปี,เจ้าหน้าที่ ก,2026-10-25,2026-10-30,2026-11-01,2026-11-03,2026-11-04,2026-11-05,50000,45000,https://drive.google.com";
                     let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                     let url = URL.createObjectURL(blob);
                     let a = document.createElement('a');
@@ -851,10 +967,7 @@
                     reader.onload = (e) => {
                         let text = e.target.result;
                         let lines = text.split(/\r\n|\n/);
-                        if (lines.length < 2) {
-                            alert('ไฟล์ CSV ไม่มีข้อมูล');
-                            return;
-                        }
+                        if (lines.length < 2) { alert('ไฟล์ CSV ไม่มีข้อมูล'); return; }
 
                         let headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
                         let getColIdx = (names) => {
@@ -868,17 +981,10 @@
                         let catIdx = getColIdx(['category', 'กลุ่มงาน']);
                         let titleIdx = getColIdx(['title', 'ชื่องาน', 'โครงการ']);
                         let ownerIdx = getColIdx(['owner', 'ผู้รับผิดชอบ']);
-                        
-                        let planStartIdx = getColIdx(['planstart', 'plan_start', 'วางแผนเริ่ม']);
-                        let planEndIdx = getColIdx(['planend', 'plan_end', 'วางแผนสิ้นสุด']);
-                        let doStartIdx = getColIdx(['dostart', 'do_start', 'dstart', 'start', 'วันเริ่ม', 'ปฏิบัติเริ่ม']);
-                        let doEndIdx = getColIdx(['doend', 'do_end', 'dend', 'end', 'วันสิ้นสุด', 'ปฏิบัติสิ้นสุด']);
-                        let sumStartIdx = getColIdx(['summarystart', 'summary_start', 'สรุปเริ่ม']);
-                        let sumEndIdx = getColIdx(['summaryend', 'summary_end', 'สรุปสิ้นสุด']);
-                        
+                        let doStartIdx = getColIdx(['dostart', 'do_start', 'start', 'วันเริ่ม']);
+                        let doEndIdx = getColIdx(['doend', 'do_end', 'end', 'วันสิ้นสุด']);
                         let appBudgetIdx = getColIdx(['approved', 'budget_approved', 'อนุมัติ']);
                         let usedBudgetIdx = getColIdx(['used', 'budget_used', 'ใช้จริง']);
-                        let urlIdx = getColIdx(['url', 'evidence', 'หลักฐาน']);
 
                         let countAdded = 0;
                         let today = new Date().toLocaleDateString('en-CA');
@@ -886,47 +992,25 @@
                         for (let i = 1; i < lines.length; i++) {
                             let line = lines[i].trim();
                             if (!line) continue;
-                            
                             let cols = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(',');
                             cols = cols.map(c => c.replace(/^"|"$/g, '').trim());
 
                             let cat = catIdx >= 0 && cols[catIdx] ? cols[catIdx] : (this.categories[0]?.name || 'กลุ่มงานทั่วไป');
                             let title = titleIdx >= 0 && cols[titleIdx] ? cols[titleIdx] : ('งานนำเข้า ' + i);
                             let owner = ownerIdx >= 0 && cols[ownerIdx] ? cols[ownerIdx] : '';
-                            
                             let doStart = doStartIdx >= 0 && cols[doStartIdx] ? cols[doStartIdx] : today;
                             let doEnd = doEndIdx >= 0 && cols[doEndIdx] ? cols[doEndIdx] : doStart;
-                            let planStart = planStartIdx >= 0 && cols[planStartIdx] ? cols[planStartIdx] : doStart;
-                            let planEnd = planEndIdx >= 0 && cols[planEndIdx] ? cols[planEndIdx] : doStart;
-                            let summaryStart = sumStartIdx >= 0 && cols[sumStartIdx] ? cols[sumStartIdx] : doEnd;
-                            let summaryEnd = sumEndIdx >= 0 && cols[sumEndIdx] ? cols[sumEndIdx] : doEnd;
-
                             let budgetApproved = appBudgetIdx >= 0 && cols[appBudgetIdx] ? parseFloat(cols[appBudgetIdx]) || 0 : 0;
                             let budgetUsed = usedBudgetIdx >= 0 && cols[usedBudgetIdx] ? parseFloat(cols[usedBudgetIdx]) || 0 : 0;
-                            let evidenceUrl = urlIdx >= 0 && cols[urlIdx] ? cols[urlIdx] : '';
 
                             let newTask = {
                                 id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
-                                category: cat,
-                                title: title,
-                                planStart: planStart,
-                                planEnd: planEnd,
-                                doStart: doStart,
-                                doEnd: doEnd,
-                                summaryStart: summaryStart,
-                                summaryEnd: summaryEnd,
-                                owner: owner,
-                                budgetApproved: budgetApproved,
-                                budgetUsed: budgetUsed,
-                                evidenceUrl: evidenceUrl,
-                                isCompleted: false,
-                                countWorkload: true,
-                                checklist: [],
-                                selectedSdgs: [],
-                                pdsa: { plan: '', do: '', study: '', act: '' }
+                                category: cat, title: title, planStart: doStart, planEnd: doEnd, doStart: doStart, doEnd: doEnd,
+                                summaryStart: doEnd, summaryEnd: doEnd, owner: owner, subTeamMembers: [], participants: '', meetingAttendees: '',
+                                budgetApproved: budgetApproved, budgetUsed: budgetUsed, evidenceUrl: '', isCompleted: false, countWorkload: true,
+                                checklist: [], selectedSdgs: [], pdsa: { plan: '', do: '', study: '', act: '' }
                             };
                             this.tasks.push(newTask);
-                            if (!this.manualTitles.includes(title)) this.manualTitles.push(title);
                             countAdded++;
                         }
                         this.saveLocalStorage();
@@ -935,41 +1019,37 @@
                     reader.readAsText(file, 'UTF-8');
                 },
 
-                // ฟังก์ชันออกรายงานสรุปภาพรวมโครงการ (แก้ไขให้เปิด Modal พรีวิวทันที)
+                // 1. ออกรายงานสรุปภาพรวมโครงการ (เพิ่ม SDGs และ PDSA ตามต้องการ)
                 generateGeneralReport() {
                     let filtered = this.tasks;
-                    if (this.reportCategory) {
-                        filtered = filtered.filter(t => t.category === this.reportCategory);
-                    }
-                    if (this.reportStartDate) {
-                        filtered = filtered.filter(t => (t.doEnd || t.planStart || '') >= this.reportStartDate);
-                    }
-                    if (this.reportEndDate) {
-                        filtered = filtered.filter(t => (t.doStart || t.planStart || '') <= this.reportEndDate);
-                    }
+                    if (this.reportCategory) filtered = filtered.filter(t => t.category === this.reportCategory);
 
-                    let html = `<div class="mb-2 text-xs">ช่วงวันที่: ${this.reportStartDate || '-'} ถึง ${this.reportEndDate || '-'}</div>`;
-                    html += `<table class="w-full border-collapse border border-slate-300 text-xs mt-2">
+                    let html = `<table class="w-full border-collapse border border-slate-300 text-xs mt-2">
                         <thead>
                             <tr class="bg-slate-100 text-slate-700">
                                 <th class="border border-slate-300 p-2">ที่</th>
                                 <th class="border border-slate-300 p-2">กลุ่มงาน / ชื่องาน / ผู้รับผิดชอบ</th>
                                 <th class="border border-slate-300 p-2">ช่วงปฏิบัติ (Do)</th>
                                 <th class="border border-slate-300 p-2">งบประมาณ (อนุมัติ / ใช้จริง)</th>
+                                <th class="border border-slate-300 p-2">SDGs & PDSA</th>
                             </tr>
                         </thead>
                         <tbody>`;
 
                     if (filtered.length === 0) {
-                        html += `<tr><td colspan="4" class="border border-slate-300 p-4 text-center text-slate-500">ไม่พบข้อมูลโครงการตามเงื่อนไข</td></tr>`;
+                        html += `<tr><td colspan="5" class="border border-slate-300 p-4 text-center text-slate-500">ไม่พบข้อมูลโครงการตามเงื่อนไข</td></tr>`;
                     } else {
                         filtered.forEach((t, i) => {
                             let budgetStr = `${(t.budgetApproved || 0).toLocaleString()} ฿ / ${(t.budgetUsed || 0).toLocaleString()} ฿`;
+                            let sdgsStr = (t.selectedSdgs && t.selectedSdgs.length > 0) ? t.selectedSdgs.join(', ') : '-';
+                            let pdsaStr = `P: ${t.pdsa?.plan || '-'}<br>D: ${t.pdsa?.do || '-'}<br>S: ${t.pdsa?.study || '-'}<br>A: ${t.pdsa?.act || '-'}`;
+                            
                             html += `<tr>
                                 <td class="border border-slate-300 p-2 text-center">${i+1}</td>
                                 <td class="border border-slate-300 p-2"><b>[${t.category}]</b> ${t.title}<br><span class="text-[10px] text-slate-500">ผู้รับผิดชอบ: ${t.owner || '-'}</span></td>
                                 <td class="border border-slate-300 p-2 text-center">${t.doStart || '-'} ถึง ${t.doEnd || '-'}</td>
                                 <td class="border border-slate-300 p-2 text-center">${budgetStr}</td>
+                                <td class="border border-slate-300 p-2"><b>SDGs:</b> ${sdgsStr}<br><b>PDSA:</b><br>${pdsaStr}</td>
                             </tr>`;
                         });
                     }
@@ -984,7 +1064,7 @@
                     };
                 },
 
-                // ฟังก์ชันออกรายงานภาระงานรายบุคคล (แก้ไขให้เปิด Modal พรีวิวทันที)
+                // 2. ออกรายงานภาระงานรายบุคคล (เพิ่ม SDGs, PDSA, สถานะ และบทบาท ตามต้องการ)
                 generateWorkloadReport() {
                     if (!this.workloadPerson) {
                         alert('กรุณาเลือกบุคลากรก่อนออกรายงานภาระงาน');
@@ -999,21 +1079,27 @@
                                 <th class="border border-slate-300 p-2">ลำดับ</th>
                                 <th class="border border-slate-300 p-2">กลุ่มงาน / ชื่องาน</th>
                                 <th class="border border-slate-300 p-2">ช่วงเวลาปฏิบัติ (Do)</th>
-                                <th class="border border-slate-300 p-2">สถานะ</th>
+                                <th class="border border-slate-300 p-2">บทบาท / สถานะ</th>
+                                <th class="border border-slate-300 p-2">SDGs & PDSA</th>
                             </tr>
                         </thead>
                         <tbody>`;
 
                     if (userTasks.length === 0) {
-                        html += `<tr><td colspan="4" class="border border-slate-300 p-4 text-center text-slate-500">ไม่พบภาระงานของบุคลากรท่านนี้</td></tr>`;
+                        html += `<tr><td colspan="5" class="border border-slate-300 p-4 text-center text-slate-500">ไม่พบภาระงานของบุคลากรท่านนี้</td></tr>`;
                     } else {
                         userTasks.forEach((t, i) => {
-                            let statusText = t.isCompleted ? 'เสร็จสิ้นแล้ว' : 'กำลังดำเนินการ';
+                            let role = t.owner === this.workloadPerson ? 'ผู้รับผิดชอบหลัก' : 'คณะทำงาน/ผู้ร่วมงาน';
+                            let statusText = t.isCompleted ? '✓ เสร็จสิ้น' : '⚡ กำลังทำ';
+                            let sdgsStr = (t.selectedSdgs && t.selectedSdgs.length > 0) ? t.selectedSdgs.join(', ') : '-';
+                            let pdsaStr = `Study: ${t.pdsa?.study || '-'}<br>Act: ${t.pdsa?.act || '-'}`;
+
                             html += `<tr>
                                 <td class="border border-slate-300 p-2 text-center">${i+1}</td>
                                 <td class="border border-slate-300 p-2"><b>[${t.category}]</b> ${t.title}</td>
                                 <td class="border border-slate-300 p-2 text-center">${t.doStart || '-'} ถึง ${t.doEnd || '-'}</td>
-                                <td class="border border-slate-300 p-2 text-center">${statusText}</td>
+                                <td class="border border-slate-300 p-2 text-center"><b>บทบาท:</b> ${role}<br><b>สถานะ:</b> ${statusText}</td>
+                                <td class="border border-slate-300 p-2"><b>SDGs:</b> ${sdgsStr}<br><b>PDSA:</b><br>${pdsaStr}</td>
                             </tr>`;
                         });
                     }
@@ -1030,7 +1116,13 @@
 
                 openTaskModal() {
                     let today = new Date().toLocaleDateString('en-CA');
-                    this.currentTask = { id: null, category: this.categories[0]?.name || '', title: '', planStart: today, planEnd: today, doStart: today, doEnd: today, summaryStart: today, summaryEnd: today, owner: '', isCompleted: false, budgetApproved: 0, budgetUsed: 0, evidenceUrl: '', pdsa: { plan: '', do: '', study: '', act: '' }, checklist: [] };
+                    this.currentTask = { 
+                        id: null, category: this.categories[0]?.name || '', title: '', planStart: today, planEnd: today, doStart: today, doEnd: today, 
+                        summaryStart: today, summaryEnd: today, owner: this.owners[0]?.name || '', subTeamMembers: [], participants: '', meetingAttendees: '', 
+                        isCompleted: false, budgetApproved: 0, budgetUsed: 0, evidenceUrl: '', useSdgs: false, selectedSdgs: [], 
+                        pdsa: { plan: '', do: '', study: '', act: '' }, checklist: [] 
+                    };
+                    this.showTitleSuggestions = false;
                     this.isModalOpen = true;
                 },
 
@@ -1038,6 +1130,10 @@
                     this.currentTask = JSON.parse(JSON.stringify(task));
                     if (!this.currentTask.pdsa) this.currentTask.pdsa = { plan: '', do: '', study: '', act: '' };
                     if (!this.currentTask.checklist) this.currentTask.checklist = [];
+                    if (!this.currentTask.subTeamMembers) this.currentTask.subTeamMembers = [];
+                    if (!this.currentTask.selectedSdgs) this.currentTask.selectedSdgs = [];
+                    if (this.currentTask.useSdgs === undefined) this.currentTask.useSdgs = this.currentTask.selectedSdgs.length > 0;
+                    this.showTitleSuggestions = false;
                     this.isModalOpen = true;
                 },
 
@@ -1048,6 +1144,7 @@
                     }
                     let tName = this.currentTask.title.trim();
                     if (!this.manualTitles.includes(tName)) this.manualTitles.push(tName);
+                    if (!this.currentTask.useSdgs) this.currentTask.selectedSdgs = [];
 
                     if (!this.currentTask.id) {
                         this.currentTask.id = Date.now().toString();
