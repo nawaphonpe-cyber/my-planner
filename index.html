@@ -513,7 +513,7 @@
 
         <!-- FOOTER VERSION & LAST MODIFIED -->
         <footer class="mt-auto py-3 px-6 text-right text-[11px] text-slate-400 border-t bg-white no-print">
-            <span>ระบบวางแผนงาน v2.8 Pro | แก้ไขล่าสุด: 23 ต.ค. 2569, 11:55 น.</span>
+            <span>ระบบวางแผนงาน v2.9 Pro | แก้ไขล่าสุด: 23 ต.ค. 2569, 12:02 น.</span>
         </footer>
     </div>
 
@@ -799,7 +799,7 @@
     <script>
         function plannerApp() {
             return {
-                isLoggedIn: localStorage.getItem('planner_logged') === 'true',
+                isLoggedIn: localStorage.getItem('planner_logged'] === 'true',
                 currentUserName: localStorage.getItem('planner_user') || '',
                 currentUserRole: localStorage.getItem('planner_role') || 'viewer',
                 loginPassword: '',
@@ -982,48 +982,77 @@
                     let reader = new FileReader();
                     reader.onload = (e) => {
                         let text = e.target.result;
-                        let lines = text.split('\n');
+                        let lines = text.split(/\r\n|\n/);
+                        if (lines.length < 2) {
+                            alert('ไฟล์ CSV ไม่มีข้อมูล');
+                            return;
+                        }
+
+                        // อ่านส่วนหัวเพื่อจับตำแหน่งคอลัมน์ให้อัตโนมัติ
+                        let headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+                        
+                        let getColIdx = (names) => {
+                            for (let name of names) {
+                                let idx = headers.findIndex(h => h.includes(name));
+                                if (idx >= 0) return idx;
+                            }
+                            return -1;
+                        };
+
+                        let catIdx = getColIdx(['category', 'กลุ่มงาน']);
+                        let titleIdx = getColIdx(['title', 'ชื่องาน', 'โครงการ']);
+                        let ownerIdx = getColIdx(['owner', 'ผู้รับผิดชอบ']);
+                        let startIdx = getColIdx(['dostart', 'start', 'เริ่มต้น']);
+                        let endIdx = getColIdx(['doend', 'end', 'สิ้นสุด']);
+                        let appBudgetIdx = getColIdx(['budgetapproved', 'อนุมัติ']);
+                        let usedBudgetIdx = getColIdx(['budgetused', 'ใช้จริง']);
+                        let urlIdx = getColIdx(['evidenceurl', 'url', 'หลักฐาน', 'ลิงก์']);
+
                         let countAdded = 0;
+                        let today = new Date().toLocaleDateString('en-CA');
+
                         for (let i = 1; i < lines.length; i++) {
                             let line = lines[i].trim();
                             if (!line) continue;
-                            let cols = line.split(',');
-                            if (cols.length >= 5) {
-                                let cat = cols[0] ? cols[0].trim() : (this.categories[0]?.name || 'กลุ่มงานทั่วไป');
-                                let title = cols[1] ? cols[1].trim() : 'งานใหม่จาก CSV';
-                                let owner = cols[2] ? cols[2].trim() : '';
-                                let doStart = cols[3] ? cols[3].trim() : new Date().toLocaleDateString('en-CA');
-                                let doEnd = cols[4] ? cols[4].trim() : doStart;
-                                let budgetApproved = cols[5] ? parseFloat(cols[5]) || 0 : 0;
-                                let budgetUsed = cols[6] ? parseFloat(cols[6]) || 0 : 0;
-                                let evidenceUrl = cols[7] ? cols[7].trim() : '';
+                            
+                            // แยกข้อมูล CSV แบบรองรับเครื่องหมายคำพูด
+                            let cols = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(',');
+                            cols = cols.map(c => c.replace(/^"|"$/g, '').trim());
 
-                                let newTask = {
-                                    id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
-                                    category: cat,
-                                    title: title,
-                                    countWorkload: true,
-                                    planStart: doStart,
-                                    planEnd: doEnd,
-                                    doStart: doStart,
-                                    doEnd: doEnd,
-                                    summaryStart: doEnd,
-                                    summaryEnd: doEnd,
-                                    budgetApproved: budgetApproved,
-                                    budgetUsed: budgetUsed,
-                                    owner: owner,
-                                    subTeamMembers: [],
-                                    checklist: [],
-                                    evidenceUrl: evidenceUrl,
-                                    useSdgs: false,
-                                    selectedSdgs: [],
-                                    isCompleted: false,
-                                    pdsa: { plan: '', do: '', study: '', act: '' }
-                                };
-                                this.tasks.push(newTask);
-                                if (!this.manualTitles.includes(title)) this.manualTitles.push(title);
-                                countAdded++;
-                            }
+                            let cat = catIdx >= 0 && cols[catIdx] ? cols[catIdx] : (this.categories[0]?.name || 'กลุ่มงานทั่วไป');
+                            let title = titleIdx >= 0 && cols[titleIdx] ? cols[titleIdx] : ('งานนำเข้า ' + i);
+                            let owner = ownerIdx >= 0 && cols[ownerIdx] ? cols[ownerIdx] : '';
+                            let doStart = startIdx >= 0 && cols[startIdx] ? cols[startIdx] : today;
+                            let doEnd = endIdx >= 0 && cols[endIdx] ? cols[endIdx] : doStart;
+                            let budgetApproved = appBudgetIdx >= 0 && cols[appBudgetIdx] ? parseFloat(cols[appBudgetIdx]) || 0 : 0;
+                            let budgetUsed = usedBudgetIdx >= 0 && cols[usedBudgetIdx] ? parseFloat(cols[usedBudgetIdx]) || 0 : 0;
+                            let evidenceUrl = urlIdx >= 0 && cols[urlIdx] ? cols[urlIdx] : '';
+
+                            let newTask = {
+                                id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+                                category: cat,
+                                title: title,
+                                countWorkload: true,
+                                planStart: doStart,
+                                planEnd: doEnd,
+                                doStart: doStart,
+                                doEnd: doEnd,
+                                summaryStart: doEnd,
+                                summaryEnd: doEnd,
+                                budgetApproved: budgetApproved,
+                                budgetUsed: budgetUsed,
+                                owner: owner,
+                                subTeamMembers: [],
+                                checklist: [],
+                                evidenceUrl: evidenceUrl,
+                                useSdgs: false,
+                                selectedSdgs: [],
+                                isCompleted: false,
+                                pdsa: { plan: '', do: '', study: '', act: '' }
+                            };
+                            this.tasks.push(newTask);
+                            if (!this.manualTitles.includes(title)) this.manualTitles.push(title);
+                            countAdded++;
                         }
                         this.saveLocalStorage();
                         alert(`นำเข้าข้อมูลจากไฟล์ CSV สำเร็จทั้งหมด ${countAdded} รายการ!`);
