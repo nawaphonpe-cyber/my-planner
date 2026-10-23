@@ -31,13 +31,13 @@
         }
     </style>
 </head>
-<body class="min-h-full flex flex-col pb-8" :class="currentUserRole === 'viewer' ? 'bg-emerald-50/40 text-slate-900' : 'bg-slate-50 text-slate-800'" x-data="plannerApp()">
+<body class="min-h-full flex flex-col pb-8" :class="currentUserRole === 'viewer' ? 'bg-emerald-50/40 text-slate-900' : 'bg-slate-50 text-slate-800'" x-data="plannerApp()" x-cloak>
 
     <!-- LOGIN SCREEN -->
-    <div x-show="!isLoggedIn" x-cloak class="fixed inset-0 z-50 bg-slate-900/80 flex items-center justify-center p-4">
+    <div x-show="!isLoggedIn" class="fixed inset-0 z-50 bg-slate-900/80 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 space-y-6 text-center">
             <h2 class="text-xl font-bold text-indigo-900">ระบบวางแผนการทำงานประจำปี</h2>
-            <p class="text-xs text-slate-500">กรอกรหัสผ่านเพื่อเข้าใช้งานระบบ</p>
+            <p class="text-xs text-slate-500">กรอกรหัสผ่านเพื่อเข้าใช้งานระบบ (รหัสผ่านเริ่มต้น: 1234)</p>
             <div class="space-y-4 text-left">
                 <div>
                     <label class="block text-xs font-semibold mb-1 text-slate-700">รหัสผ่าน (Password)</label>
@@ -50,7 +50,7 @@
     </div>
 
     <!-- MAIN APP -->
-    <div x-show="isLoggedIn" x-cloak class="flex-1 flex flex-col w-full">
+    <div x-show="isLoggedIn" class="flex-1 flex flex-col w-full">
         <header class="shadow-md w-full no-print transition-colors duration-300" :class="currentUserRole === 'viewer' ? 'bg-emerald-600 text-white' : 'bg-indigo-700 text-white'">
             <div class="w-full px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
                 <div>
@@ -532,7 +532,7 @@
                             <input type="password" x-model="adminNewPass" placeholder="กรอกรหัสผ่านแอดมินใหม่..." class="w-full border rounded p-2 bg-white">
                         </div>
                         <div class="flex items-end">
-                            <button @click="updateAdminPassword()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-semibold cursor-pointer">บันทึกรหัสแอดมินใหม่</button>
+                            <button @click="updateAdminPassword()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-semibold cursor-pointer">บันทึกรหัสแอดมินใหม่</button>
                         </div>
                     </div>
                 </div>
@@ -592,7 +592,7 @@
 
         <!-- FOOTER VERSION & LAST MODIFIED -->
         <footer class="mt-auto py-3 px-6 text-right text-[11px] text-slate-400 border-t bg-white no-print">
-            <span>ระบบวางแผนงาน v3.8 Full Date CSV Fix | แก้ไขล่าสุด: 23 ต.ค. 2569, 14:58 น.</span>
+            <span>ระบบวางแผนงาน v3.10 Full Featured & Report Fixed | แก้ไขล่าสุด: 23 ต.ค. 2569, 15:25 น.</span>
         </footer>
     </div>
 
@@ -696,6 +696,38 @@
         </div>
     </div>
 
+    <!-- PRINTABLE FORM MODAL (รายงาน PDF พรีวิว) -->
+    <div x-show="printModal.open" x-cloak class="fixed inset-0 bg-slate-900/80 flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full p-6 sm:p-8 space-y-6 max-h-[95vh] overflow-y-auto print:p-0 print:shadow-none" @click.stop>
+            <div class="flex justify-between items-center pb-3 border-b no-print">
+                <h3 class="font-bold text-lg text-indigo-900">ตัวอย่างเอกสารก่อนพิมพ์</h3>
+                <div class="flex gap-2">
+                    <button @click="window.print()" class="bg-indigo-600 text-white px-4 py-2 rounded text-xs font-semibold cursor-pointer">🖨️ สั่งพิมพ์เอกสาร (แนวนอน)</button>
+                    <button @click="printModal.open = false" class="bg-slate-200 px-4 py-2 rounded text-xs cursor-pointer">ปิด</button>
+                </div>
+            </div>
+
+            <div class="space-y-4 text-slate-900 bg-white p-4 sm:p-6" id="printableArea">
+                <div class="text-center space-y-1">
+                    <h2 class="text-lg sm:text-xl font-bold" x-text="printModal.title"></h2>
+                    <p class="text-xs sm:text-sm text-slate-600" x-text="printModal.subtitle"></p>
+                </div>
+                <div x-html="printModal.htmlContent"></div>
+                
+                <div class="grid grid-cols-2 pt-16 text-center text-xs sm:text-sm gap-8">
+                    <div class="space-y-12">
+                        <p>ลงชื่อ......................................................ผู้รายงาน</p>
+                        <p>(<span x-text="printModal.reporterName || '......................................................'"></span>)</p>
+                    </div>
+                    <div class="space-y-12">
+                        <p>ลงชื่อ......................................................ผู้รับรองรายงาน</p>
+                        <p>(......................................................)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         function plannerApp() {
             return {
@@ -713,6 +745,12 @@
                 taskStatusTab: 'all',
                 selectedTaskIds: [],
                 showTitleSuggestions: false,
+                reportCategory: '',
+                workloadPerson: '',
+                reportStartDate: new Date().getFullYear() + '-10-01',
+                reportEndDate: (new Date().getFullYear() + 1) + '-09-30',
+                workloadYear: new Date().getFullYear(),
+                workloadTerm: '1',
                 tasks: [],
                 categories: [
                     { id: '1', name: 'กลุ่มงานบริหารทั่วไป', color: '#7c3aed' },
@@ -735,6 +773,7 @@
                 adminNewPass: '',
                 newManualTitle: '',
                 manualTitles: [],
+                printModal: { open: false, title: '', subtitle: '', htmlContent: '', reporterName: '' },
                 dayDetailModal: { open: false, dateStr: '', tasks: [] },
                 currentTask: { id: null, category: '', title: '', planStart: '', planEnd: '', doStart: '', doEnd: '', summaryStart: '', summaryEnd: '', owner: '', isCompleted: false, budgetApproved: 0, budgetUsed: 0, evidenceUrl: '', pdsa: { plan: '', do: '', study: '', act: '' }, checklist: [] },
                 currentYearNum: new Date().getFullYear(),
@@ -832,8 +871,8 @@
                         
                         let planStartIdx = getColIdx(['planstart', 'plan_start', 'วางแผนเริ่ม']);
                         let planEndIdx = getColIdx(['planend', 'plan_end', 'วางแผนสิ้นสุด']);
-                        let doStartIdx = getColIdx(['dostart', 'do_start', 'start', 'วันเริ่ม', 'ปฏิบัติเริ่ม']);
-                        let doEndIdx = getColIdx(['doend', 'do_end', 'end', 'วันสิ้นสุด', 'ปฏิบัติสิ้นสุด']);
+                        let doStartIdx = getColIdx(['dostart', 'do_start', 'dstart', 'start', 'วันเริ่ม', 'ปฏิบัติเริ่ม']);
+                        let doEndIdx = getColIdx(['doend', 'do_end', 'dend', 'end', 'วันสิ้นสุด', 'ปฏิบัติสิ้นสุด']);
                         let sumStartIdx = getColIdx(['summarystart', 'summary_start', 'สรุปเริ่ม']);
                         let sumEndIdx = getColIdx(['summaryend', 'summary_end', 'สรุปสิ้นสุด']);
                         
@@ -894,6 +933,99 @@
                         alert(`นำเข้าข้อมูลสำเร็จ ${countAdded} รายการ!`);
                     };
                     reader.readAsText(file, 'UTF-8');
+                },
+
+                // ฟังก์ชันออกรายงานสรุปภาพรวมโครงการ
+                generateGeneralReport() {
+                    let filtered = this.tasks;
+                    if (this.reportCategory) {
+                        filtered = filtered.filter(t => t.category === this.reportCategory);
+                    }
+                    if (this.reportStartDate) {
+                        filtered = filtered.filter(t => (t.doEnd || t.planStart || '') >= this.reportStartDate);
+                    }
+                    if (this.reportEndDate) {
+                        filtered = filtered.filter(t => (t.doStart || t.planStart || '') <= this.reportEndDate);
+                    }
+
+                    let html = `<div class="mb-2 text-xs">ช่วงวันที่: ${this.reportStartDate || '-'} ถึง ${this.reportEndDate || '-'}</div>`;
+                    html += `<table class="w-full border-collapse border border-slate-300 text-xs mt-2">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700">
+                                <th class="border border-slate-300 p-2">ที่</th>
+                                <th class="border border-slate-300 p-2">กลุ่มงาน / ชื่องาน / ผู้รับผิดชอบ</th>
+                                <th class="border border-slate-300 p-2">ช่วงปฏิบัติ (Do)</th>
+                                <th class="border border-slate-300 p-2">งบประมาณ (อนุมัติ / ใช้จริง)</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+                    if (filtered.length === 0) {
+                        html += `<tr><td colspan="4" class="border border-slate-300 p-4 text-center text-slate-500">ไม่พบข้อมูลโครงการตามเงื่อนไข</td></tr>`;
+                    } else {
+                        filtered.forEach((t, i) => {
+                            let budgetStr = `${(t.budgetApproved || 0).toLocaleString()} ฿ / ${(t.budgetUsed || 0).toLocaleString()} ฿`;
+                            html += `<tr>
+                                <td class="border border-slate-300 p-2 text-center">${i+1}</td>
+                                <td class="border border-slate-300 p-2"><b>[${t.category}]</b> ${t.title}<br><span class="text-[10px] text-slate-500">ผู้รับผิดชอบ: ${t.owner || '-'}</span></td>
+                                <td class="border border-slate-300 p-2 text-center">${t.doStart || '-'} ถึง ${t.doEnd || '-'}</td>
+                                <td class="border border-slate-300 p-2 text-center">${budgetStr}</td>
+                            </tr>`;
+                        });
+                    }
+                    html += `</tbody></table>`;
+
+                    this.printModal = {
+                        open: true,
+                        title: 'รายงานสรุปภาพรวมโครงการประจำปี',
+                        subtitle: 'กลุ่มงาน: ' + (this.reportCategory || 'ทุกกลุ่มงานทั้งหมด'),
+                        htmlContent: html,
+                        reporterName: this.currentUserName
+                    };
+                },
+
+                // ฟังก์ชันออกรายงานภาระงานรายบุคคล
+                generateWorkloadReport() {
+                    if (!this.workloadPerson) {
+                        alert('กรุณาเลือกบุคลากรก่อนออกรายงานภาระงาน');
+                        return;
+                    }
+
+                    let userTasks = this.tasks.filter(t => t.owner === this.workloadPerson || (t.subTeamMembers && t.subTeamMembers.includes(this.workloadPerson)));
+                    let html = `<div class="mb-3 text-xs"><b>ชื่อ-นามสกุลผู้ปฏิบัติงาน:</b> ${this.workloadPerson} (ปี พ.ศ. ${this.workloadYear + 543} รอบที่ ${this.workloadTerm})</div>`;
+                    html += `<table class="w-full border-collapse border border-slate-300 text-xs">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700">
+                                <th class="border border-slate-300 p-2">ลำดับ</th>
+                                <th class="border border-slate-300 p-2">กลุ่มงาน / ชื่องาน</th>
+                                <th class="border border-slate-300 p-2">ช่วงเวลาปฏิบัติ (Do)</th>
+                                <th class="border border-slate-300 p-2">สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+                    if (userTasks.length === 0) {
+                        html += `<tr><td colspan="4" class="border border-slate-300 p-4 text-center text-slate-500">ไม่พบภาระงานของบุคลากรท่านนี้</td></tr>`;
+                    } else {
+                        userTasks.forEach((t, i) => {
+                            let statusText = t.isCompleted ? 'เสร็จสิ้นแล้ว' : 'กำลังดำเนินการ';
+                            html += `<tr>
+                                <td class="border border-slate-300 p-2 text-center">${i+1}</td>
+                                <td class="border border-slate-300 p-2"><b>[${t.category}]</b> ${t.title}</td>
+                                <td class="border border-slate-300 p-2 text-center">${t.doStart || '-'} ถึง ${t.doEnd || '-'}</td>
+                                <td class="border border-slate-300 p-2 text-center">${statusText}</td>
+                            </tr>`;
+                        });
+                    }
+                    html += `</tbody></table>`;
+
+                    this.printModal = {
+                        open: true,
+                        title: 'รายงานภาระงานรายบุคคลประจำปีงบประมาณ',
+                        subtitle: 'รายชื่อบุคลากร: ' + this.workloadPerson,
+                        htmlContent: html,
+                        reporterName: this.workloadPerson
+                    };
                 },
 
                 openTaskModal() {
