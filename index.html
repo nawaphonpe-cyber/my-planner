@@ -71,6 +71,7 @@
                 <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'templates'" :class="activeTab === 'templates' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการเช็คลิสต์</button>
                 <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'categories'" :class="activeTab === 'categories' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการกลุ่มงาน</button>
                 <button x-show="currentUserRole !== 'viewer'" @click="activeTab = 'owners'" :class="activeTab === 'owners' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการบุคลากร</button>
+                <button x-show="currentUserRole === 'admin'" @click="activeTab = 'backup'" :class="activeTab === 'backup' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">สำรอง/นำเข้าข้อมูล</button>
                 <button x-show="currentUserRole === 'admin'" @click="activeTab = 'users'" :class="activeTab === 'users' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการสิทธิ์</button>
             </div>
 
@@ -407,6 +408,27 @@
                 </div>
             </div>
 
+            <!-- TAB: BACKUP & EXCEL IMPORT/EXPORT -->
+            <div x-show="currentUserRole === 'admin' && activeTab === 'backup'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
+                <h2 class="text-base font-bold text-indigo-950">📦 ระบบสำรองข้อมูล นำเข้า และส่งออกข้อมูล (Excel / JSON)</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Export / Template -->
+                    <div class="bg-slate-50 border p-4 rounded-xl space-y-3 text-xs">
+                        <h3 class="font-bold text-indigo-900 text-sm">📥 ดาวน์โหลดข้อมูลและเทมเพลต</h3>
+                        <p class="text-slate-500">ดาวน์โหลดข้อมูลงานทั้งหมดในรูปแบบไฟล์ JSON สำหรับสำรองข้อมูลเก็บไว้</p>
+                        <button @click="exportJSONData()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded font-semibold cursor-pointer">ดาวน์โหลดสำรองข้อมูล (JSON Backup)</button>
+                    </div>
+
+                    <!-- Import -->
+                    <div class="bg-indigo-50/50 border border-indigo-200 p-4 rounded-xl space-y-3 text-xs">
+                        <h3 class="font-bold text-indigo-900 text-sm">📤 กู้คืนข้อมูล (Restoreจากไฟล์ JSON)</h3>
+                        <p class="text-slate-500">อัปโหลดไฟล์ JSON ที่เคยสำรองไว้เพื่อกู้คืนข้อมูลทั้งหมดกลับเข้าสู่ระบบ</p>
+                        <input type="file" @change="importJSONData($event)" accept=".json" class="w-full border rounded p-2 bg-white text-xs cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
             <!-- TAB 7: USERS -->
             <div x-show="currentUserRole === 'admin' && activeTab === 'users'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
                 <h2 class="text-base font-bold text-slate-800">จัดการสิทธิ์ผู้ใช้งานระบบ</h2>
@@ -479,7 +501,7 @@
 
         <!-- FOOTER VERSION & LAST MODIFIED -->
         <footer class="mt-auto py-3 px-6 text-right text-[11px] text-slate-400 border-t bg-white no-print">
-            <span>ระบบวางแผนงาน v2.5 Pro | แก้ไขล่าสุด: 23 ต.ค. 2569, 11:29 น.</span>
+            <span>ระบบวางแผนงาน v2.6 Pro | แก้ไขล่าสุด: 23 ต.ค. 2569, 11:40 น.</span>
         </footer>
     </div>
 
@@ -821,6 +843,7 @@
                 yearlyViewYear: new Date().getFullYear(),
                 monthNames: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'],
                 lastStoredStart: '',
+                manualTitles: [],
 
                 sdgFullData: [
                     { goalNum: 1, goalTitle: 'ขจัดความยากจนทุกรูปแบบในทุกที่', targets: [{ code: '1.1', title: 'ขจัดความยากจนรุนแรงสำหรับทุกคนในทุกที่' }, { code: '1.2', title: 'ลดสัดส่วนคนจนทุกมิติลงอย่างน้อยครึ่งหนึ่ง' }, { code: '1.3', title: 'ดำเนินระบบและมาตรการคุ้มครองทางสังคมที่เหมาะสม' }, { code: '1.4', title: 'สิทธิเท่าเทียมในการเข้าถึงทรัพยากรและบริการพื้นฐาน' }, { code: '1.5', title: 'สร้างภูมิต้านทานแก่ผู้ยากไร้ต่อภัยพิบัติ' }, { code: '1.a', title: 'ระดมทรัพยากรเพื่อยุติความยากจน' }, { code: '1.b', title: 'สร้างกรอบนโยบายระดับประเทศที่สนับสนุนคนจน' }] },
@@ -851,17 +874,6 @@
 
                 init() { 
                     this.loadLocalStorage(); 
-                    // ตรวจสอบและดึงข้อมูลชื่องานสำรองเผื่อกรณีคีย์ข้อมูลเดิมถูกรีเซ็ต
-                    this.migrateOldDataIfNeeded();
-                },
-
-                migrateOldDataIfNeeded() {
-                    let oldTasks = localStorage.getItem('app_tasks');
-                    if (oldTasks) {
-                        try {
-                            this.tasks = JSON.parse(oldTasks);
-                        } catch(e) {}
-                    }
                 },
 
                 handleLogin() {
@@ -937,40 +949,44 @@
                     }
                 },
 
-                manualTitles: [],
-
-                addManualTaskTitle() {
-                    if (!this.newManualTitle.trim()) return;
-                    let val = this.newManualTitle.trim();
-                    if (!this.manualTitles.includes(val)) {
-                        this.manualTitles.push(val);
-                        this.saveLocalStorage();
-                    }
-                    this.newManualTitle = '';
+                exportJSONData() {
+                    let backupObj = {
+                        tasks: this.tasks,
+                        categories: this.categories,
+                        owners: this.owners,
+                        templates: this.allTemplates,
+                        manualTitles: this.manualTitles,
+                        appUsers: this.appUsers
+                    };
+                    let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupObj, null, 2));
+                    let downloadAnchor = document.createElement('a');
+                    downloadAnchor.setAttribute("href", dataStr);
+                    downloadAnchor.setAttribute("download", "planner_backup_" + new Date().toISOString().split('T')[0] + ".json");
+                    document.body.appendChild(downloadAnchor);
+                    downloadAnchor.click();
+                    downloadAnchor.remove();
                 },
 
-                deleteTaskTitle(tTitle) {
-                    if (confirm(`คุณต้องการลบชื่องาน "${tTitle}"ออกจากคลังเทมเพลตใช่หรือไม่?`)) {
-                        this.manualTitles = this.manualTitles.filter(t => t !== tTitle);
-                        this.saveLocalStorage();
-                    }
-                },
-
-                renameTaskTitle(oldTitle) {
-                    let newTitle = prompt('แก้ไขชื่องานในคลังเทมเพลต:', oldTitle);
-                    if (newTitle && newTitle.trim() && newTitle.trim() !== oldTitle) {
-                        let nt = newTitle.trim();
-                        // อัปเดตใน manualTitles
-                        let idx = this.manualTitles.indexOf(oldTitle);
-                        if (idx >= 0) this.manualTitles[idx] = nt;
-                        else this.manualTitles.push(nt);
-                        
-                        // อัปเดตใน tasks ที่ใช้ชื่องานนี้ด้วย
-                        this.tasks.forEach(t => {
-                            if (t.title === oldTitle) t.title = nt;
-                        });
-                        this.saveLocalStorage();
-                    }
+                importJSONData(event) {
+                    let file = event.target.files[0];
+                    if (!file) return;
+                    let reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            let json = JSON.parse(e.target.result);
+                            if (json.tasks) this.tasks = json.tasks;
+                            if (json.categories) this.categories = json.categories;
+                            if (json.owners) this.owners = json.owners;
+                            if (json.templates) this.allTemplates = json.templates;
+                            if (json.manualTitles) this.manualTitles = json.manualTitles;
+                            if (json.appUsers) this.appUsers = json.appUsers;
+                            this.saveLocalStorage();
+                            alert('กู้คืนข้อมูลสำเร็จเรียบร้อยแล้ว');
+                        } catch(err) {
+                            alert('ไฟล์สำรองข้อมูลไม่ถูกต้อง');
+                        }
+                    };
+                    reader.readAsText(file);
                 },
 
                 get sortedOwners() {
@@ -997,7 +1013,6 @@
                     return this.sortedOwners.filter(o => o.name.toLowerCase().includes(this.ownerSearchQuery.toLowerCase()));
                 },
 
-                // คลังชื่องานรวม (จากงานจริง + ที่เพิ่มไว้ใน manualTitles) เรียงตามตัวอักษร
                 get sortedTaskTitles() {
                     let titlesSet = new Set(this.manualTitles || []);
                     this.tasks.forEach(t => { if (t.title) titlesSet.add(t.title.trim()); });
@@ -1009,6 +1024,38 @@
                     let list = this.sortedTaskTitles;
                     if (!query) return list;
                     return list.filter(t => t.toLowerCase().includes(query));
+                },
+
+                addManualTaskTitle() {
+                    if (!this.newManualTitle.trim()) return;
+                    let val = this.newManualTitle.trim();
+                    if (!this.manualTitles.includes(val)) {
+                        this.manualTitles.push(val);
+                        this.saveLocalStorage();
+                    }
+                    this.newManualTitle = '';
+                },
+
+                deleteTaskTitle(tTitle) {
+                    if (confirm(`คุณต้องการลบชื่องาน "${tTitle}"ออกจากคลังเทมเพลตใช่หรือไม่?`)) {
+                        this.manualTitles = this.manualTitles.filter(t => t !== tTitle);
+                        this.saveLocalStorage();
+                    }
+                },
+
+                renameTaskTitle(oldTitle) {
+                    let newTitle = prompt('แก้ไขชื่องานในคลังเทมเพลต:', oldTitle);
+                    if (newTitle && newTitle.trim() && newTitle.trim() !== oldTitle) {
+                        let nt = newTitle.trim();
+                        let idx = this.manualTitles.indexOf(oldTitle);
+                        if (idx >= 0) this.manualTitles[idx] = nt;
+                        else this.manualTitles.push(nt);
+                        
+                        this.tasks.forEach(t => {
+                            if (t.title === oldTitle) t.title = nt;
+                        });
+                        this.saveLocalStorage();
+                    }
                 },
 
                 toggleSelectAllTeam() {
@@ -1457,7 +1504,6 @@
                         alert('กรุณากรอกชื่องานและเลือกกลุ่มงานหลัก');
                         return;
                     }
-                    // บันทึกชื่องานลงคลังเทมเพลตอัตโนมัติหากยังไม่มี
                     let tName = this.currentTask.title.trim();
                     if (!this.manualTitles.includes(tName)) {
                         this.manualTitles.push(tName);
