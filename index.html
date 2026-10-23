@@ -499,11 +499,11 @@
 
             <!-- TAB: BACKUP & EXCEL / CSV IMPORT/EXPORT -->
             <div x-show="currentUserRole === 'admin' && activeTab === 'backup'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-6">
-                <h2 class="text-base font-bold text-indigo-950">📦 สำรองข้อมูล และนำเข้าผ่านไฟล์ CSV พร้อมแก้ไขวันที่ DoStart / DoEnd</h2>
+                <h2 class="text-base font-bold text-indigo-950">📦 สำรองข้อมูล และนำเข้าผ่านไฟล์ CSV</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl space-y-3 text-xs">
                         <h3 class="font-bold text-emerald-900 text-sm">📊 นำเข้าข้อมูลด้วยไฟล์ CSV (Excel)</h3>
-                        <p class="text-slate-600">ดาวน์โหลดเทมเพลตมาตรฐาน (รองรับหัวข้อ do_start / do_end) เพื่อกรอกข้อมูลวันที่ปฏิบัติงานให้ถูกต้อง แล้วอัปโหลดกลับเข้าสู่ระบบ</p>
+                        <p class="text-slate-600">ดาวน์โหลดเทมเพลตมาตรฐาน (รองรับ do_start / do_end) แล้วอัปโหลดกลับเข้าสู่ระบบ</p>
                         <button @click="downloadCSVTemplate()" class="w-full bg-emerald-600 text-white py-2 rounded font-semibold cursor-pointer">ดาวน์โหลดเทมเพลต CSV ตัวอย่าง</button>
                         <div>
                             <label class="block font-semibold mb-1 text-emerald-900 mt-2">อัปโหลดไฟล์ CSV:</label>
@@ -592,12 +592,12 @@
 
         <!-- FOOTER VERSION & LAST MODIFIED -->
         <footer class="mt-auto py-3 px-6 text-right text-[11px] text-slate-400 border-t bg-white no-print">
-            <span>ระบบวางแผนงาน v3.4 Full Restore | แก้ไขล่าสุด: 23 ต.ค. 2569, 14:30 น.</span>
+            <span>ระบบวางแผนงาน v3.6 Complete Restoration | แก้ไขล่าสุด: 23 ต.ค. 2569, 14:35 น.</span>
         </footer>
     </div>
 
     <!-- TASK MODAL -->
-    <div x-show="isModalOpen" class="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-3 z-50 overflow-y-auto" x-cloak>
+    <div x-show="isModalOpen" x-cloak class="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-3 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-5 sm:p-6 space-y-4 max-h-[95vh] overflow-y-auto" @click.stop>
             <h3 class="text-base font-bold text-indigo-900 border-b pb-2" x-text="currentTask.id ? 'แก้ไขงาน' : 'เพิ่มงานใหม่'"></h3>
             
@@ -679,7 +679,7 @@
     </div>
 
     <!-- DAY DETAILS MODAL -->
-    <div x-show="dayDetailModal.open" class="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-3 z-50" x-cloak>
+    <div x-show="dayDetailModal.open" x-cloak class="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-3 z-50">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4" @click.stop>
             <h3 class="text-base font-bold text-indigo-900 border-b pb-2" x-text="'รายละเอียดในวันที่: ' + dayDetailModal.dateStr"></h3>
             <div class="space-y-3 max-h-60 overflow-y-auto">
@@ -700,8 +700,8 @@
         function plannerApp() {
             return {
                 isLoggedIn: localStorage.getItem('planner_logged') === 'true',
-                currentUserName: localStorage.getItem('planner_user'] || 'ผู้ใช้งานระบบ',
-                currentUserRole: localStorage.getItem('planner_role'] || 'admin',
+                currentUserName: localStorage.getItem('planner_user') || 'ผู้ดูแลระบบหลัก (Admin)',
+                currentUserRole: localStorage.getItem('planner_role') || 'admin',
                 loginPassword: '',
                 activeTab: 'dashboard',
                 calendarMode: 'monthly',
