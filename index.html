@@ -76,14 +76,17 @@
                 <button x-show="currentUserRole === 'admin'" @click="activeTab = 'users'" :class="activeTab === 'users' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการสิทธิ์</button>
             </div>
 
-            <!-- TAB: DASHBOARD -->
-            <div x-show="activeTab === 'dashboard'" class="space-y-4 flex-1 flex flex-col">
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-3">
-                    <h2 class="font-bold text-sm text-indigo-900">📊 แดชบอร์ดสรุปผลการดำเนินงานและงบประมาณ</h2>
-                    <div class="flex items-center gap-2 flex-wrap text-xs">
+            <!-- TAB: DASHBOARD (1. ออกแบบใหม่ให้สวยงาม ทันสมัย และใช้งานง่าย) -->
+            <div x-show="activeTab === 'dashboard'" class="space-y-6 flex-1 flex flex-col">
+                <div class="bg-gradient-to-r from-indigo-800 to-indigo-600 p-5 rounded-2xl shadow-md text-white flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold">📊 ภาพรวมแดชบอร์ดการบริหารจัดการงาน</h2>
+                        <p class="text-xs text-indigo-100 opacity-90">ติดตามสถานะการดำเนินงานและงบประมาณประจำปีงบประมาณ</p>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap text-xs bg-white/10 p-2 rounded-xl backdrop-blur-sm">
                         <div>
-                            <label class="font-semibold mr-1">กลุ่มงาน:</label>
-                            <select x-model="dashCategoryFilter" class="border rounded p-1.5 bg-white font-semibold">
+                            <label class="font-semibold mr-1 text-white">กลุ่มงาน:</label>
+                            <select x-model="dashCategoryFilter" class="border rounded p-1.5 bg-white text-slate-800 font-semibold shadow-xs">
                                 <option value="">-- ทุกกลุ่มงาน --</option>
                                 <template x-for="cat in categories" :key="cat.id">
                                     <option :value="cat.name" x-text="cat.name"></option>
@@ -91,33 +94,84 @@
                             </select>
                         </div>
                         <div>
-                            <label class="font-semibold mr-1">ตั้งแต่วันที่:</label>
-                            <input type="date" x-model="dashStartDate" class="border rounded p-1 bg-white">
+                            <label class="font-semibold mr-1 text-white">ตั้งแต่วันที่:</label>
+                            <input type="date" x-model="dashStartDate" class="border rounded p-1 bg-white text-slate-800 shadow-xs">
                         </div>
                         <div>
-                            <label class="font-semibold mr-1">ถึงวันที่:</label>
-                            <input type="date" x-model="dashEndDate" class="border rounded p-1 bg-white">
+                            <label class="font-semibold mr-1 text-white">ถึงวันที่:</label>
+                            <input type="date" x-model="dashEndDate" class="border rounded p-1 bg-white text-slate-800 shadow-xs">
                         </div>
-                        <button @click="dashCategoryFilter = ''; dashStartDate = ''; dashEndDate = '';" class="bg-slate-200 px-3 py-1.5 rounded font-semibold cursor-pointer">ล้างตัวกรอง</button>
+                        <button @click="dashCategoryFilter = ''; dashStartDate = ''; dashEndDate = '';" class="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded font-semibold cursor-pointer transition-colors">ล้างตัวกรอง</button>
                     </div>
                 </div>
 
+                <!-- การ์ดตัวเลขสรุปผลแบบไล่เฉดสีสวยงาม -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-white p-4 rounded-xl border shadow-sm space-y-1">
-                        <p class="text-xs text-slate-500 font-semibold">จำนวนงานทั้งหมด</p>
-                        <h3 class="text-2xl font-bold text-indigo-900" x-text="dashboardStats.totalTasks"></h3>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                        <div class="absolute right-3 top-3 text-indigo-100 text-4xl font-bold opacity-50">📋</div>
+                        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">จำนวนงานทั้งหมด</p>
+                        <h3 class="text-3xl font-extrabold text-indigo-900 mt-2" x-text="dashboardStats.totalTasks"></h3>
+                        <p class="text-[11px] text-indigo-600 mt-1 font-medium">โครงการในระบบ</p>
                     </div>
-                    <div class="bg-white p-4 rounded-xl border shadow-sm space-y-1">
-                        <p class="text-xs text-slate-500 font-semibold">งานที่เสร็จสิ้นแล้ว</p>
-                        <h3 class="text-2xl font-bold text-emerald-600" x-text="dashboardStats.completedTasks"></h3>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                        <div class="absolute right-3 top-3 text-emerald-100 text-4xl font-bold opacity-50">✓</div>
+                        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">งานที่เสร็จสิ้นแล้ว</p>
+                        <h3 class="text-3xl font-extrabold text-emerald-600 mt-2" x-text="dashboardStats.completedTasks"></h3>
+                        <p class="text-[11px] text-emerald-600 mt-1 font-medium">ดำเนินการสำเร็จ 100%</p>
                     </div>
-                    <div class="bg-white p-4 rounded-xl border shadow-sm space-y-1">
-                        <p class="text-xs text-slate-500 font-semibold">งบประมาณอนุมัติรวม</p>
-                        <h3 class="text-xl font-bold text-indigo-700" x-text="dashboardStats.totalApproved.toLocaleString() + ' ฿'"></h3>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                        <div class="absolute right-3 top-3 text-blue-100 text-4xl font-bold opacity-50">💰</div>
+                        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">งบประมาณอนุมัติรวม</p>
+                        <h3 class="text-2xl font-extrabold text-blue-700 mt-2" x-text="dashboardStats.totalApproved.toLocaleString() + ' ฿'"></h3>
+                        <p class="text-[11px] text-blue-600 mt-1 font-medium">วงเงินตามแผนงบประมาณ</p>
                     </div>
-                    <div class="bg-white p-4 rounded-xl border shadow-sm space-y-1">
-                        <p class="text-xs text-slate-500 font-semibold">งบประมาณใช้จริงรวม</p>
-                        <h3 class="text-xl font-bold text-amber-600" x-text="dashboardStats.totalUsed.toLocaleString() + ' ฿'"></h3>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                        <div class="absolute right-3 top-3 text-amber-100 text-4xl font-bold opacity-50">💸</div>
+                        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">งบประมาณใช้จริงรวม</p>
+                        <h3 class="text-2xl font-extrabold text-amber-600 mt-2" x-text="dashboardStats.totalUsed.toLocaleString() + ' ฿'"></h3>
+                        <p class="text-[11px] text-amber-600 mt-1 font-medium">เบิกจ่ายจริงสะสม</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                        <h3 class="font-bold text-sm text-slate-800 border-b pb-3 flex items-center gap-2"><span>📈</span> สัดส่วนสถานะการดำเนินงาน</h3>
+                        <div class="grid grid-cols-2 gap-3 text-xs">
+                            <div class="p-3 bg-emerald-50/70 rounded-xl border border-emerald-100 flex flex-col justify-between space-y-2">
+                                <span class="font-semibold text-emerald-900">✓ เสร็จสิ้นแล้ว</span>
+                                <span class="font-extrabold text-emerald-700 text-lg" x-text="dashboardStats.completedTasks + ' งาน'"></span>
+                            </div>
+                            <div class="p-3 bg-amber-50/70 rounded-xl border border-amber-100 flex flex-col justify-between space-y-2">
+                                <span class="font-semibold text-amber-900">⚡ กำลังดำเนินการ</span>
+                                <span class="font-extrabold text-amber-700 text-lg" x-text="dashboardStats.doingTasks + ' งาน'"></span>
+                            </div>
+                            <div class="p-3 bg-blue-50/70 rounded-xl border border-blue-100 flex flex-col justify-between space-y-2">
+                                <span class="font-semibold text-blue-900">🕒 รอดำเนินการ</span>
+                                <span class="font-extrabold text-blue-700 text-lg" x-text="dashboardStats.pendingTasks + ' งาน'"></span>
+                            </div>
+                            <div class="p-3 bg-rose-50/70 rounded-xl border border-rose-100 flex flex-col justify-between space-y-2">
+                                <span class="font-semibold text-rose-900">⚠️ เลยกำหนด</span>
+                                <span class="font-extrabold text-rose-700 text-lg" x-text="dashboardStats.overdueTasks + ' งาน'"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                        <h3 class="font-bold text-sm text-slate-800 border-b pb-3 flex items-center gap-2"><span>🏢</span> งบประมาณและการดำเนินงานแยกตามกลุ่มงาน</h3>
+                        <div class="space-y-3 max-h-60 overflow-y-auto pr-1">
+                            <template x-for="catStat in dashboardCategoryStats" :key="catStat.name">
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-2 hover:bg-indigo-50/30 transition-colors">
+                                    <div class="flex justify-between font-bold text-indigo-900 text-xs">
+                                        <span x-text="catStat.name"></span>
+                                        <span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full text-[10px]" x-text="catStat.count + ' โครงการ'"></span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-600 text-[11px]">
+                                        <span>อนุมัติ: <b class="text-slate-900" x-text="catStat.approved.toLocaleString() + ' ฿'"></b></span>
+                                        <span>ใช้จริง: <b class="text-indigo-600" x-text="catStat.used.toLocaleString() + ' ฿'"></b></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -550,11 +604,11 @@
 
         <!-- FOOTER VERSION & LAST MODIFIED -->
         <footer class="mt-auto py-3 px-6 text-right text-[11px] text-slate-400 border-t bg-white no-print">
-            <span>ระบบวางแผนงาน v3.14 Complete SDGs & Participants Fix | แก้ไขล่าสุด: 23 ต.ค. 2569, 16:20 น.</span>
+            <span>ระบบวางแผนงาน v3.15 Enhanced Dashboard & Perfect SDGs | แก้ไขล่าสุด: 23 ต.ค. 2569, 16:35 น.</span>
         </footer>
     </div>
 
-    <!-- TASK MODAL (เพิ่มงานใหม่ พร้อมช่องค้นหาชื่อบุคลากร และ SDGs ครบถ้วน 17 เป้าหมาย) -->
+    <!-- TASK MODAL -->
     <div x-show="isModalOpen" x-cloak class="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-3 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-5 sm:p-6 space-y-4 max-h-[95vh] overflow-y-auto" @click.stop>
             <h3 class="text-base font-bold text-indigo-900 border-b pb-2" x-text="currentTask.id ? 'แก้ไขงาน' : 'เพิ่มงานใหม่'"></h3>
@@ -678,7 +732,7 @@
                     </div>
                 </div>
 
-                <!-- SDGs ครบถ้วนทุก 17 เป้าหมายและเป้าหมายย่อยตามมาตรฐานสากล -->
+                <!-- 3. SDGs ครบถ้วนทั้ง 17 เป้าหมาย (Goal 1 - 17) ตามมาตรฐานสากล UN -->
                 <div class="bg-indigo-50 border p-3 rounded-xl space-y-2">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-indigo-900">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs ครบถ้วน 17 เป้าหมาย)</span>
@@ -687,7 +741,7 @@
                             <div class="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                         </label>
                     </div>
-                    <div x-show="currentTask.useSdgs" class="space-y-3 max-h-48 overflow-y-auto bg-white p-3 rounded border">
+                    <div x-show="currentTask.useSdgs" class="space-y-3 max-h-52 overflow-y-auto bg-white p-3 rounded border">
                         <template x-for="group in sdgFullData" :key="group.goalNum">
                             <div class="border-b pb-2 last:border-0">
                                 <label class="flex items-center gap-2 font-bold text-indigo-900 cursor-pointer">
@@ -883,25 +937,25 @@
                 printModal: { open: false, title: '', subtitle: '', htmlContent: '', reporterName: '' },
                 dayDetailModal: { open: false, dateStr: '', tasks: [], checklists: [] },
                 
-                // SDGs ครบถ้วนทั้ง 17 เป้าหมายตามสากล
+                // 3. SDGs ครบถ้วนทั้ง 17 เป้าหมาย (Goal 1 - 17) ตามมาตรฐานสากล UN
                 sdgFullData: [
-                    { goalNum: 1, goalTitle: 'ขจัดความยากจนทุกรูปแบบในทุกที่', targets: [{ code: '1.1', title: 'ขจัดความยากจนรุนแรง' }, { code: '1.2', title: 'ลดสัดส่วนคนจน' }, { code: '1.a', title: 'ระดมทรัพยากรยุติความยากจน' }, { code: '1.b', title: 'สร้างกรอบนโยบายเชิงยุทธศาสตร์' }] },
-                    { goalNum: 2, goalTitle: 'ยุติความหิวโหย บรรลุความมั่นคงทางอาหาร', targets: [{ code: '2.1', title: 'เข้าถึงอาหารปลอดภัย' }, { code: '2.2', title: 'ยุติทุพโภชนาการ' }, { code: '2.3', title: 'เพิ่มผลผลิตเกษตรกรรายย่อย' }] },
-                    { goalNum: 3, goalTitle: 'สร้างหลักประกันการมีสุขภาวะที่ดี', targets: [{ code: '3.1', title: 'ลดอัตราการตายมารดา' }, { code: '3.2', title: 'ยุติการตายทารกและเด็ก' }, { code: '3.4', title: 'ลดการตายจาก NCDs' }, { code: '3.8', title: 'หลักประกันสุขภาพถ้วนหน้า' }] },
-                    { goalNum: 4, goalTitle: 'การศึกษาที่มีคุณภาพเท่าเทียม', targets: [{ code: '4.1', title: 'การศึกษาขั้นพื้นฐานฟรี' }, { code: '4.2', title: 'พัฒนาเด็กปฐมวัย' }, { code: '4.3', title: 'เข้าถึงอาชีวะและอุดมศึกษา' }] },
-                    { goalNum: 5, goalTitle: 'ความเสมอภาคระหว่างเพศ', targets: [{ code: '5.1', title: 'ยุติการเลือกปฏิบัติ' }, { code: '5.2', title: 'ขจัดความรุนแรงต่อสตรี' }, { code: '5.5', title: 'โอกาสผู้นำเท่าเทียม' }] },
-                    { goalNum: 6, goalTitle: 'น้ำสะอาดและการสุขาภิบาล', targets: [{ code: '6.1', title: 'เข้าถึงน้ำดื่มปลอดภัย' }, { code: '6.2', title: 'สุขอนามัยเหมาะสม' }, { code: '6.3', title: 'ปรับปรุงคุณภาพน้ำ' }] },
-                    { goalNum: 7, goalTitle: 'พลังงานสะอาดที่เข้าถึงได้', targets: [{ code: '7.1', title: 'เข้าถึงพลังงานสมัยใหม่' }, { code: '7.2', title: 'เพิ่มพลังงานทดแทน' }, { code: '7.3', title: 'เพิ่มประสิทธิภาพพลังงาน' }] },
-                    { goalNum: 8, goalTitle: 'งานที่มีคุณค่าและการเติบโตทางเศรษฐกิจ', targets: [{ code: '8.1', title: 'เติบโตเศรษฐกิจต่อหัว' }, { code: '8.5', title: 'จ้างงานเต็มที่' }, { code: '8.8', title: 'สภาพแวดล้อมปลอดภัย' }] },
-                    { goalNum: 9, goalTitle: 'โครงสร้างพื้นฐาน นวัตกรรม และอุตสาหกรรม', targets: [{ code: '9.1', title: 'พัฒนาโครงสร้างพื้นฐาน' }, { code: '9.2', title: 'อุตสาหกรรมครอบคลุมยั่งยืน' }, { code: '9.5', title: 'เพิ่มวิจัยวิทยาศาสตร์' }] },
-                    { goalNum: 10, goalTitle: 'ลดความเหลื่อมล้ำ', targets: [{ code: '10.1', title: 'เติบโตรายได้กลุ่มล่างสุด' }, { code: '10.2', title: 'โอบอุ้มความ ฯลฯ' }, { code: '10.3', title: 'ประกันโอกาสเท่าเทียม' }] },
-                    { goalNum: 11, goalTitle: 'เมืองและชุมชนยั่งยืน', targets: [{ code: '11.1', title: 'ที่อยู่อาศัยราคาจ่ายไหว' }, { code: '11.2', title: 'คมนาคมปลอดภัยยั่งยืน' }, { code: '11.4', title: 'ปกป้องมรดกทางวัฒนธรรม' }] },
-                    { goalNum: 12, goalTitle: 'การบริโภคและการผลิตที่ยั่งยืน', targets: [{ code: '12.2', title: 'ใช้ทรัพยากรธรรมชาติยั่งยืน' }, { code: '12.3', title: 'ลดขยะอาหารลงครึ่งหนึ่ง' }, { code: '12.5', title: 'ลดการเกิดขยะรีไซเคิล' }] },
-                    { goalNum: 13, goalTitle: 'การรับมือการเปลี่ยนแปลงสภาพภูมิอากาศ', targets: [{ code: '13.1', title: 'เสริมสร้างภูมิต้านทานภัย' }, { code: '13.2', title: 'บูรณาการมาตรการภูมิอากาศ' }, { code: '13.3', title: 'สร้างความตระหนักรู้ภูมิอากาศ' }] },
-                    { goalNum: 14, goalTitle: 'ทรัพยากรทางทะเล', targets: [{ code: '14.1', title: 'ลดมลพิษทางทะเล' }, { code: '14.5', title: 'อนุรักษ์พื้นที่ชายฝั่ง' }] },
-                    { goalNum: 15, goalTitle: 'ระบบนิเวศบนบก', targets: [{ code: '15.1', title: 'อนุรักษ์ฟื้นฟูระบบนิเวศ' }, { code: '15.2', title: 'จัดการป่าไม้ยั่งยืน' }, { code: '15.5', title: 'ลดการสูญเสียความหลากหลาย' }] },
-                    { goalNum: 16, goalTitle: 'สันติภาพ ความยุติธรรม และสถาบันเข้มแข็ง', targets: [{ code: '16.1', title: 'ลดความรุนแรงทุกรูปแบบ' }, { code: '16.5', title: 'ลดทุจริตและสินบน' }, { code: '16.6', title: 'พัฒนาสถาบันโปร่งใส' }] },
-                    { goalNum: 17, goalTitle: 'ความร่วมมือเพื่อการพัฒนาที่ยั่งยืน', targets: [{ code: '17.1', title: 'เสริมจัดเก็บรายได้' }, { code: '17.16', title: 'หุ้นส่วนความร่วมมือระดับโลก' }] }
+                    { goalNum: 1, goalTitle: 'ขจัดความยากจนทุกรูปแบบในทุกที่', targets: [{ code: '1.1', title: 'ขจัดความยากจนรุนแรง' }, { code: '1.2', title: 'ลดสัดส่วนคนจน' }, { code: '1.3', title: 'ระบบคุ้มครองทางสังคมที่เหมาะสม' }, { code: '1.4', title: 'สิทธิเท่าเทียมในทรัพยากรเศรษฐกิจ' }, { code: '1.a', title: 'ระดมทรัพยากรยุติความยากจน' }, { code: '1.b', title: 'สร้างกรอบนโยบายเชิงยุทธศาสตร์' }] },
+                    { goalNum: 2, goalTitle: 'ยุติความหิวโหย บรรลุความมั่นคงทางอาหาร', targets: [{ code: '2.1', title: 'เข้าถึงอาหารปลอดภัยและเพียงพอ' }, { code: '2.2', title: 'ยุติทุพโภชนาการทุกรูปแบบ' }, { code: '2.3', title: 'เพิ่มผลิตภาพเกษตรกรรายย่อย' }, { code: '2.4', title: 'การผลิตอาหารที่ยั่งยืน' }] },
+                    { goalNum: 3, goalTitle: 'สร้างหลักประกันการมีสุขภาวะที่ดี', targets: [{ code: '3.1', title: 'ลดอัตราการตายมารดา' }, { code: '3.2', title: 'ยุติการตายทารกและเด็ก' }, { code: '3.3', title: 'ยับยั้งโรคติดต่อสำคัญ' }, { code: '3.4', title: 'ลดการตายจาก NCDs สุขภาพจิต' }, { code: '3.8', title: 'หลักประกันสุขภาพถ้วนหน้า' }, { code: '3.9', title: 'ลดเจ็บป่วยจากสารเคมีและมลพิษ' }] },
+                    { goalNum: 4, goalTitle: 'การศึกษาที่มีคุณภาพเท่าเทียม', targets: [{ code: '4.1', title: 'การศึกษาขั้นพื้นฐานฟรีมีคุณภาพ' }, { code: '4.2', title: 'พัฒนาการเด็กปฐมวัย' }, { code: '4.3', title: 'เข้าถึงอาชีวะและอุดมศึกษา' }, { code: '4.4', title: 'เพิ่มทักษะประกอบอาชีพ' }, { code: '4.7', title: 'การศึกษาเพื่อการพัฒนาที่ยั่งยืน' }] },
+                    { goalNum: 5, goalTitle: 'ความเสมอภาคระหว่างเพศ', targets: [{ code: '5.1', title: 'ยุติการเลือกปฏิบัติต่อสตรีทุกแห่ง' }, { code: '5.2', title: 'ขจัดความรุนแรงต่อสตรีและเด็กหญิง' }, { code: '5.5', title: 'โอกาสและความเป็นผู้นำเท่าเทียม' }, { code: '5.a', title: 'สิทธิเท่าเทียมในทรัพยากรเศรษฐกิจ' }] },
+                    { goalNum: 6, goalTitle: 'น้ำสะอาดและการสุขาภิบาล', targets: [{ code: '6.1', title: 'เข้าถึงน้ำดื่มปลอดภัยราคาเข้าถึงได้' }, { code: '6.2', title: 'สุขอนามัยและการสุขาภิบาลที่เหมาะสม' }, { code: '6.3', title: 'ปรับปรุงคุณภาพน้ำ ลดมลพิษ' }, { code: '6.5', title: 'การบริหารจัดการทรัพยากรน้ำรวม' }] },
+                    { goalNum: 7, goalTitle: 'พลังงานสะอาดที่เข้าถึงได้', targets: [{ code: '7.1', title: 'เข้าถึงบริการพลังงานสมัยใหม่' }, { code: '7.2', title: 'เพิ่มสัดส่วนพลังงานทดแทน' }, { code: '7.3', title: 'เพิ่มประสิทธิภาพการใช้พลังงาน' }] },
+                    { goalNum: 8, goalTitle: 'งานที่มีคุณค่าและการเติบโตทางเศรษฐกิจ', targets: [{ code: '8.1', title: 'เติบโตทางเศรษฐกิจต่อหัว' }, { code: '8.2', title: 'ยกระดับผลิตภาพเศรษฐกิจ' }, { code: '8.5', title: 'จ้างงานเต็มที่และมีคุณค่า' }, { code: '8.8', title: 'ปกป้องสิทธิแรงงาน สภาพแวดล้อมปลอดภัย' }] },
+                    { goalNum: 9, goalTitle: 'โครงสร้างพื้นฐาน นวัตกรรม และอุตสาหกรรม', targets: [{ code: '9.1', title: 'พัฒนาโครงสร้างพื้นฐานคุณภาพสูง' }, { code: '9.2', title: 'อุตสาหกรรมครอบคลุมและยั่งยืน' }, { code: '9.5', title: 'เพิ่มวิจัยและพัฒนาวิทยาศาสตร์' }] },
+                    { goalNum: 10, goalTitle: 'ลดความเหลื่อมล้ำ', targets: [{ code: '10.1', title: 'เติบโตรายได้กลุ่มล่างสุดของประชากร' }, { code: '10.2', title: 'โอบอุ้มความinclusionทางสังคมเศรษฐกิจ' }, { code: '10.3', title: 'ประกันโอกาสเท่าเทียมลดเลือกปฏิบัติ' }] },
+                    { goalNum: 11, goalTitle: 'เมืองและชุมชนยั่งยืน', targets: [{ code: '11.1', title: 'ที่อยู่อาศัยและบริการพื้นฐานปลอดภัย' }, { code: '11.2', title: 'ระบบคมนาคมขนส่งยั่งยืนปลอดภัย' }, { code: '11.4', title: 'ปกป้องคุ้มครองมรดกทางวัฒนธรรม' }, { code: '11.5', title: 'ลดความเสียหายจากภัยพิบัติ' }] },
+                    { goalNum: 12, goalTitle: 'การบริโภคและการผลิตที่ยั่งยืน', targets: [{ code: '12.2', title: 'บริหารจัดการทรัพยากรธรรมชาติยั่งยืน' }, { code: '12.3', title: 'ลดขยะอาหารระดับค้าปลีก/ผู้บริโภคลงครึ่งหนึ่ง' }, { code: '12.5', title: 'ลดการเกิดขยะผ่านการรีไซเคิล' }, { code: '12.6', title: 'ส่งเสริมบริษัททำรายงานความยั่งยืน' }] },
+                    { goalNum: 13, goalTitle: 'การรับมือการเปลี่ยนแปลงสภาพภูมิอากาศ', targets: [{ code: '13.1', title: 'เสริมสร้างภูมิต้านทานต่อภัยพิบัติ' }, { code: '13.2', title: 'บูรณาการมาตรการภูมิอากาศในนโยบาย' }, { code: '13.3', title: 'สร้างความตระหนักรู้การรับมือภูมิอากาศ' }] },
+                    { goalNum: 14, goalTitle: 'ทรัพยากรทางทะเล', targets: [{ code: '14.1', title: 'ป้องกันและลดมลพิษทางทะเล' }, { code: '14.2', title: 'บริหารจัดการปกป้องระบบนิเวศทางทะเล' }, { code: '14.5', title: 'อนุรักษ์พื้นที่ชายฝั่งและทางทะเล' }] },
+                    { goalNum: 15, goalTitle: 'ระบบนิเวศบนบก', targets: [{ code: '15.1', title: 'อนุรักษ์ฟื้นฟูระบบนิเวศบนบกและน้ำจืด' }, { code: '15.2', title: 'ยุติการตัดไม้ทำลายป่า ฟื้นฟูป่าเสื่อมโทรม' }, { code: '15.5', title: 'หยุดยั้งการสูญเสียความหลากหลายทางชีวภาพ' }] },
+                    { goalNum: 16, goalTitle: 'สันติภาพ ความยุติธรรม และสถาบันเข้มแข็ง', targets: [{ code: '16.1', title: 'ลดความรุนแรงและอัตราการตายทุกรูปแบบ' }, { code: '16.5', title: 'ลดการทุจริตและสินบนทุกรูปแบบ' }, { code: '16.6', title: 'พัฒนาสถาบันโปร่งใสตรวจสอบได้' }, { code: '16.10', title: 'ประกันการเข้าถึงข้อมูลของประชาชน' }] },
+                    { goalNum: 17, goalTitle: 'ความร่วมมือเพื่อการพัฒนาที่ยั่งยืน', targets: [{ code: '17.1', title: 'เสริมการจัดเก็บรายได้ในประเทศ' }, { code: '17.16', title: 'หุ้นส่วนความร่วมมือระดับโลกเพื่อการพัฒนา' }, { code: '17.18', title: 'สนับสนุนข้อมูลสถิติคุณภาพสูง' }] }
                 ],
 
                 currentTask: { 
@@ -967,7 +1021,6 @@
                     localStorage.setItem('app_templates', JSON.stringify(this.allTemplates));
                 },
 
-                // ค้นหาชื่อบุคลากรและเลือก
                 get filteredOwnersMain() {
                     if (!this.ownerSearchInput) return this.owners;
                     return this.owners.filter(o => o.name.toLowerCase().includes(this.ownerSearchInput.toLowerCase()));
@@ -1174,13 +1227,21 @@
                     reader.readAsText(file, 'UTF-8');
                 },
 
-                // 3. รายงานสรุปภาพรวมโครงการ (กรองเฉพาะงานที่เกิดขึ้นในช่วงวันที่เลือก และแสดงลิงก์หลักฐาน)
+                // 2. รายงานสรุปภาพรวมโครงการ (แสดงเฉพาะงานที่มีช่วงวันที่คาดเกี่ยวกับช่วงที่เลือกจริง)
                 generateGeneralReport() {
                     let filtered = this.tasks.filter(t => {
                         let matchCat = !this.reportCategory || t.category === this.reportCategory;
                         let start = t.doStart || t.planStart || '';
                         let end = t.doEnd || t.planEnd || start;
-                        let matchDate = (!this.reportStartDate || end >= this.reportStartDate) && (!this.reportEndDate || start <= this.reportEndDate);
+                        // เงื่อนไขช่วงวันที่ทับซ้อนกับช่วงที่เลือก (Overlap Condition)
+                        let matchDate = true;
+                        if (this.reportStartDate && this.reportEndDate) {
+                            matchDate = (end >= this.reportStartDate && start <= this.reportEndDate);
+                        } else if (this.reportStartDate) {
+                            matchDate = (end >= this.reportStartDate);
+                        } else if (this.reportEndDate) {
+                            matchDate = (start <= this.reportEndDate);
+                        }
                         return matchCat && matchDate;
                     });
 
@@ -1226,7 +1287,7 @@
                     };
                 },
 
-                // 4. รายงานภาระงานรายบุคคล (กรองตามรอบปี/เทอม และแนบลิงก์หลักฐาน)
+                // รายงานภาระงานรายบุคคล (แนบลิงก์หลักฐาน)
                 generateWorkloadReport() {
                     if (!this.workloadPerson) {
                         alert('กรุณาเลือกบุคลากรก่อนออกรายงานภาระงาน');
@@ -1240,7 +1301,7 @@
                         let isOwnerOrTeam = (t.owner === this.workloadPerson || (t.subTeamMembers && t.subTeamMembers.includes(this.workloadPerson)));
                         let start = t.doStart || t.planStart || '';
                         let end = t.doEnd || t.planEnd || start;
-                        let inTerm = start && end && end >= startTermDate && start <= endTermDate;
+                        let inTerm = start && end && (end >= startTermDate && start <= endTermDate);
                         return isOwnerOrTeam && inTerm;
                     });
 
