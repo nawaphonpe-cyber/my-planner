@@ -76,7 +76,7 @@
                 <button x-show="currentUserRole === 'admin'" @click="activeTab = 'users'" :class="activeTab === 'users' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'" class="py-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer whitespace-nowrap">จัดการสิทธิ์</button>
             </div>
 
-            <!-- TAB: DASHBOARD (1. ออกแบบใหม่ให้สวยงาม ทันสมัย และใช้งานง่าย) -->
+            <!-- TAB: DASHBOARD -->
             <div x-show="activeTab === 'dashboard'" class="space-y-6 flex-1 flex flex-col">
                 <div class="bg-gradient-to-r from-indigo-800 to-indigo-600 p-5 rounded-2xl shadow-md text-white flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
@@ -105,7 +105,6 @@
                     </div>
                 </div>
 
-                <!-- การ์ดตัวเลขสรุปผลแบบไล่เฉดสีสวยงาม -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
                         <div class="absolute right-3 top-3 text-indigo-100 text-4xl font-bold opacity-50">📋</div>
@@ -604,7 +603,7 @@
 
         <!-- FOOTER VERSION & LAST MODIFIED -->
         <footer class="mt-auto py-3 px-6 text-right text-[11px] text-slate-400 border-t bg-white no-print">
-            <span>ระบบวางแผนงาน v3.15 Enhanced Dashboard & Perfect SDGs | แก้ไขล่าสุด: 23 ต.ค. 2569, 16:35 น.</span>
+            <span>ระบบวางแผนงาน v3.16 Precise Report Filter & Custom SDGs | แก้ไขล่าสุด: 23 ต.ค. 2569, 16:50 น.</span>
         </footer>
     </div>
 
@@ -698,7 +697,7 @@
                     </div>
                 </div>
 
-                <!-- ผู้เข้าร่วมโครงการ และ ผู้เข้าร่วมประชุม (ดึงจากรายชื่อบุคลากร ค้นหาและเลือกได้) -->
+                <!-- ผู้เข้าร่วมโครงการ และ ผู้เข้าร่วมประชุม -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-100 p-3 rounded-xl border">
                     <div>
                         <div class="flex justify-between items-center mb-1">
@@ -732,8 +731,8 @@
                     </div>
                 </div>
 
-                <!-- 3. SDGs ครบถ้วนทั้ง 17 เป้าหมาย (Goal 1 - 17) ตามมาตรฐานสากล UN -->
-                <div class="bg-indigo-50 border p-3 rounded-xl space-y-2">
+                <!-- SDGs ครบถ้วน 17 เป้าหมาย พร้อมช่องพิมพ์เพิ่มเองได้อย่างอิสระ -->
+                <div class="bg-indigo-50 border p-3 rounded-xl space-y-3">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-indigo-900">🌍 เป้าหมายการพัฒนาที่ยั่งยืน (SDGs ครบถ้วน 17 เป้าหมาย)</span>
                         <label class="relative inline-flex items-center cursor-pointer">
@@ -741,23 +740,30 @@
                             <div class="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                         </label>
                     </div>
-                    <div x-show="currentTask.useSdgs" class="space-y-3 max-h-52 overflow-y-auto bg-white p-3 rounded border">
-                        <template x-for="group in sdgFullData" :key="group.goalNum">
-                            <div class="border-b pb-2 last:border-0">
-                                <label class="flex items-center gap-2 font-bold text-indigo-900 cursor-pointer">
-                                    <input type="checkbox" :value="'Goal ' + group.goalNum" x-model="currentTask.selectedSdgs" class="rounded text-indigo-600">
-                                    <span x-text="'Goal ' + group.goalNum + ': ' + group.goalTitle"></span>
-                                </label>
-                                <div class="pl-6 mt-1 space-y-1">
-                                    <template x-for="target in group.targets" :key="target.code">
-                                        <label class="flex items-start gap-2 text-[11px] text-slate-600 cursor-pointer">
-                                            <input type="checkbox" :value="target.code" x-model="currentTask.selectedSdgs" class="mt-0.5 rounded text-indigo-600">
-                                            <span x-text="target.code + ': ' + target.title"></span>
-                                        </label>
-                                    </template>
+                    <div x-show="currentTask.useSdgs" class="space-y-3">
+                        <div class="max-h-48 overflow-y-auto bg-white p-3 rounded border space-y-3">
+                            <template x-for="group in sdgFullData" :key="group.goalNum">
+                                <div class="border-b pb-2 last:border-0">
+                                    <label class="flex items-center gap-2 font-bold text-indigo-900 cursor-pointer">
+                                        <input type="checkbox" :value="'Goal ' + group.goalNum" x-model="currentTask.selectedSdgs" class="rounded text-indigo-600">
+                                        <span x-text="'Goal ' + group.goalNum + ': ' + group.goalTitle"></span>
+                                    </label>
+                                    <div class="pl-6 mt-1 space-y-1">
+                                        <template x-for="target in group.targets" :key="target.code">
+                                            <label class="flex items-start gap-2 text-[11px] text-slate-600 cursor-pointer">
+                                                <input type="checkbox" :value="target.code" x-model="currentTask.selectedSdgs" class="mt-0.5 rounded text-indigo-600">
+                                                <span x-text="target.code + ': ' + target.title"></span>
+                                            </label>
+                                        </template>
+                                    </div>
                                 </div>
-                            </div>
-                        </template>
+                            </template>
+                        </div>
+                        <!-- ช่องพิมพ์เพิ่ม SDGs เองอิสระ -->
+                        <div class="bg-white p-2.5 rounded border space-y-1">
+                            <label class="block font-semibold text-slate-700 text-[11px]">✍️ พิมพ์เพิ่มเป้าหมาย SDGs อื่นๆ (คั่นด้วยเครื่องหมายจุลภาค ,)</label>
+                            <input type="text" x-model="currentTask.customSdgs" placeholder="เช่น เป้าหมายพิเศษเพิ่มเติม..." class="w-full border rounded p-1.5 text-xs bg-white">
+                        </div>
                     </div>
                 </div>
 
@@ -937,31 +943,31 @@
                 printModal: { open: false, title: '', subtitle: '', htmlContent: '', reporterName: '' },
                 dayDetailModal: { open: false, dateStr: '', tasks: [], checklists: [] },
                 
-                // 3. SDGs ครบถ้วนทั้ง 17 เป้าหมาย (Goal 1 - 17) ตามมาตรฐานสากล UN
+                // SDGs ครบถ้วนทั้ง 17 เป้าหมายตามสากล UN
                 sdgFullData: [
-                    { goalNum: 1, goalTitle: 'ขจัดความยากจนทุกรูปแบบในทุกที่', targets: [{ code: '1.1', title: 'ขจัดความยากจนรุนแรง' }, { code: '1.2', title: 'ลดสัดส่วนคนจน' }, { code: '1.3', title: 'ระบบคุ้มครองทางสังคมที่เหมาะสม' }, { code: '1.4', title: 'สิทธิเท่าเทียมในทรัพยากรเศรษฐกิจ' }, { code: '1.a', title: 'ระดมทรัพยากรยุติความยากจน' }, { code: '1.b', title: 'สร้างกรอบนโยบายเชิงยุทธศาสตร์' }] },
-                    { goalNum: 2, goalTitle: 'ยุติความหิวโหย บรรลุความมั่นคงทางอาหาร', targets: [{ code: '2.1', title: 'เข้าถึงอาหารปลอดภัยและเพียงพอ' }, { code: '2.2', title: 'ยุติทุพโภชนาการทุกรูปแบบ' }, { code: '2.3', title: 'เพิ่มผลิตภาพเกษตรกรรายย่อย' }, { code: '2.4', title: 'การผลิตอาหารที่ยั่งยืน' }] },
-                    { goalNum: 3, goalTitle: 'สร้างหลักประกันการมีสุขภาวะที่ดี', targets: [{ code: '3.1', title: 'ลดอัตราการตายมารดา' }, { code: '3.2', title: 'ยุติการตายทารกและเด็ก' }, { code: '3.3', title: 'ยับยั้งโรคติดต่อสำคัญ' }, { code: '3.4', title: 'ลดการตายจาก NCDs สุขภาพจิต' }, { code: '3.8', title: 'หลักประกันสุขภาพถ้วนหน้า' }, { code: '3.9', title: 'ลดเจ็บป่วยจากสารเคมีและมลพิษ' }] },
-                    { goalNum: 4, goalTitle: 'การศึกษาที่มีคุณภาพเท่าเทียม', targets: [{ code: '4.1', title: 'การศึกษาขั้นพื้นฐานฟรีมีคุณภาพ' }, { code: '4.2', title: 'พัฒนาการเด็กปฐมวัย' }, { code: '4.3', title: 'เข้าถึงอาชีวะและอุดมศึกษา' }, { code: '4.4', title: 'เพิ่มทักษะประกอบอาชีพ' }, { code: '4.7', title: 'การศึกษาเพื่อการพัฒนาที่ยั่งยืน' }] },
-                    { goalNum: 5, goalTitle: 'ความเสมอภาคระหว่างเพศ', targets: [{ code: '5.1', title: 'ยุติการเลือกปฏิบัติต่อสตรีทุกแห่ง' }, { code: '5.2', title: 'ขจัดความรุนแรงต่อสตรีและเด็กหญิง' }, { code: '5.5', title: 'โอกาสและความเป็นผู้นำเท่าเทียม' }, { code: '5.a', title: 'สิทธิเท่าเทียมในทรัพยากรเศรษฐกิจ' }] },
-                    { goalNum: 6, goalTitle: 'น้ำสะอาดและการสุขาภิบาล', targets: [{ code: '6.1', title: 'เข้าถึงน้ำดื่มปลอดภัยราคาเข้าถึงได้' }, { code: '6.2', title: 'สุขอนามัยและการสุขาภิบาลที่เหมาะสม' }, { code: '6.3', title: 'ปรับปรุงคุณภาพน้ำ ลดมลพิษ' }, { code: '6.5', title: 'การบริหารจัดการทรัพยากรน้ำรวม' }] },
-                    { goalNum: 7, goalTitle: 'พลังงานสะอาดที่เข้าถึงได้', targets: [{ code: '7.1', title: 'เข้าถึงบริการพลังงานสมัยใหม่' }, { code: '7.2', title: 'เพิ่มสัดส่วนพลังงานทดแทน' }, { code: '7.3', title: 'เพิ่มประสิทธิภาพการใช้พลังงาน' }] },
-                    { goalNum: 8, goalTitle: 'งานที่มีคุณค่าและการเติบโตทางเศรษฐกิจ', targets: [{ code: '8.1', title: 'เติบโตทางเศรษฐกิจต่อหัว' }, { code: '8.2', title: 'ยกระดับผลิตภาพเศรษฐกิจ' }, { code: '8.5', title: 'จ้างงานเต็มที่และมีคุณค่า' }, { code: '8.8', title: 'ปกป้องสิทธิแรงงาน สภาพแวดล้อมปลอดภัย' }] },
-                    { goalNum: 9, goalTitle: 'โครงสร้างพื้นฐาน นวัตกรรม และอุตสาหกรรม', targets: [{ code: '9.1', title: 'พัฒนาโครงสร้างพื้นฐานคุณภาพสูง' }, { code: '9.2', title: 'อุตสาหกรรมครอบคลุมและยั่งยืน' }, { code: '9.5', title: 'เพิ่มวิจัยและพัฒนาวิทยาศาสตร์' }] },
-                    { goalNum: 10, goalTitle: 'ลดความเหลื่อมล้ำ', targets: [{ code: '10.1', title: 'เติบโตรายได้กลุ่มล่างสุดของประชากร' }, { code: '10.2', title: 'โอบอุ้มความinclusionทางสังคมเศรษฐกิจ' }, { code: '10.3', title: 'ประกันโอกาสเท่าเทียมลดเลือกปฏิบัติ' }] },
-                    { goalNum: 11, goalTitle: 'เมืองและชุมชนยั่งยืน', targets: [{ code: '11.1', title: 'ที่อยู่อาศัยและบริการพื้นฐานปลอดภัย' }, { code: '11.2', title: 'ระบบคมนาคมขนส่งยั่งยืนปลอดภัย' }, { code: '11.4', title: 'ปกป้องคุ้มครองมรดกทางวัฒนธรรม' }, { code: '11.5', title: 'ลดความเสียหายจากภัยพิบัติ' }] },
-                    { goalNum: 12, goalTitle: 'การบริโภคและการผลิตที่ยั่งยืน', targets: [{ code: '12.2', title: 'บริหารจัดการทรัพยากรธรรมชาติยั่งยืน' }, { code: '12.3', title: 'ลดขยะอาหารระดับค้าปลีก/ผู้บริโภคลงครึ่งหนึ่ง' }, { code: '12.5', title: 'ลดการเกิดขยะผ่านการรีไซเคิล' }, { code: '12.6', title: 'ส่งเสริมบริษัททำรายงานความยั่งยืน' }] },
-                    { goalNum: 13, goalTitle: 'การรับมือการเปลี่ยนแปลงสภาพภูมิอากาศ', targets: [{ code: '13.1', title: 'เสริมสร้างภูมิต้านทานต่อภัยพิบัติ' }, { code: '13.2', title: 'บูรณาการมาตรการภูมิอากาศในนโยบาย' }, { code: '13.3', title: 'สร้างความตระหนักรู้การรับมือภูมิอากาศ' }] },
-                    { goalNum: 14, goalTitle: 'ทรัพยากรทางทะเล', targets: [{ code: '14.1', title: 'ป้องกันและลดมลพิษทางทะเล' }, { code: '14.2', title: 'บริหารจัดการปกป้องระบบนิเวศทางทะเล' }, { code: '14.5', title: 'อนุรักษ์พื้นที่ชายฝั่งและทางทะเล' }] },
-                    { goalNum: 15, goalTitle: 'ระบบนิเวศบนบก', targets: [{ code: '15.1', title: 'อนุรักษ์ฟื้นฟูระบบนิเวศบนบกและน้ำจืด' }, { code: '15.2', title: 'ยุติการตัดไม้ทำลายป่า ฟื้นฟูป่าเสื่อมโทรม' }, { code: '15.5', title: 'หยุดยั้งการสูญเสียความหลากหลายทางชีวภาพ' }] },
-                    { goalNum: 16, goalTitle: 'สันติภาพ ความยุติธรรม และสถาบันเข้มแข็ง', targets: [{ code: '16.1', title: 'ลดความรุนแรงและอัตราการตายทุกรูปแบบ' }, { code: '16.5', title: 'ลดการทุจริตและสินบนทุกรูปแบบ' }, { code: '16.6', title: 'พัฒนาสถาบันโปร่งใสตรวจสอบได้' }, { code: '16.10', title: 'ประกันการเข้าถึงข้อมูลของประชาชน' }] },
-                    { goalNum: 17, goalTitle: 'ความร่วมมือเพื่อการพัฒนาที่ยั่งยืน', targets: [{ code: '17.1', title: 'เสริมการจัดเก็บรายได้ในประเทศ' }, { code: '17.16', title: 'หุ้นส่วนความร่วมมือระดับโลกเพื่อการพัฒนา' }, { code: '17.18', title: 'สนับสนุนข้อมูลสถิติคุณภาพสูง' }] }
+                    { goalNum: 1, goalTitle: 'ขจัดความยากจนทุกรูปแบบในทุกที่', targets: [{ code: '1.1', title: 'ขจัดความยากจนรุนแรง' }, { code: '1.2', title: 'ลดสัดส่วนคนจน' }, { code: '1.3', title: 'ระบบคุ้มครองทางสังคม' }, { code: '1.4', title: 'สิทธิเท่าเทียมทรัพยากร' }, { code: '1.a', title: 'ระดมทรัพยากรยุติความยากจน' }] },
+                    { goalNum: 2, goalTitle: 'ยุติความหิวโหย บรรลุความมั่นคงทางอาหาร', targets: [{ code: '2.1', title: 'เข้าถึงอาหารปลอดภัย' }, { code: '2.2', title: 'ยุติทุพโภชนาการ' }, { code: '2.3', title: 'เพิ่มผลิตภาพเกษตรกรรายย่อย' }, { code: '2.4', title: 'การผลิตอาหารยั่งยืน' }] },
+                    { goalNum: 3, goalTitle: 'สร้างหลักประกันการมีสุขภาวะที่ดี', targets: [{ code: '3.1', title: 'ลดตายมารดา' }, { code: '3.2', title: 'ยุติการตายเด็ก' }, { code: '3.4', title: 'ลดตาย NCDs สุขภาพจิต' }, { code: '3.8', title: 'หลักประกันสุขภาพถ้วนหน้า' }] },
+                    { goalNum: 4, goalTitle: 'การศึกษาที่มีคุณภาพเท่าเทียม', targets: [{ code: '4.1', title: 'การศึกษาขั้นพื้นฐานฟรี' }, { code: '4.2', title: 'พัฒนาการเด็กปฐมวัย' }, { code: '4.3', title: 'เข้าถึงอาชีวะและอุดมศึกษา' }, { code: '4.7', title: 'การศึกษาเพื่อความยั่งยืน' }] },
+                    { goalNum: 5, goalTitle: 'ความเสมอภาคระหว่างเพศ', targets: [{ code: '5.1', title: 'ยุติเลือกปฏิบัติสตรี' }, { code: '5.2', title: 'ขจัดความรุนแรงต่อสตรี' }, { code: '5.5', title: 'โอกาสผู้นำเท่าเทียม' }] },
+                    { goalNum: 6, goalTitle: 'น้ำสะอาดและการสุขาภิบาล', targets: [{ code: '6.1', title: 'เข้าถึงน้ำดื่มปลอดภัย' }, { code: '6.2', title: 'สุขอนามัยเหมาะสม' }, { code: '6.3', title: 'ปรับปรุงคุณภาพน้ำ' }] },
+                    { goalNum: 7, goalTitle: 'พลังงานสะอาดที่เข้าถึงได้', targets: [{ code: '7.1', title: 'เข้าถึงพลังงานสมัยใหม่' }, { code: '7.2', title: 'เพิ่มพลังงานทดแทน' }, { code: '7.3', title: 'เพิ่มประสิทธิภาพพลังงาน' }] },
+                    { goalNum: 8, goalTitle: 'งานที่มีคุณค่าและการเติบโตทางเศรษฐกิจ', targets: [{ code: '8.1', title: 'เติบโตเศรษฐกิจต่อหัว' }, { code: '8.5', title: 'จ้างงานเต็มที่' }, { code: '8.8', title: 'สภาพแวดล้อมปลอดภัย' }] },
+                    { goalNum: 9, goalTitle: 'โครงสร้างพื้นฐาน นวัตกรรม และอุตสาหกรรม', targets: [{ code: '9.1', title: 'พัฒนาโครงสร้างพื้นฐาน' }, { code: '9.2', title: 'อุตสาหกรรมยั่งยืน' }, { code: '9.5', title: 'เพิ่มวิจัยวิทยาศาสตร์' }] },
+                    { goalNum: 10, goalTitle: 'ลดความเหลื่อมล้ำ', targets: [{ code: '10.1', title: 'เติบโตรายได้กลุ่มล่างสุด' }, { code: '10.3', title: 'ประกันโอกาสเท่าเทียม' }] },
+                    { goalNum: 11, goalTitle: 'เมืองและชุมชนยั่งยืน', targets: [{ code: '11.1', title: 'ที่อยู่อาศัยราคาจ่ายไหว' }, { code: '11.2', title: 'คมนาคมปลอดภัย' }, { code: '11.5', title: 'ลดความเสียหายภัยพิบัติ' }] },
+                    { goalNum: 12, goalTitle: 'การบริโภคและการผลิตที่ยั่งยืน', targets: [{ code: '12.2', title: 'ใช้ทรัพยากรธรรมชาติยั่งยืน' }, { code: '12.3', title: 'ลดขยะอาหารลงครึ่งหนึ่ง' }, { code: '12.5', title: 'ลดเกิดขยะรีไซเคิล' }] },
+                    { goalNum: 13, goalTitle: 'การรับมือการเปลี่ยนแปลงสภาพภูมิอากาศ', targets: [{ code: '13.1', title: 'เสริมภูมิต้านทานภัย' }, { code: '13.2', title: 'บูรณาการมาตรการภูมิอากาศ' }] },
+                    { goalNum: 14, goalTitle: 'ทรัพยากรทางทะเล', targets: [{ code: '14.1', title: 'ลดมลพิษทางทะเล' }, { code: '14.5', title: 'อนุรักษ์พื้นที่ชายฝั่ง' }] },
+                    { goalNum: 15, goalTitle: 'ระบบนิเวศบนบก', targets: [{ code: '15.1', title: 'อนุรักษ์ฟื้นฟูระบบนิเวศ' }, { code: '15.2', title: 'จัดการป่าไม้ยั่งยืน' }, { code: '15.5', title: 'ลดสูญเสียความหลากหลาย' }] },
+                    { goalNum: 16, goalTitle: 'สันติภาพ ความยุติธรรม และสถาบันเข้มแข็ง', targets: [{ code: '16.1', title: 'ลดความรุนแรง' }, { code: '16.5', title: 'ลดทุจริตและสินบน' }, { code: '16.6', title: 'พัฒนาสถาบันโปร่งใส' }] },
+                    { goalNum: 17, goalTitle: 'ความร่วมมือเพื่อการพัฒนาที่ยั่งยืน', targets: [{ code: '17.1', title: 'เสริมจัดเก็บรายได้' }, { code: '17.16', title: 'หุ้นส่วนความร่วมมือ' }] }
                 ],
 
                 currentTask: { 
                     id: null, category: '', title: '', planStart: '', planEnd: '', doStart: '', doEnd: '', summaryStart: '', summaryEnd: '', 
                     owner: '', subTeamMembers: [], participantsList: [], meetingAttendeesList: [], isCompleted: false, budgetApproved: 0, budgetUsed: 0, 
-                    evidenceUrl: '', useSdgs: false, selectedSdgs: [], pdsa: { plan: '', do: '', study: '', act: '' }, checklist: [] 
+                    evidenceUrl: '', useSdgs: false, selectedSdgs: [], customSdgs: '', pdsa: { plan: '', do: '', study: '', act: '' }, checklist: [] 
                 },
                 
                 currentYearNum: new Date().getFullYear(),
@@ -1216,7 +1222,7 @@
                                 category: cat, title: title, planStart: doStart, planEnd: doEnd, doStart: doStart, doEnd: doEnd,
                                 summaryStart: doEnd, summaryEnd: doEnd, owner: owner, subTeamMembers: [], participantsList: [], meetingAttendeesList: [],
                                 budgetApproved: budgetApproved, budgetUsed: budgetUsed, evidenceUrl: evidenceUrl, isCompleted: false, countWorkload: true,
-                                checklist: [], selectedSdgs: [], pdsa: { plan: '', do: '', study: '', act: '' }
+                                checklist: [], selectedSdgs: [], customSdgs: '', pdsa: { plan: '', do: '', study: '', act: '' }
                             };
                             this.tasks.push(newTask);
                             countAdded++;
@@ -1227,13 +1233,13 @@
                     reader.readAsText(file, 'UTF-8');
                 },
 
-                // 2. รายงานสรุปภาพรวมโครงการ (แสดงเฉพาะงานที่มีช่วงวันที่คาดเกี่ยวกับช่วงที่เลือกจริง)
+                // 2. รายงานสรุปภาพรวมโครงการ (แสดงเฉพาะงานที่อยู่ในช่วงวันที่เลือกและกลุ่มงานที่เลือกเท่านั้น อย่างเคร่งครัด)
                 generateGeneralReport() {
                     let filtered = this.tasks.filter(t => {
                         let matchCat = !this.reportCategory || t.category === this.reportCategory;
                         let start = t.doStart || t.planStart || '';
                         let end = t.doEnd || t.planEnd || start;
-                        // เงื่อนไขช่วงวันที่ทับซ้อนกับช่วงที่เลือก (Overlap Condition)
+                        
                         let matchDate = true;
                         if (this.reportStartDate && this.reportEndDate) {
                             matchDate = (end >= this.reportStartDate && start <= this.reportEndDate);
@@ -1259,11 +1265,13 @@
                         <tbody>`;
 
                     if (filtered.length === 0) {
-                        html += `<tr><td colspan="5" class="border border-slate-300 p-4 text-center text-slate-500">ไม่พบข้อมูลโครงการในช่วงวันที่เลือก</td></tr>`;
+                        html += `<tr><td colspan="5" class="border border-slate-300 p-4 text-center text-slate-500">ไม่พบข้อมูลโครงการตามเงื่อนไขช่วงวันที่เลือก</td></tr>`;
                     } else {
                         filtered.forEach((t, i) => {
                             let budgetStr = `${(t.budgetApproved || 0).toLocaleString()} ฿ / ${(t.budgetUsed || 0).toLocaleString()} ฿`;
-                            let sdgsStr = (t.selectedSdgs && t.selectedSdgs.length > 0) ? t.selectedSdgs.join(', ') : '-';
+                            let sdgsList = [...(t.selectedSdgs || [])];
+                            if (t.customSdgs && t.customSdgs.trim()) sdgsList.push(t.customSdgs.trim());
+                            let sdgsStr = sdgsList.length > 0 ? sdgsList.join(', ') : '-';
                             let pdsaStr = `P: ${t.pdsa?.plan || '-'}<br>D: ${t.pdsa?.do || '-'}<br>S: ${t.pdsa?.study || '-'}<br>A: ${t.pdsa?.act || '-'}`;
                             let linkStr = t.evidenceUrl ? `<br><a href="${t.evidenceUrl}" target="_blank" class="text-indigo-600 underline">🔗 ลิงก์หลักฐาน</a>` : '';
                             
@@ -1324,7 +1332,9 @@
                         userTasks.forEach((t, i) => {
                             let role = t.owner === this.workloadPerson ? 'ผู้รับผิดชอบหลัก' : 'คณะทำงาน/ผู้ร่วมงาน';
                             let statusText = t.isCompleted ? '✓ เสร็จสิ้น' : '⚡ กำลังทำ';
-                            let sdgsStr = (t.selectedSdgs && t.selectedSdgs.length > 0) ? t.selectedSdgs.join(', ') : '-';
+                            let sdgsList = [...(t.selectedSdgs || [])];
+                            if (t.customSdgs && t.customSdgs.trim()) sdgsList.push(t.customSdgs.trim());
+                            let sdgsStr = sdgsList.length > 0 ? sdgsList.join(', ') : '-';
                             let pdsaStr = `Study: ${t.pdsa?.study || '-'}<br>Act: ${t.pdsa?.act || '-'}`;
                             let linkStr = t.evidenceUrl ? `<br><a href="${t.evidenceUrl}" target="_blank" class="text-indigo-600 underline">🔗 ลิงก์หลักฐาน</a>` : '';
 
@@ -1353,7 +1363,7 @@
                     this.currentTask = { 
                         id: null, category: this.categories[0]?.name || '', title: '', planStart: today, planEnd: today, doStart: today, doEnd: today, 
                         summaryStart: today, summaryEnd: today, owner: this.owners[0]?.name || '', subTeamMembers: [], participantsList: [], meetingAttendeesList: [], 
-                        isCompleted: false, budgetApproved: 0, budgetUsed: 0, evidenceUrl: '', useSdgs: false, selectedSdgs: [], 
+                        isCompleted: false, budgetApproved: 0, budgetUsed: 0, evidenceUrl: '', useSdgs: false, selectedSdgs: [], customSdgs: '', 
                         pdsa: { plan: '', do: '', study: '', act: '' }, checklist: [] 
                     };
                     this.ownerSearchInput = '';
@@ -1372,7 +1382,8 @@
                     if (!this.currentTask.participantsList) this.currentTask.participantsList = [];
                     if (!this.currentTask.meetingAttendeesList) this.currentTask.meetingAttendeesList = [];
                     if (!this.currentTask.selectedSdgs) this.currentTask.selectedSdgs = [];
-                    if (this.currentTask.useSdgs === undefined) this.currentTask.useSdgs = this.currentTask.selectedSdgs.length > 0;
+                    if (!this.currentTask.customSdgs) this.currentTask.customSdgs = '';
+                    if (this.currentTask.useSdgs === undefined) this.currentTask.useSdgs = (this.currentTask.selectedSdgs.length > 0 || this.currentTask.customSdgs.trim() !== '');
                     this.ownerSearchInput = '';
                     this.ownerSearchQuery = '';
                     this.partSearchQuery = '';
@@ -1388,7 +1399,7 @@
                     }
                     let tName = this.currentTask.title.trim();
                     if (!this.manualTitles.includes(tName)) this.manualTitles.push(tName);
-                    if (!this.currentTask.useSdgs) this.currentTask.selectedSdgs = [];
+                    if (!this.currentTask.useSdgs) { this.currentTask.selectedSdgs = []; this.currentTask.customSdgs = ''; }
 
                     if (!this.currentTask.id) {
                         this.currentTask.id = Date.now().toString();
